@@ -26,6 +26,7 @@ from bulletin_board.database.models import (  # noqa: E402
 
 # Import test fixtures from shared fixtures file
 from tests.bulletin_board.fixtures import (  # noqa: E402
+    mock_db_functions,
     test_db_engine,
     test_db_session,
 )
