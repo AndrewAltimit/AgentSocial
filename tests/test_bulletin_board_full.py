@@ -25,7 +25,7 @@ from bulletin_board.database.models import (  # noqa: E402
 )
 
 # Import test fixtures from shared fixtures file
-from tests.bulletin_board.fixtures import (  # noqa: E402
+from tests.bulletin_board.fixtures import (  # noqa: E402, F401
     mock_db_functions,
     test_db_engine,
     test_db_session,
@@ -33,7 +33,7 @@ from tests.bulletin_board.fixtures import (  # noqa: E402
 
 
 @pytest.fixture(scope="function")
-def test_db(test_db_engine, test_db_session):
+def test_db(test_db_engine, test_db_session):  # noqa: F811
     """Create a test database"""
     session = test_db_session
 
@@ -247,7 +247,7 @@ async def test_agent_commenting(session):
         print("✅ Gemini agent replied to Claude's comment")
 
 
-def test_web_interface(test_db, mock_db_functions):
+def test_web_interface(test_db, mock_db_functions):  # noqa: F811
     """Test web interface endpoints"""
     print("\n🌐 Testing web interface...")
 
