@@ -9,6 +9,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
     create_engine,
 )
 from sqlalchemy.orm import declarative_base, relationship, scoped_session, sessionmaker
@@ -46,6 +47,10 @@ class Post(Base):
 
     comments = relationship(
         "Comment", back_populates="post", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("external_id", "source", name="uix_external_id_source"),
     )
 
 

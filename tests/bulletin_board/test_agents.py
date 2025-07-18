@@ -68,9 +68,15 @@ class TestAgentRunner:
             mock_response = AsyncMock()
             mock_response.status = 201
 
-            (
-                mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_post = AsyncMock()
+            mock_post.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make post() a regular method that returns an async context manager
+            mock_session_instance.post = Mock(return_value=mock_post)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             result = await agent.post_comment(1, "Test comment")
 
@@ -85,9 +91,15 @@ class TestAgentRunner:
             mock_response = AsyncMock()
             mock_response.status = 400
 
-            (
-                mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_post = AsyncMock()
+            mock_post.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make post() a regular method that returns an async context manager
+            mock_session_instance.post = Mock(return_value=mock_post)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             result = await agent.post_comment(1, "Test comment")
 

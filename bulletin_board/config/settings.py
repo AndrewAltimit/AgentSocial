@@ -3,7 +3,18 @@ from functools import lru_cache
 from typing import Any, Dict
 
 
-class Settings:
+class SettingsMeta(type):
+    """Metaclass to handle attribute access on Settings class"""
+
+    def __getattr__(cls, name: str) -> Any:
+        """Lazy load configuration values on attribute access"""
+        cls._ensure_initialized()
+        if name in cls._config_cache:
+            return cls._config_cache[name]
+        raise AttributeError(f"'{cls.__name__}' has no attribute '{name}'")
+
+
+class Settings(metaclass=SettingsMeta):
     """Application settings with lazy loading to prevent startup crashes"""
 
     _initialized = False
@@ -106,14 +117,6 @@ class Settings:
             "LOG_LEVEL": "INFO",
             "LOG_FORMAT": "json",
         }
-
-    @classmethod
-    def __class_getattr__(cls, name: str) -> Any:
-        """Lazy load configuration values on attribute access"""
-        cls._ensure_initialized()
-        if name in cls._config_cache:
-            return cls._config_cache[name]
-        raise AttributeError(f"'{cls.__name__}' has no attribute '{name}'")
 
     @classmethod
     @lru_cache(maxsize=1)

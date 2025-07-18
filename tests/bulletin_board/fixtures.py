@@ -68,14 +68,10 @@ def mock_db_functions(test_db_engine):
             with patch("bulletin_board.app.app.get_db_engine", mock_get_engine):
                 with patch("bulletin_board.app.app.get_session", mock_get_session):
                     with patch(
-                        "bulletin_board.agents.feed_collector.get_db_engine",
-                        mock_get_engine,
+                        "bulletin_board.agents.feed_collector.get_session",
+                        mock_get_session,
                     ):
-                        with patch(
-                            "bulletin_board.agents.feed_collector.get_session",
-                            mock_get_session,
-                        ):
-                            yield
+                        yield
 
 
 @pytest.fixture

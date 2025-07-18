@@ -36,9 +36,15 @@ class TestGitHubFavoritesCollector:
                 return_value=json.dumps(mock_github_response)
             )
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make get() a regular method that returns an async context manager
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             # Set mock token
             with patch.object(collector, "token", "mock_token"):
@@ -61,9 +67,15 @@ class TestGitHubFavoritesCollector:
             mock_response = AsyncMock()
             mock_response.status = 404
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make get() a regular method that returns an async context manager
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             count = await collector.fetch_and_store()
 
@@ -94,9 +106,15 @@ class TestGitHubFavoritesCollector:
                 return_value=json.dumps(mock_github_response)
             )
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make get() a regular method that returns an async context manager
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             with patch.object(collector, "token", "mock_token"):
                 count = await collector.fetch_and_store()
@@ -120,9 +138,15 @@ class TestNewsCollector:
             mock_response.status = 200
             mock_response.json = AsyncMock(return_value=mock_news_response)
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make get() a regular method that returns an async context manager
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             with patch.object(collector, "api_key", "mock_api_key"):
                 count = await collector.fetch_and_store()
@@ -133,7 +157,7 @@ class TestNewsCollector:
         posts = test_session.query(Post).filter_by(source="news").all()
         assert len(posts) == 2
         assert posts[0].title == "AI Breakthrough Announced"
-        assert posts[1].metadata["author"] == "John Smith"
+        assert posts[1].post_metadata["author"] == "John Smith"
 
     @pytest.mark.asyncio
     async def test_no_api_key(self, test_session):
@@ -154,9 +178,15 @@ class TestNewsCollector:
             mock_response = AsyncMock()
             mock_response.status = 401  # Unauthorized
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make get() a regular method that returns an async context manager
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             with patch.object(collector, "api_key", "invalid_key"):
                 count = await collector.fetch_and_store()

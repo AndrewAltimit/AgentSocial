@@ -7,9 +7,8 @@ sys.path.insert(
 )
 
 import json  # noqa: E402
-import tempfile  # noqa: E402
 from datetime import datetime, timedelta  # noqa: E402
-from unittest.mock import AsyncMock, patch  # noqa: E402
+from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
@@ -29,18 +28,10 @@ class TestBulletinBoardIntegration:
 
     @pytest.fixture
     def temp_db(self):
-        """Create a temporary SQLite database"""
-        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-            db_path = f.name
-
-        db_url = f"sqlite:///{db_path}"
+        """Create an in-memory SQLite database"""
+        # Use in-memory database to avoid file permission issues
+        db_url = "sqlite:///:memory:"
         yield db_url
-
-        # Cleanup
-        try:
-            os.unlink(db_path)
-        except OSError:
-            pass
 
     @pytest.fixture
     def mock_environment(self, temp_db):
@@ -79,8 +70,15 @@ class TestBulletinBoardIntegration:
         engine = get_db_engine(mock_environment["DATABASE_URL"])
         create_tables(engine)
 
-        # Initialize agents
-        init_agents()
+        # Initialize agents with mocked database functions
+        with patch(
+            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+        ):
+            with patch(
+                "bulletin_board.agents.init_agents.get_session",
+                return_value=get_session(engine),
+            ):
+                init_agents()
 
         # Verify agents were created
         session = get_session(engine)
@@ -136,15 +134,26 @@ class TestBulletinBoardIntegration:
             news_response.status = 200
             news_response.json = AsyncMock(return_value=news_articles)
 
-            # Configure mock to return different responses based on URL
-            async def get_mock(url, **kwargs):
-                if "github" in url:
-                    return github_response
-                else:
-                    return news_response
+            # Set up the mock chain properly for GitHub
+            mock_github_get = AsyncMock()
+            mock_github_get.__aenter__.return_value = github_response
 
-            mock_get = AsyncMock(side_effect=get_mock)
-            mock_session.return_value.__aenter__.return_value.get = mock_get
+            # Set up the mock chain properly for News
+            mock_news_get = AsyncMock()
+            mock_news_get.__aenter__.return_value = news_response
+
+            # Configure mock session
+            mock_session_instance = AsyncMock()
+
+            # Configure get method to return different mocks based on URL
+            def get_mock(url, **kwargs):
+                if "github" in url:
+                    return mock_github_get
+                else:
+                    return mock_news_get
+
+            mock_session_instance.get = Mock(side_effect=get_mock)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             # Run collectors
             await run_collectors(engine)
@@ -166,7 +175,16 @@ class TestBulletinBoardIntegration:
         """Test agents commenting on posts"""
         engine = get_db_engine(mock_environment["DATABASE_URL"])
         create_tables(engine)
-        init_agents()
+
+        # Mock the database functions in init_agents to use our test database
+        with patch(
+            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+        ):
+            with patch(
+                "bulletin_board.agents.init_agents.get_session",
+                return_value=get_session(engine),
+            ):
+                init_agents()
 
         # Create test posts
         session = get_session(engine)
@@ -190,6 +208,15 @@ class TestBulletinBoardIntegration:
         session.add(post1)
         session.add(post2)
         session.commit()
+
+        # Get the IDs before closing the session
+        post1_id = post1.id
+        post1_title = post1.title
+        post1_content = post1.content
+        post2_id = post2.id
+        post2_title = post2.title
+        post2_content = post2.content
+
         session.close()
 
         # Mock agent API calls
@@ -200,15 +227,15 @@ class TestBulletinBoardIntegration:
             posts_response.json = AsyncMock(
                 return_value=[
                     {
-                        "id": post1.id,
-                        "title": post1.title,
-                        "content": post1.content,
+                        "id": post1_id,
+                        "title": post1_title,
+                        "content": post1_content,
                         "comments": [],
                     },
                     {
-                        "id": post2.id,
-                        "title": post2.title,
-                        "content": post2.content,
+                        "id": post2_id,
+                        "title": post2_title,
+                        "content": post2_content,
                         "comments": [],
                     },
                 ]
@@ -218,12 +245,19 @@ class TestBulletinBoardIntegration:
             comment_response = AsyncMock()
             comment_response.status = 201
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = posts_response
-            (
-                mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
-            ) = comment_response
+            # Set up the mock chain properly for GET
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = posts_response
+
+            # Set up the mock chain properly for POST
+            mock_post = AsyncMock()
+            mock_post.__aenter__.return_value = comment_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session_instance.post = Mock(return_value=mock_post)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             # Control randomness to ensure some comments
             with patch("random.random", return_value=0.3):  # Will trigger comments
@@ -244,7 +278,16 @@ class TestBulletinBoardIntegration:
         """Test web interface with full stack"""
         engine = get_db_engine(mock_environment["DATABASE_URL"])
         create_tables(engine)
-        init_agents()
+
+        # Initialize agents with mocked database functions
+        with patch(
+            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+        ):
+            with patch(
+                "bulletin_board.agents.init_agents.get_session",
+                return_value=get_session(engine),
+            ):
+                init_agents()
 
         # Create test data
         session = get_session(engine)
@@ -279,8 +322,10 @@ class TestBulletinBoardIntegration:
             response = client.get("/api/posts")
             assert response.status_code == 200
             data = json.loads(response.data)
-            assert len(data) == 1
-            assert data[0]["title"] == "Web Test Post"
+            # Find our test post among all posts
+            test_post = next((p for p in data if p["title"] == "Web Test Post"), None)
+            assert test_post is not None
+            assert test_post["comment_count"] == 1
 
             # Get single post with comments
             response = client.get(f"/api/posts/{post_id}")
@@ -300,12 +345,49 @@ class TestBulletinBoardIntegration:
 class TestEndToEndScenarios:
     """Test complete end-to-end scenarios"""
 
+    @pytest.fixture
+    def temp_db(self):
+        """Create an in-memory SQLite database"""
+        # Use in-memory database to avoid file permission issues
+        db_url = "sqlite:///:memory:"
+        yield db_url
+
+    @pytest.fixture
+    def mock_environment(self, temp_db):
+        """Set up mock environment variables"""
+        env_vars = {
+            "DATABASE_URL": temp_db,
+            "GITHUB_READ_TOKEN": "mock_github_token",
+            "NEWS_API_KEY": "mock_news_key",
+            "GITHUB_FEED_REPO": "test/repo",
+            "GITHUB_FEED_BRANCH": "main",
+            "GITHUB_FEED_PATH": "test.json",
+        }
+
+        with patch.dict(os.environ, env_vars):
+            # Also patch Settings to use test values
+            with patch("bulletin_board.config.settings.Settings.DATABASE_URL", temp_db):
+                with patch(
+                    "bulletin_board.config.settings.Settings.INTERNAL_NETWORK_ONLY",
+                    False,
+                ):
+                    yield env_vars
+
     @pytest.mark.asyncio
     async def test_full_bulletin_board_cycle(self, mock_environment):
         """Test complete cycle: collect feeds -> agents comment -> web display"""
         engine = get_db_engine(mock_environment["DATABASE_URL"])
         create_tables(engine)
-        init_agents()
+
+        # Initialize agents with mocked database functions
+        with patch(
+            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+        ):
+            with patch(
+                "bulletin_board.agents.init_agents.get_session",
+                return_value=get_session(engine),
+            ):
+                init_agents()
 
         # Step 1: Simulate feed collection
         session = get_session(engine)
@@ -317,7 +399,7 @@ class TestEndToEndScenarios:
             title="Breaking: New AI Model Released",
             content="A revolutionary AI model has been announced today",
             url="https://news.ai/breaking",
-            metadata={"author": "AI Reporter"},
+            post_metadata={"author": "AI Reporter"},
             created_at=datetime.utcnow(),
         )
         session.add(post)

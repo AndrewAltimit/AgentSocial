@@ -2,13 +2,13 @@
 """
 Full integration test demonstrating bulletin board functionality with mock data
 """
-import asyncio
 import json
 import os
 import sys
-import tempfile
 from datetime import datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,23 +25,21 @@ from bulletin_board.database.models import (  # noqa: E402
     Post,
     create_tables,
     get_db_engine,
-    get_session,
 )
 
-# Import app later to avoid database connection on import
 
+@pytest.fixture(scope="function")
+def test_db():
+    """Create a test database"""
+    from sqlalchemy.orm import sessionmaker
 
-def setup_test_database():
-    """Set up test database with mock data"""
-    print("📦 Setting up test database...")
-
-    # Create temporary database
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
-
-    engine = get_db_engine(f"sqlite:///{db_path}")
+    # Use in-memory database to avoid file permission issues
+    engine = get_db_engine("sqlite:///:memory:")
     create_tables(engine)
-    session = get_session(engine)
+
+    # Create a new session directly instead of using get_session
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
     # Create test agents
     agents = [
@@ -69,9 +67,21 @@ def setup_test_database():
 
     print(f"✅ Created {len(agents)} test agents")
 
-    return db_path, engine, session
+    yield engine, session
+
+    # Cleanup
+    session.close()
+    engine.dispose()
 
 
+@pytest.fixture
+def session(test_db):
+    """Get the test session"""
+    engine, session = test_db
+    return session
+
+
+@pytest.mark.asyncio
 async def test_feed_collection(session):
     """Test feed collection with mock APIs"""
     print("\n🔄 Testing feed collection...")
@@ -110,9 +120,14 @@ async def test_feed_collection(session):
         mock_response.status = 200
         mock_response.text = AsyncMock(return_value=json.dumps(mock_github_data))
 
-        (
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-        ) = mock_response
+        # Set up the mock chain properly
+        mock_get = AsyncMock()
+        mock_get.__aenter__.return_value = mock_response
+
+        # Configure the session mock
+        mock_session_instance = AsyncMock()
+        mock_session_instance.get = Mock(return_value=mock_get)
+        mock_session.return_value.__aenter__.return_value = mock_session_instance
 
         with patch.object(github_collector, "token", "mock_token"):
             github_count = await github_collector.fetch_and_store()
@@ -126,9 +141,14 @@ async def test_feed_collection(session):
         mock_response.status = 200
         mock_response.json = AsyncMock(return_value=mock_news_data)
 
-        (
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-        ) = mock_response
+        # Set up the mock chain properly
+        mock_get = AsyncMock()
+        mock_get.__aenter__.return_value = mock_response
+
+        # Configure the session mock
+        mock_session_instance = AsyncMock()
+        mock_session_instance.get = Mock(return_value=mock_get)
+        mock_session.return_value.__aenter__.return_value = mock_session_instance
 
         with patch.object(news_collector, "api_key", "mock_api_key"):
             news_count = await news_collector.fetch_and_store()
@@ -142,6 +162,7 @@ async def test_feed_collection(session):
         print(f"   - [{post.source}] {post.title}")
 
 
+@pytest.mark.asyncio
 async def test_agent_commenting(session):
     """Test agent commenting behavior"""
     print("\n💬 Testing agent commenting...")
@@ -149,45 +170,65 @@ async def test_agent_commenting(session):
     # Get posts for agents to comment on
     posts = session.query(Post).all()
 
+    # Mock the agent profile lookup
+    mock_agent_profile = AgentProfile(
+        agent_id="test_claude",
+        display_name="Test Claude",
+        agent_software="claude_code",
+        role_description="Test Claude agent",
+        context_instructions="Be helpful in testing",
+    )
+
     # Mock agent behavior
-    claude_agent = ClaudeAgent("test_claude")
+    with patch(
+        "bulletin_board.agents.agent_runner.get_agent_by_id",
+        return_value=mock_agent_profile,
+    ):
+        claude_agent = ClaudeAgent("test_claude")
 
-    # Prepare mock posts data
-    mock_posts_data = []
-    for post in posts:
-        mock_posts_data.append(
-            {
-                "id": post.id,
-                "title": post.title,
-                "content": post.content,
-                "source": post.source,
-                "comments": [],
-            }
-        )
+        # Prepare mock posts data
+        mock_posts_data = []
+        for post in posts:
+            mock_posts_data.append(
+                {
+                    "id": post.id,
+                    "title": post.title,
+                    "content": post.content,
+                    "source": post.source,
+                    "comments": [],
+                }
+            )
 
-    # Mock API calls
-    with patch("aiohttp.ClientSession") as mock_session:
-        # Mock getting posts
-        get_response = AsyncMock()
-        get_response.status = 200
-        get_response.json = AsyncMock(return_value=mock_posts_data)
+        # Mock API calls
+        with patch("aiohttp.ClientSession") as mock_session:
+            # Mock getting posts
+            get_response = AsyncMock()
+            get_response.status = 200
+            get_response.json = AsyncMock(return_value=mock_posts_data)
 
-        # Mock posting comments
-        post_response = AsyncMock()
-        post_response.status = 201
+            # Mock posting comments
+            post_response = AsyncMock()
+            post_response.status = 201
 
-        mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (  # noqa: E501
-            get_response
-        )
-        (
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
-        ) = post_response
+            # Set up the mock chain properly for GET
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = get_response
 
-        # Make agent always comment (override random)
-        with patch("random.random", return_value=0.1):
-            comments_made = await claude_agent.analyze_and_comment(mock_posts_data)
+            # Set up the mock chain properly for POST
+            mock_post = AsyncMock()
+            mock_post.__aenter__.return_value = post_response
 
-    print(f"✅ Claude agent made {comments_made} comments")
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session_instance.post = Mock(return_value=mock_post)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
+
+            # Make agent always comment (override random)
+            with patch("random.random", return_value=0.1):
+                comments_made = await claude_agent.analyze_and_comment(mock_posts_data)
+
+        print(f"✅ Claude agent made {comments_made} comments")
 
     # Manually add comments to database for demonstration
     for i, post in enumerate(posts):
@@ -214,108 +255,93 @@ async def test_agent_commenting(session):
         print("✅ Gemini agent replied to Claude's comment")
 
 
-def test_web_interface(db_path):
+def test_web_interface(test_db):
     """Test web interface endpoints"""
     print("\n🌐 Testing web interface...")
 
+    engine, session = test_db
+
+    # Add some test posts for the web interface to display
+    from datetime import timedelta
+
+    post1 = Post(
+        external_id="web_test_1",
+        source="favorites",
+        title="Test Favorite for Web",
+        content="This is a test favorite post",
+        created_at=datetime.utcnow() - timedelta(hours=1),
+    )
+    post2 = Post(
+        external_id="web_test_2",
+        source="news",
+        title="Test News for Web",
+        content="This is a test news post",
+        created_at=datetime.utcnow() - timedelta(hours=2),
+    )
+    session.add(post1)
+    session.add(post2)
+    session.commit()
+
+    # Add a comment
+    comment = Comment(
+        post_id=post1.id,
+        agent_id="test_claude",
+        content="This is a test comment on the web post",
+    )
+    session.add(comment)
+    session.commit()
+
+    post1_id = post1.id
+
     # Override database URL for Flask app
     original_url = Settings.DATABASE_URL
-    Settings.DATABASE_URL = f"sqlite:///{db_path}"
+    Settings.DATABASE_URL = "sqlite:///:memory:"  # Use in-memory for Flask app too
 
-    # Import app after setting database URL
-    from bulletin_board.app.app import app
+    # Patch the database functions to use our test database
+    from sqlalchemy.orm import sessionmaker
 
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        # Test getting posts
-        response = client.get("/api/posts")
-        assert response.status_code == 200
-        posts = json.loads(response.data)
-        print(f"✅ API returned {len(posts)} posts")
+    Session = sessionmaker(bind=engine)
 
-        # Test getting single post with comments
-        if posts:
-            post_id = posts[0]["id"]
-            response = client.get(f"/api/posts/{post_id}")
-            assert response.status_code == 200
-            post_data = json.loads(response.data)
-            print(
-                f"✅ Retrieved post '{post_data['title']}' with "  # noqa: E501
-                f"{len(post_data['comments'])} comments"
-            )
+    def get_test_session(engine=None):
+        return Session()
 
-        # Test getting agents
-        response = client.get("/api/agents")
-        assert response.status_code == 200
-        agents = json.loads(response.data)
-        print(f"✅ API returned {len(agents)} active agents")
+    with patch("bulletin_board.database.models.get_db_engine", return_value=engine):
+        with patch(
+            "bulletin_board.database.models.get_session", side_effect=get_test_session
+        ):
+            # Import app after patching
+            from bulletin_board.app.app import app
 
-        # Test main page
-        response = client.get("/")
-        assert response.status_code == 200
-        print("✅ Web interface homepage loads successfully")
+            app.config["TESTING"] = True
+            with app.test_client() as client:
+                # Test getting posts
+                response = client.get("/api/posts")
+                assert response.status_code == 200
+                posts = json.loads(response.data)
+                print(f"✅ API returned {len(posts)} posts")
+
+                # Test getting single post with comments
+                response = client.get(f"/api/posts/{post1_id}")
+                assert response.status_code == 200
+                post_data = json.loads(response.data)
+                print(
+                    f"✅ Retrieved post '{post_data['title']}' with "  # noqa: E501
+                    f"{len(post_data['comments'])} comments"
+                )
+
+                # Test getting agents
+                response = client.get("/api/agents")
+                assert response.status_code == 200
+                agents = json.loads(response.data)
+                print(f"✅ API returned {len(agents)} active agents")
+
+                # Test main page
+                response = client.get("/")
+                assert response.status_code == 200
+                print("✅ Web interface homepage loads successfully")
 
     # Restore original URL
     Settings.DATABASE_URL = original_url
 
 
-def demonstrate_full_system():
-    """Run full system demonstration"""
-    print("=" * 60)
-    print("🚀 AgentSocial Bulletin Board - Full System Demonstration")
-    print("=" * 60)
-
-    db_path = None
-    try:
-        # Set up test environment
-        db_path, engine, session = setup_test_database()
-
-        # Run async tests
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        # Collect feeds
-        loop.run_until_complete(test_feed_collection(session))
-
-        # Agents comment
-        loop.run_until_complete(test_agent_commenting(session))
-
-        # Test web interface
-        test_web_interface(db_path)
-
-        print("\n" + "=" * 60)
-        print("✨ Full system demonstration completed successfully!")
-        print("=" * 60)
-
-        print("\n📊 Final Statistics:")
-        posts_count = session.query(Post).count()
-        comments_count = session.query(Comment).count()
-        agents_count = session.query(AgentProfile).filter_by(is_active=True).count()
-
-        print(f"   - Active agents: {agents_count}")
-        print(f"   - Total posts: {posts_count}")
-        print(f"   - Total comments: {comments_count}")
-
-        print("\n🎯 The bulletin board system is fully functional with:")
-        print("   ✓ Database schema and models")
-        print("   ✓ Feed collection from multiple sources")
-        print("   ✓ Agent commenting system with replies")
-        print("   ✓ Web interface for viewing content")
-        print("   ✓ Age filtering (24-hour limit)")
-        print("   ✓ Security (internal network restrictions)")
-
-        session.close()
-
-    except Exception as e:
-        print(f"\n❌ Error during demonstration: {e}")
-        import traceback
-
-        traceback.print_exc()
-    finally:
-        # Clean up
-        if db_path and os.path.exists(db_path):
-            os.unlink(db_path)
-
-
-if __name__ == "__main__":
-    demonstrate_full_system()
+# Tests can be run with: pytest tests/test_bulletin_board_full.py -v
