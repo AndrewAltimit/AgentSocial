@@ -1,0 +1,164 @@
+---
+name: MCP Tools Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      tool_name:
+        description: 'MCP tool to run'
+        required: true
+        type: choice
+        options:
+          - consult_gemini
+          - create_manim_animation
+          - compile_latex
+          - format_check
+          - lint
+          - analyze
+      tool_args:
+        description: 'Tool arguments (JSON format)'
+        required: false
+        default: '{}'
+
+jobs:
+  run-mcp-tool:
+    name: Execute MCP Tool
+    runs-on: [self-hosted, linux]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          lfs: true
+
+      - name: Start MCP server with health check
+        uses: ./.github/actions/docker-compose-health-check
+        with:
+          services: 'mcp-server'
+          health-endpoint: 'http://localhost:8005/health'
+          timeout: '30'
+          build: 'false'  # Don't rebuild since this is for manual execution
+
+      - name: Execute MCP tool
+        id: mcp_tool
+        run: |
+          python -c "
+          import json
+          import requests
+
+          tool_name = '${{ github.event.inputs.tool_name }}'
+          tool_args = json.loads('${{ github.event.inputs.tool_args }}')
+
+          response = requests.post(
+              'http://localhost:8000/tools/execute',
+              json={
+                  'tool': tool_name,
+                  'arguments': tool_args
+              }
+          )
+
+          result = response.json()
+          print(f'Tool output: {json.dumps(result, indent=2)}')
+
+          # Save output for artifact
+          with open('tool_output.json', 'w') as f:
+              json.dump(result, f, indent=2)
+          "
+
+      - name: Upload tool output
+        uses: actions/upload-artifact@v3
+        with:
+          name: mcp-tool-output
+          path: tool_output.json
+
+      - name: Post results to PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = JSON.parse(fs.readFileSync('tool_output.json', 'utf8'));
+
+            const comment = `## MCP Tool Results
+
+            **Tool**: ${{ github.event.inputs.tool_name }}
+
+            **Output**:
+            \`\`\`json
+            ${JSON.stringify(output, null, 2)}
+            \`\`\`
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Stop MCP server
+        if: always()
+        run: docker-compose down
+
+  gemini-consultation:
+    name: Gemini AI Consultation
+    runs-on: [self-hosted, linux]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR changes
+        id: pr_changes
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > pr_changes.diff
+
+      - name: Consult Gemini about changes
+        run: |
+          python -c "
+          import os
+          import json
+          from tools.gemini.gemini_integration import GeminiIntegration
+
+          with open('pr_changes.diff', 'r') as f:
+              changes = f.read()
+
+          gemini = GeminiIntegration()
+
+          prompt = f'''Review these code changes and provide feedback:
+
+          {changes[:5000]}  # Truncate for API limits
+
+          Focus on:
+          1. Potential bugs or issues
+          2. Performance concerns
+          3. Best practices
+          4. Security considerations
+          '''
+
+          response = gemini.consult(prompt)
+
+          with open('gemini_review.md', 'w') as f:
+              f.write(f'## Gemini AI Code Review\\n\\n{response}')
+          "
+
+      - name: Post Gemini review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const review = fs.readFileSync('gemini_review.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: review
+            });

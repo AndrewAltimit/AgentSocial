@@ -1,0 +1,97 @@
+---
+name: Lint Stages (dynamic)
+
+on:
+  workflow_call:
+    inputs:
+      stage:
+        description: 'Linting stage to run (format, basic, full)'
+        required: true
+        type: string
+      upload_artifacts:
+        description: 'Upload lint results as artifacts'
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      status:
+        description: 'Linting status'
+        value: ${{ jobs.lint.outputs.status }}
+      errors:
+        description: 'Number of errors found'
+        value: ${{ jobs.lint.outputs.errors }}
+      warnings:
+        description: 'Number of warnings found'
+        value: ${{ jobs.lint.outputs.warnings }}
+
+jobs:
+  lint:
+    name: Lint Stage - ${{ inputs.stage }}
+    runs-on: self-hosted
+    timeout-minutes: ${{ inputs.stage == 'format' && 5 || inputs.stage == 'basic' && 10 || 20 }}
+    outputs:
+      status: ${{ steps.result.outputs.status }}
+      errors: ${{ steps.result.outputs.errors }}
+      warnings: ${{ steps.result.outputs.warnings }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          lfs: true
+
+      # Docker CI image will be built automatically by run-ci.sh script
+
+      - name: Run linting stage
+        id: lint
+        shell: bash
+        run: |
+          ./scripts/run-lint-stage.sh ${{ inputs.stage }}
+          # Script handles all the logic and exports errors/warnings to GITHUB_ENV
+
+      - name: Parse results
+        id: result
+        if: always()
+        shell: bash
+        run: |
+          # Get error and warning counts from environment
+          errors="${errors:-0}"
+          warnings="${warnings:-0}"
+
+          echo "errors=$errors" >> $GITHUB_OUTPUT
+          echo "warnings=$warnings" >> $GITHUB_OUTPUT
+          echo "status=${{ job.status }}" >> $GITHUB_OUTPUT
+
+          # Generate summary
+          echo "## Lint Results - ${{ inputs.stage }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Errors | $errors |" >> $GITHUB_STEP_SUMMARY
+          echo "| Warnings | $warnings |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ $errors -eq 0 && $warnings -eq 0 ]]; then
+            echo "✅ No issues found!" >> $GITHUB_STEP_SUMMARY
+          elif [[ $errors -eq 0 ]]; then
+            echo "⚠️ No errors, but $warnings warnings found." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Found $errors errors and $warnings warnings." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload artifacts
+        if: inputs.upload_artifacts && always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results-${{ inputs.stage }}-${{ github.run_id }}
+          path: |
+            lint-output.txt
+            black-output.txt
+            isort-output.txt
+            bandit-report.json
+            safety-report.json
+          retention-days: 7
+          if-no-files-found: ignore

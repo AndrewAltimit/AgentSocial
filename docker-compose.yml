@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # Main MCP Server
+  mcp-server:
+    build:
+      context: .
+      dockerfile: docker/mcp.Dockerfile
+    container_name: mcp-server
+    ports:
+      - "8005:8000"
+    volumes:
+      - ./tools/mcp:/app/tools/mcp
+      - ./.mcp.json:/app/.mcp.json
+      - ./scripts:/app/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME}/.config/github-copilot/hosts.json:/root/.config/github-copilot/hosts.json:ro
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - MCP_SERVER_NAME=mcp-server
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    command: python -m tools.mcp.mcp_server
+
+  # Gemini MCP Server - MUST RUN ON HOST
+  # This service will immediately exit with an error message
+  gemini-mcp-server:
+    build:
+      context: .
+      dockerfile: docker/mcp.Dockerfile
+    container_name: gemini-mcp-server
+    environment:
+      - CONTAINER_ENV=1  # Force container detection
+    command: python tools/mcp/gemini_mcp_server.py
+    restart: "no"
+    networks:
+      - mcp-network
+    # This will always exit immediately with instructions
+
+  # ComfyUI MCP HTTP Bridge (for remote ComfyUI)
+  mcp-comfyui-http:
+    build:
+      context: .
+      dockerfile: docker/mcp-http-bridge.Dockerfile
+    container_name: mcp-comfyui-http
+    ports:
+      - "8189:8189"
+    environment:
+      - REMOTE_MCP_URL=${COMFYUI_SERVER_URL:-http://192.168.0.152:8189}
+      - SERVICE_NAME=comfyui
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # AI Toolkit MCP HTTP Bridge (for remote AI Toolkit)
+  mcp-ai-toolkit-http:
+    build:
+      context: .
+      dockerfile: docker/mcp-http-bridge.Dockerfile
+    container_name: mcp-ai-toolkit-http
+    ports:
+      - "8190:8190"
+    environment:
+      - REMOTE_MCP_URL=${AI_TOOLKIT_SERVER_URL:-http://192.168.0.152:8190}
+      - SERVICE_NAME=ai-toolkit
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  # Development Database (optional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: project-db
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-project_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - mcp-network
+    profiles:
+      - development
+
+  # Redis Cache (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: project-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - mcp-network
+    profiles:
+      - development
+
+  # CI/CD Python container
+  python-ci:
+    build:
+      context: .
+      dockerfile: docker/python-ci.Dockerfile
+    container_name: python-ci
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    environment:
+      - HOME=/tmp
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    networks:
+      - mcp-network
+    profiles:
+      - ci
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
