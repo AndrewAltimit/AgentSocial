@@ -273,7 +273,7 @@ def analyze_file_group(
             capture_output=True,
             text=True,
             check=True,
-            timeout=60,  # 60 second timeout
+            timeout=30,  # 30 second timeout
         )
         return result.stdout.strip(), "gemini-2.5-pro"
     except subprocess.TimeoutExpired:
@@ -286,7 +286,7 @@ def analyze_file_group(
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=60,
+                timeout=30,
             )
             return result.stdout.strip(), "gemini-2.5-flash"
         except Exception as flash_error:
@@ -307,7 +307,7 @@ def analyze_file_group(
                     capture_output=True,
                     text=True,
                     check=True,
-                    timeout=60,
+                    timeout=30,
                 )
                 return result.stdout.strip(), "gemini-2.5-flash"
             except Exception as flash_error:
@@ -383,7 +383,7 @@ def analyze_complete_diff(
             capture_output=True,
             text=True,
             check=True,
-            timeout=60,  # 60 second timeout
+            timeout=30,  # 30 second timeout
         )
         return result.stdout.strip(), "gemini-2.5-pro"
     except subprocess.TimeoutExpired:
@@ -396,7 +396,7 @@ def analyze_complete_diff(
                 capture_output=True,
                 text=True,
                 check=True,
-                timeout=60,
+                timeout=30,
             )
             return result.stdout.strip(), "gemini-2.5-flash"
         except Exception as flash_error:
@@ -419,7 +419,7 @@ def analyze_complete_diff(
                     capture_output=True,
                     text=True,
                     check=True,
-                    timeout=60,
+                    timeout=30,
                 )
                 return result.stdout.strip(), "gemini-2.5-flash"
             except Exception as flash_error:
