@@ -1,130 +1,138 @@
-import pytest
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta
+import os
+import sys
 
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+import asyncio
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+
+from bulletin_board.agents.agent_profiles import AGENT_PROFILES
 from bulletin_board.agents.agent_runner import (
     AgentRunner,
     ClaudeAgent,
     GeminiAgent,
     run_agent,
-    run_all_agents
+    run_all_agents,
 )
-from bulletin_board.agents.agent_profiles import AGENT_PROFILES
 
 
 class TestAgentRunner:
     """Test base agent runner functionality"""
-    
+
     @pytest.mark.asyncio
     async def test_get_recent_posts_success(self, mock_agents):
         """Test fetching recent posts from API"""
         agent = ClaudeAgent("test_claude_1")
-        
+
         mock_posts = [
             {"id": 1, "title": "Test Post", "comments": []},
-            {"id": 2, "title": "Another Post", "comments": []}
+            {"id": 2, "title": "Another Post", "comments": []},
         ]
-        
-        with patch('aiohttp.ClientSession') as mock_session:
+
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response = AsyncMock()
             mock_response.status = 200
             mock_response.json = AsyncMock(return_value=mock_posts)
-            
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = mock_response
-            
+
+            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
+                mock_response
+            )
+
             posts = await agent.get_recent_posts()
-        
+
         assert len(posts) == 2
         assert posts[0]["title"] == "Test Post"
-    
+
     @pytest.mark.asyncio
     async def test_post_comment_success(self, mock_agents):
         """Test posting a comment successfully"""
         agent = ClaudeAgent("test_claude_1")
-        
-        with patch('aiohttp.ClientSession') as mock_session:
+
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response = AsyncMock()
             mock_response.status = 201
-            
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
-            
+
+            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
+
             result = await agent.post_comment(1, "Test comment")
-        
+
         assert result is True
-    
+
     @pytest.mark.asyncio
     async def test_post_comment_failure(self, mock_agents):
         """Test handling comment post failure"""
         agent = ClaudeAgent("test_claude_1")
-        
-        with patch('aiohttp.ClientSession') as mock_session:
+
+        with patch("aiohttp.ClientSession") as mock_session:
             mock_response = AsyncMock()
             mock_response.status = 400
-            
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
-            
+
+            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
+
             result = await agent.post_comment(1, "Test comment")
-        
+
         assert result is False
 
 
 class TestClaudeAgent:
     """Test Claude agent specific behavior"""
-    
+
     @pytest.mark.asyncio
     async def test_analyze_and_comment(self, mock_agents):
         """Test Claude agent commenting logic"""
         agent = ClaudeAgent("test_claude_1")
-        
+
         posts = [
-            {
-                "id": 1,
-                "title": "AI News",
-                "content": "Some AI content",
-                "comments": []
-            },
+            {"id": 1, "title": "AI News", "content": "Some AI content", "comments": []},
             {
                 "id": 2,
                 "title": "Tech Update",
                 "content": "Tech content",
                 "comments": [
                     {"agent_id": "test_claude_1", "content": "Already commented"}
-                ]
-            }
+                ],
+            },
         ]
-        
-        with patch.object(agent, 'post_comment', return_value=True) as mock_post:
-            with patch('random.random', return_value=0.3):  # Will comment
+
+        with patch.object(agent, "post_comment", return_value=True) as mock_post:
+            with patch("random.random", return_value=0.3):  # Will comment
                 comments_made = await agent.analyze_and_comment(posts)
-        
+
         # Should only comment on first post (second already has a comment)
         assert comments_made == 1
         mock_post.assert_called_once()
-    
+
     def test_generate_comment(self, mock_agents):
         """Test comment generation"""
         agent = ClaudeAgent("test_claude_1")
         agent.profile = {
-            'role_description': 'technology enthusiast',
-            'display_name': 'TechBot'
+            "role_description": "technology enthusiast",
+            "display_name": "TechBot",
         }
-        
+
         post = {"id": 1, "title": "Test", "content": "Content"}
         comment = agent._generate_comment(post)
-        
+
         assert "technology enthusiast" in comment.lower() or "TechBot" in comment
         assert "[This would be generated by Claude API with full context]" in comment
 
 
 class TestGeminiAgent:
     """Test Gemini agent specific behavior"""
-    
+
     @pytest.mark.asyncio
     async def test_analyze_and_comment_with_reply(self, mock_agents):
         """Test Gemini agent replying to existing comments"""
         agent = GeminiAgent("test_gemini_1")
-        
+
         posts = [
             {
                 "id": 1,
@@ -132,66 +140,70 @@ class TestGeminiAgent:
                 "content": "Let's discuss",
                 "comments": [
                     {"id": 10, "agent_id": "other_agent", "content": "Initial comment"}
-                ]
+                ],
             }
         ]
-        
-        with patch.object(agent, 'post_comment', return_value=True) as mock_post:
-            with patch('random.random', side_effect=[0.3, 0.2]):  # Will comment and reply
+
+        with patch.object(agent, "post_comment", return_value=True) as mock_post:
+            with patch(
+                "random.random", side_effect=[0.3, 0.2]
+            ):  # Will comment and reply
                 comments_made = await agent.analyze_and_comment(posts)
-        
+
         assert comments_made == 1
         # Check that parent_comment_id was passed
         call_args = mock_post.call_args
         assert call_args[0][0] == 1  # post_id
         assert isinstance(call_args[0][1], str)  # comment text
         # Parent comment ID might be passed
-    
+
     def test_generate_reply_comment(self, mock_agents):
         """Test reply comment generation"""
         agent = GeminiAgent("test_gemini_1")
         agent.profile = {
-            'role_description': 'security analyst',
-            'display_name': 'SecBot'
+            "role_description": "security analyst",
+            "display_name": "SecBot",
         }
-        
+
         post = {"id": 1, "title": "Test", "content": "Content"}
         comment = agent._generate_comment(post, is_reply=True)
-        
-        assert "Building on that point" in comment or "interesting perspective" in comment
+
+        assert (
+            "Building on that point" in comment or "interesting perspective" in comment
+        )
         assert "[This would be generated by Gemini CLI with full context]" in comment
 
 
 class TestAgentRunners:
     """Test agent runner utility functions"""
-    
+
     @pytest.mark.asyncio
     async def test_run_specific_agent(self):
         """Test running a specific agent"""
-        with patch('bulletin_board.agents.agent_runner.ClaudeAgent') as MockClaude:
+        with patch("bulletin_board.agents.agent_runner.ClaudeAgent") as MockClaude:
             mock_agent = Mock()
             mock_agent.run = AsyncMock()
             MockClaude.return_value = mock_agent
-            
+
             await run_agent("tech_enthusiast_claude")
-            
+
             MockClaude.assert_called_once_with("tech_enthusiast_claude")
             mock_agent.run.assert_called_once()
-    
+
     @pytest.mark.asyncio
     async def test_run_unknown_agent(self):
         """Test handling unknown agent ID"""
         # Should handle gracefully
         await run_agent("unknown_agent_id")
-    
+
     @pytest.mark.asyncio
     async def test_run_all_agents(self):
         """Test running all configured agents"""
-        with patch('bulletin_board.agents.agent_runner.run_agent') as mock_run:
+        with patch("bulletin_board.agents.agent_runner.run_agent") as mock_run:
             mock_run.return_value = asyncio.Future()
             mock_run.return_value.set_result(None)
-            
+
             await run_all_agents()
-            
+
             # Should be called once for each agent profile
             assert mock_run.call_count == len(AGENT_PROFILES)

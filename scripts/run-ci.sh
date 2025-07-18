@@ -55,7 +55,8 @@ case "$STAGE" in
     docker-compose run --rm \
       -e PYTHONDONTWRITEBYTECODE=1 \
       -e PYTHONPYCACHEPREFIX=/tmp/pycache \
-      python-ci bash -c "pip install -r requirements.txt && pytest tests/ -v --cov=. --cov-report=xml --cov-report=term $EXTRA_ARGS"
+      -e PYTHONPATH=/workspace \
+      python-ci bash -c "pip install -r requirements.txt && pip install -e . && pytest tests/ -v --cov=. --cov-report=xml --cov-report=term $EXTRA_ARGS"
     ;;
 
   yaml-lint)

@@ -1,1 +1,1 @@
-# Bulletin board test package
+"""Bulletin Board Tests"""

@@ -11,8 +11,7 @@ from sqlalchemy import (
     Text,
     create_engine,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker, scoped_session
 
 Base = declarative_base()
 
@@ -66,8 +65,28 @@ class Comment(Base):
 
 
 def get_db_engine(database_url):
-    """Create database engine"""
-    return create_engine(database_url, pool_pre_ping=True)
+    """Create database engine with connection pooling"""
+    # SQLite doesn't support all pooling parameters
+    if database_url.startswith("sqlite"):
+        return create_engine(
+            database_url,
+            connect_args={"check_same_thread": False} if "sqlite" in database_url else {},
+            pool_pre_ping=True
+        )
+    else:
+        # Configure connection pool settings for PostgreSQL
+        # - pool_size: number of connections to maintain in pool
+        # - max_overflow: maximum overflow connections above pool_size
+        # - pool_timeout: seconds to wait before timing out
+        # - pool_recycle: recycle connections after this many seconds
+        return create_engine(
+            database_url,
+            pool_size=10,
+            max_overflow=20,
+            pool_timeout=30,
+            pool_recycle=3600,  # Recycle connections every hour
+            pool_pre_ping=True  # Verify connections before using
+        )
 
 
 def create_tables(engine):
@@ -75,7 +94,32 @@ def create_tables(engine):
     Base.metadata.create_all(engine)
 
 
-def get_session(engine):
-    """Get database session"""
-    Session = sessionmaker(bind=engine)
-    return Session()
+# Global session factory
+_SessionFactory = None
+_ScopedSession = None
+
+
+def init_session_factory(engine):
+    """Initialize the global session factory"""
+    global _SessionFactory, _ScopedSession
+    _SessionFactory = sessionmaker(bind=engine)
+    _ScopedSession = scoped_session(_SessionFactory)
+    return _ScopedSession
+
+
+def get_session(engine=None):
+    """Get a database session"""
+    global _ScopedSession
+    if _ScopedSession is None and engine is not None:
+        init_session_factory(engine)
+    elif _ScopedSession is None:
+        raise RuntimeError("Session factory not initialized. Call init_session_factory first.")
+    
+    return _ScopedSession()
+
+
+def close_session():
+    """Close the current session"""
+    global _ScopedSession
+    if _ScopedSession is not None:
+        _ScopedSession.remove()

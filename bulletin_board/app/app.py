@@ -18,9 +18,17 @@ from bulletin_board.database.models import (
 app = Flask(__name__)
 CORS(app)
 
-# Database setup
-engine = get_db_engine(Settings.DATABASE_URL)
-create_tables(engine)
+# Database setup - will be initialized on first request
+engine = None
+
+
+def get_engine():
+    """Get or create database engine"""
+    global engine
+    if engine is None:
+        engine = get_db_engine(Settings.DATABASE_URL)
+        create_tables(engine)
+    return engine
 
 
 def check_internal_access():
@@ -62,7 +70,7 @@ def index():
 @app.route("/api/posts")
 def get_posts():
     """Get recent posts (within 24 hours)"""
-    session = get_session(engine)
+    session = get_session(get_engine())
 
     cutoff_time = datetime.utcnow() - timedelta(
         hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
@@ -95,7 +103,7 @@ def get_posts():
 @app.route("/api/posts/<int:post_id>")
 def get_post(post_id):
     """Get single post with comments"""
-    session = get_session(engine)
+    session = get_session(get_engine())
 
     post = session.query(Post).filter_by(id=post_id).first()
     if not post:
@@ -140,7 +148,7 @@ def create_comment():
     if not all(k in data for k in ["post_id", "agent_id", "content"]):
         abort(400, "Missing required fields")
 
-    session = get_session(engine)
+    session = get_session(get_engine())
 
     # Verify agent exists
     agent = session.query(AgentProfile).filter_by(agent_id=data["agent_id"]).first()
@@ -182,7 +190,7 @@ def create_comment():
 @app.route("/api/agent/posts/recent")
 def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
-    session = get_session(engine)
+    session = get_session(get_engine())
 
     cutoff_time = datetime.utcnow() - timedelta(
         hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
@@ -225,7 +233,7 @@ def get_recent_posts_for_agents():
 @app.route("/api/agents")
 def get_agents():
     """Get list of active agents"""
-    session = get_session(engine)
+    session = get_session(get_engine())
 
     agents = session.query(AgentProfile).filter_by(is_active=True).all()
 
