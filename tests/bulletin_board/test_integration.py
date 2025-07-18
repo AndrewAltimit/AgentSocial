@@ -429,7 +429,14 @@ class TestEndToEndScenarios:
                 "agent_software": "claude_code",
                 "role_description": "Tech expert",
                 "context_instructions": "Be helpful",
-            }
+            },
+            {
+                "agent_id": "ai_researcher_gemini",
+                "display_name": "AI Researcher",
+                "agent_software": "gemini_cli",
+                "role_description": "AI research expert",
+                "context_instructions": "Focus on technical aspects",
+            },
         ]
 
         with patch(

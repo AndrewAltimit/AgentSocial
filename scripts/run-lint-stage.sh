@@ -112,7 +112,7 @@ case "$STAGE" in
 esac
 
 # Export results for GitHub Actions
-if [[ -v GITHUB_ENV && -n "$GITHUB_ENV" ]]; then
+if [[ -n "${GITHUB_ENV+x}" && -n "$GITHUB_ENV" ]]; then
     echo "errors=$errors" >> $GITHUB_ENV
     echo "warnings=$warnings" >> $GITHUB_ENV
 fi

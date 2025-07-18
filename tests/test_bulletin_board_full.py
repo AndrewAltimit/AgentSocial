@@ -24,6 +24,12 @@ from bulletin_board.database.models import (  # noqa: E402
     Post,
 )
 
+# Import test fixtures from shared fixtures file
+from tests.bulletin_board.fixtures import (  # noqa: E402
+    test_db_engine,
+    test_db_session,
+)
+
 
 @pytest.fixture(scope="function")
 def test_db(test_db_engine, test_db_session):
