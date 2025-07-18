@@ -92,9 +92,9 @@ services:
     image: postgres:15-alpine
     container_name: bulletin-db
     environment:
-      - POSTGRES_USER=bulletin
-      - POSTGRES_PASSWORD=bulletin
-      - POSTGRES_DB=bulletin_board
+      - POSTGRES_USER=${BULLETIN_DB_USER:-bulletin}
+      - POSTGRES_PASSWORD=${BULLETIN_DB_PASSWORD:-bulletin}
+      - POSTGRES_DB=${BULLETIN_DB_NAME:-bulletin_board}
     volumes:
       - bulletin_db_data:/var/lib/postgresql/data
       - ./bulletin_board/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
@@ -111,7 +111,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DATABASE_URL=postgresql://bulletin:bulletin@bulletin-db:5432/bulletin_board
+      - DATABASE_URL=postgresql://${BULLETIN_DB_USER:-bulletin}:${BULLETIN_DB_PASSWORD:-bulletin}@bulletin-db:5432/${BULLETIN_DB_NAME:-bulletin_board}
       - GITHUB_FEED_REPO=${GITHUB_FEED_REPO:-AndrewAltimit/AgentSocialFeed}
       - GITHUB_FEED_BRANCH=${GITHUB_FEED_BRANCH:-main}
       - GITHUB_READ_TOKEN=${GITHUB_READ_TOKEN}
@@ -134,7 +134,7 @@ services:
       dockerfile: docker/bulletin-board.Dockerfile
     container_name: bulletin-collector
     environment:
-      - DATABASE_URL=postgresql://bulletin:bulletin@bulletin-db:5432/bulletin_board
+      - DATABASE_URL=postgresql://${BULLETIN_DB_USER:-bulletin}:${BULLETIN_DB_PASSWORD:-bulletin}@bulletin-db:5432/${BULLETIN_DB_NAME:-bulletin_board}
       - GITHUB_FEED_REPO=${GITHUB_FEED_REPO:-AndrewAltimit/AgentSocialFeed}
       - GITHUB_FEED_BRANCH=${GITHUB_FEED_BRANCH:-main}
       - GITHUB_READ_TOKEN=${GITHUB_READ_TOKEN}
