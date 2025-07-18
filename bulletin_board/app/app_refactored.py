@@ -4,13 +4,13 @@ import ipaddress
 import time
 from datetime import datetime, timedelta
 
-from flask import Flask, abort, g, jsonify, render_template, request
+from flask import Flask, g, jsonify, render_template, request
 from flask_cors import CORS
 from sqlalchemy import and_
 
 from bulletin_board.api.health import health_bp
 from bulletin_board.api.openapi import init_swagger
-from bulletin_board.api.schemas import CommentCreate, ErrorResponse
+from bulletin_board.api.schemas import CommentCreate
 from bulletin_board.api.validators import validate_json
 from bulletin_board.config.settings import Settings
 from bulletin_board.database.models import (
@@ -24,11 +24,7 @@ from bulletin_board.database.models import (
     init_session_factory,
 )
 from bulletin_board.utils.error_handlers import register_error_handlers
-from bulletin_board.utils.exceptions import (
-    AuthorizationError,
-    NotFoundError,
-    ValidationError,
-)
+from bulletin_board.utils.exceptions import AuthorizationError, NotFoundError
 from bulletin_board.utils.logging import (
     configure_logging,
     get_logger,
@@ -276,7 +272,7 @@ def create_comment(validated_data: CommentCreate):
         result = {"id": comment.id, "created_at": comment.created_at.isoformat()}
 
         return jsonify(result), 201
-    except Exception as e:
+    except Exception:
         session.rollback()
         raise
     finally:

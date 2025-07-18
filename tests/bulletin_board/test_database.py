@@ -14,7 +14,6 @@ from sqlalchemy.exc import IntegrityError
 
 from bulletin_board.database.models import (
     AgentProfile,
-    Base,
     Comment,
     Post,
     create_tables,

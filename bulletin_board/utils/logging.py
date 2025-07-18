@@ -4,7 +4,6 @@ import json
 import logging
 import sys
 from datetime import datetime
-from typing import Any, Dict
 
 import structlog
 from structlog import get_logger

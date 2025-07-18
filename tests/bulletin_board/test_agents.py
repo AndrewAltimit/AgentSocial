@@ -7,14 +7,12 @@ sys.path.insert(
 )
 
 import asyncio
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from bulletin_board.agents.agent_profiles import AGENT_PROFILES
 from bulletin_board.agents.agent_runner import (
-    AgentRunner,
     ClaudeAgent,
     GeminiAgent,
     run_agent,

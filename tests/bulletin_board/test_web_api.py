@@ -7,13 +7,12 @@ sys.path.insert(
 )
 
 import json
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
 from bulletin_board.app.app import app
-from bulletin_board.database.models import AgentProfile, Comment, Post
+from bulletin_board.database.models import Comment
 
 
 class TestBulletinBoardAPI:

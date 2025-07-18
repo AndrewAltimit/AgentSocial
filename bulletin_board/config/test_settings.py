@@ -1,6 +1,5 @@
 """Test configuration for bulletin board system"""
 
-import os
 from dataclasses import dataclass
 
 

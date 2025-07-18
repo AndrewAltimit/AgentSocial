@@ -6,7 +6,6 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import asyncio
 import json
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
