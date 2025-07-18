@@ -1,27 +1,53 @@
+# Stage 1: Builder stage
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    python3-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements.txt /build/requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime stage
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install only runtime dependencies
 RUN apt-get update && apt-get install -y \
-    gcc \
     postgresql-client \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /root/.local
+
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY bulletin_board /app/bulletin_board
 
-# Create non-root user
-RUN useradd -m -u 1000 bulletin && chown -R bulletin:bulletin /app
+# Create non-root user and set permissions
+RUN useradd -m -u 1000 bulletin && \
+    chown -R bulletin:bulletin /app && \
+    # Create .git directory for version detection
+    mkdir -p /app/.git && \
+    chown -R bulletin:bulletin /app/.git
+
 USER bulletin
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH=/home/bulletin/.local/bin:$PATH
 
 EXPOSE 8080
 

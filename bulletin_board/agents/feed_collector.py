@@ -43,9 +43,26 @@ class GitHubFavoritesCollector(FeedCollector):
         try:
             favorites = await self._fetch_github_file()
             return self._store_favorites(favorites)
-        except Exception as e:
+        except aiohttp.ClientError as e:
             logger.error(
-                "Error fetching GitHub favorites",
+                "Network error fetching GitHub favorites",
+                error=str(e),
+                error_type=type(e).__name__,
+                repo=Settings.GITHUB_FEED_REPO,
+            )
+            return 0
+        except json.JSONDecodeError as e:
+            logger.error(
+                "Invalid JSON in GitHub favorites file",
+                error=str(e),
+                line=e.lineno,
+                column=e.colno,
+                repo=Settings.GITHUB_FEED_REPO,
+            )
+            return 0
+        except ValueError as e:
+            logger.error(
+                "Data validation error in GitHub favorites",
                 error=str(e),
                 repo=Settings.GITHUB_FEED_REPO,
             )
@@ -68,7 +85,19 @@ class GitHubFavoritesCollector(FeedCollector):
                     content = await response.text()
                     return json.loads(content)
                 else:
-                    raise Exception(f"GitHub API error: {response.status}")
+                    error_body = await response.text()
+                    logger.error(
+                        "GitHub API request failed",
+                        status_code=response.status,
+                        error_body=error_body[:500],  # Truncate for logging
+                    )
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=response.history,
+                        status=response.status,
+                        message=f"GitHub API error: {response.status}",
+                        headers=response.headers,
+                    )
 
     def _store_favorites(self, favorites: List[Dict[str, Any]]) -> int:
         """Store favorites in database"""
@@ -94,6 +123,15 @@ class GitHubFavoritesCollector(FeedCollector):
                 # Post already exists
                 self.db_session.rollback()
                 continue
+            except Exception as e:
+                logger.error(
+                    "Failed to store favorite",
+                    error=str(e),
+                    error_type=type(e).__name__,
+                    item_id=item.get("id", "unknown"),
+                )
+                self.db_session.rollback()
+                continue
 
         return new_count
 
@@ -115,8 +153,26 @@ class NewsCollector(FeedCollector):
         try:
             articles = await self._fetch_news()
             return self._store_articles(articles)
-        except Exception as e:
-            logger.error("Error fetching news", error=str(e))
+        except aiohttp.ClientError as e:
+            logger.error(
+                "Network error fetching news",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            return 0
+        except json.JSONDecodeError as e:
+            logger.error(
+                "Invalid JSON response from News API",
+                error=str(e),
+                line=e.lineno,
+                column=e.colno,
+            )
+            return 0
+        except ValueError as e:
+            logger.error(
+                "Data validation error in news articles",
+                error=str(e),
+            )
             return 0
 
     async def _fetch_news(self) -> List[Dict[str, Any]]:
@@ -134,7 +190,19 @@ class NewsCollector(FeedCollector):
                     data = await response.json()
                     return data.get("articles", [])
                 else:
-                    raise Exception(f"News API error: {response.status}")
+                    error_body = await response.text()
+                    logger.error(
+                        "News API request failed",
+                        status_code=response.status,
+                        error_body=error_body[:500],  # Truncate for logging
+                    )
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=response.history,
+                        status=response.status,
+                        message=f"News API error: {response.status}",
+                        headers=response.headers,
+                    )
 
     def _store_articles(self, articles: List[Dict[str, Any]]) -> int:
         """Store news articles in database"""
@@ -165,6 +233,15 @@ class NewsCollector(FeedCollector):
                 new_count += 1
             except IntegrityError:
                 # Article already exists
+                self.db_session.rollback()
+                continue
+            except Exception as e:
+                logger.error(
+                    "Failed to store article",
+                    error=str(e),
+                    error_type=type(e).__name__,
+                    article_url=article.get("url", "unknown"),
+                )
                 self.db_session.rollback()
                 continue
 

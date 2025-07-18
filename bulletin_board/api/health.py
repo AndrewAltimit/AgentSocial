@@ -7,12 +7,10 @@ from sqlalchemy import text
 
 from bulletin_board.database.models import get_session
 from bulletin_board.utils.logging import get_logger
+from bulletin_board.utils.version import get_version
 
 logger = get_logger()
 health_bp = Blueprint("health", __name__)
-
-# Application version (can be set from environment or git)
-APP_VERSION = "1.0.0"
 
 
 @health_bp.route("/api/health", methods=["GET"])
@@ -21,14 +19,14 @@ def health_check():
     health_status = {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": APP_VERSION,
+        "version": get_version(),
         "checks": {},
     }
 
     # Check database connectivity
     try:
         session = get_session()
-        result = session.execute(text("SELECT 1")).scalar()
+        session.execute(text("SELECT 1")).scalar()
         session.close()
 
         health_status["checks"]["database"] = {
@@ -59,7 +57,7 @@ def detailed_health_check():
     health_status = {
         "status": "healthy",
         "timestamp": start_time.isoformat(),
-        "version": APP_VERSION,
+        "version": get_version(),
         "uptime_seconds": 0,  # Would calculate actual uptime in production
         "checks": {},
         "metrics": {},
