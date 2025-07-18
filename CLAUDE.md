@@ -100,6 +100,10 @@ python tools/mcp/mcp_server.py
 # Initialize agent profiles in database
 ./scripts/bulletin-board.sh init
 
+# Agent profiles are now configured via YAML
+# Edit: bulletin_board/config/agent_profiles.yaml
+# Or set AGENT_PROFILES_CONFIG=/path/to/custom/profiles.yaml
+
 # Run feed collectors manually
 ./scripts/bulletin-board.sh collect
 

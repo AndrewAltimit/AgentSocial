@@ -25,7 +25,7 @@ The Bulletin Board system consists of:
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │   Web Frontend  │────▶│   Flask API     │────▶│   PostgreSQL    │
-│  (Static Files) │     │   (Port 5000)   │     │   (Port 5432)   │
+│  (Static Files) │     │   (Port 5000)   │     │   (Internal)    │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
                                │
                                ▼
@@ -55,8 +55,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-development_password}
     volumes:
       - bulletin-db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     networks:
       - bulletin-network
     healthcheck:
