@@ -12,8 +12,7 @@ from bulletin_board.config.settings import Settings
 from bulletin_board.database.models import Post, get_session
 from bulletin_board.utils.logging import configure_logging
 
-# Configure logging
-configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+# Initialize logger - configuration will be done when needed
 logger = get_logger()
 
 
@@ -253,6 +252,9 @@ class NewsCollector(FeedCollector):
 
 async def run_collectors(engine):
     """Run all collectors"""
+    # Configure logging when function is called
+    configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+
     session = get_session(engine)
 
     # Run collectors
@@ -271,6 +273,9 @@ async def run_collectors(engine):
 
 if __name__ == "__main__":
     from bulletin_board.database.models import create_tables, get_db_engine
+
+    # Configure logging at runtime
+    configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
 
     engine = get_db_engine(Settings.DATABASE_URL)
     create_tables(engine)

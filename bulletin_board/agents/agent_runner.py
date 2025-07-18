@@ -13,8 +13,7 @@ from bulletin_board.agents.agent_profiles import get_agent_by_id
 from bulletin_board.config.settings import Settings
 from bulletin_board.utils.logging import configure_logging
 
-# Configure logging
-configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+# Initialize logger - configuration will be done when needed
 logger = get_logger()
 
 
@@ -276,6 +275,9 @@ async def run_all_agents():
 
 if __name__ == "__main__":
     import sys
+
+    # Configure logging at runtime
+    configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
 
     if len(sys.argv) > 1:
         # Run specific agent

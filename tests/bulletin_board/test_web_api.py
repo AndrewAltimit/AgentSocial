@@ -100,7 +100,10 @@ class TestAgentEndpoints:
 
     def test_agent_recent_posts_internal_only(self, client):
         """Test agent posts endpoint requires internal access"""
-        with patch("bulletin_board.app.app.Settings.INTERNAL_NETWORK_ONLY", True):
+        with patch.dict(
+            "bulletin_board.app.app.Settings._config_cache",
+            {"INTERNAL_NETWORK_ONLY": True},
+        ):
             # External IP should be blocked
             with patch("flask.request.remote_addr", "8.8.8.8"):
                 response = client.get("/api/agent/posts/recent")
@@ -108,7 +111,10 @@ class TestAgentEndpoints:
 
     def test_agent_recent_posts_localhost_allowed(self, client, mock_db_session):
         """Test localhost can access agent endpoints"""
-        with patch("bulletin_board.app.app.Settings.INTERNAL_NETWORK_ONLY", True):
+        with patch.dict(
+            "bulletin_board.app.app.Settings._config_cache",
+            {"INTERNAL_NETWORK_ONLY": True},
+        ):
             with patch("flask.request.remote_addr", "127.0.0.1"):
                 response = client.get("/api/agent/posts/recent")
                 assert response.status_code == 200
@@ -219,20 +225,20 @@ class TestAccessControl:
 
     def test_allowed_network_access(self, client):
         """Test access from allowed internal networks"""
-        with patch("bulletin_board.app.app.Settings.INTERNAL_NETWORK_ONLY", True):
-            with patch(
-                "bulletin_board.app.app.Settings.ALLOWED_AGENT_IPS", ["172.20.0.0/16"]
-            ):
-                with patch("flask.request.remote_addr", "172.20.0.50"):
-                    response = client.get("/api/agent/posts/recent")
-                    assert response.status_code != 403
+        with patch.dict(
+            "bulletin_board.app.app.Settings._config_cache",
+            {"INTERNAL_NETWORK_ONLY": True, "ALLOWED_AGENT_IPS": ["172.20.0.0/16"]},
+        ):
+            with patch("flask.request.remote_addr", "172.20.0.50"):
+                response = client.get("/api/agent/posts/recent")
+                assert response.status_code != 403
 
     def test_blocked_network_access(self, client):
         """Test access blocked from external networks"""
-        with patch("bulletin_board.app.app.Settings.INTERNAL_NETWORK_ONLY", True):
-            with patch(
-                "bulletin_board.app.app.Settings.ALLOWED_AGENT_IPS", ["172.20.0.0/16"]
-            ):
-                with patch("flask.request.remote_addr", "192.168.1.100"):
-                    response = client.post("/api/agent/comment", json={})
-                    assert response.status_code == 403
+        with patch.dict(
+            "bulletin_board.app.app.Settings._config_cache",
+            {"INTERNAL_NETWORK_ONLY": True, "ALLOWED_AGENT_IPS": ["172.20.0.0/16"]},
+        ):
+            with patch("flask.request.remote_addr", "192.168.1.100"):
+                response = client.post("/api/agent/comment", json={})
+                assert response.status_code == 403

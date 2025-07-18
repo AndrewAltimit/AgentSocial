@@ -15,13 +15,15 @@ from bulletin_board.database.models import (
 )
 from bulletin_board.utils.logging import configure_logging
 
-# Configure logging
-configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+# Initialize logger - configuration will be done when needed
 logger = get_logger()
 
 
 def init_agents():
     """Initialize agent profiles in the database"""
+    # Configure logging when function is called
+    configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+
     engine = get_db_engine(Settings.DATABASE_URL)
     create_tables(engine)
 

@@ -18,13 +18,19 @@ from bulletin_board.agents.agent_runner import (  # noqa: E402
     run_agent,
     run_all_agents,
 )
+from bulletin_board.config.settings import Settings  # noqa: E402
+
+# Ensure Settings is initialized
+_ = Settings.get_config()
 
 
 class TestAgentRunner:
     """Test base agent runner functionality"""
 
     @pytest.mark.asyncio
-    async def test_get_recent_posts_success(self, mock_agents):
+    async def test_get_recent_posts_success(
+        self, mock_settings, mock_agent_profiles, mock_agents
+    ):
         """Test fetching recent posts from API"""
         agent = ClaudeAgent("test_claude_1")
 
@@ -38,9 +44,15 @@ class TestAgentRunner:
             mock_response.status = 200
             mock_response.json = AsyncMock(return_value=mock_posts)
 
-            (
-                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
-            ) = mock_response
+            # Set up the mock chain properly
+            mock_get = AsyncMock()
+            mock_get.__aenter__.return_value = mock_response
+
+            # Configure the session mock
+            mock_session_instance = AsyncMock()
+            # Make get() a regular method that returns an async context manager
+            mock_session_instance.get = Mock(return_value=mock_get)
+            mock_session.return_value.__aenter__.return_value = mock_session_instance
 
             posts = await agent.get_recent_posts()
 
@@ -48,7 +60,7 @@ class TestAgentRunner:
         assert posts[0]["title"] == "Test Post"
 
     @pytest.mark.asyncio
-    async def test_post_comment_success(self, mock_agents):
+    async def test_post_comment_success(self, mock_agent_profiles, mock_agents):
         """Test posting a comment successfully"""
         agent = ClaudeAgent("test_claude_1")
 
@@ -65,7 +77,7 @@ class TestAgentRunner:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_post_comment_failure(self, mock_agents):
+    async def test_post_comment_failure(self, mock_agent_profiles, mock_agents):
         """Test handling comment post failure"""
         agent = ClaudeAgent("test_claude_1")
 
@@ -86,7 +98,7 @@ class TestClaudeAgent:
     """Test Claude agent specific behavior"""
 
     @pytest.mark.asyncio
-    async def test_analyze_and_comment(self, mock_agents):
+    async def test_analyze_and_comment(self, mock_agent_profiles, mock_agents):
         """Test Claude agent commenting logic"""
         agent = ClaudeAgent("test_claude_1")
 
@@ -110,7 +122,7 @@ class TestClaudeAgent:
         assert comments_made == 1
         mock_post.assert_called_once()
 
-    def test_generate_comment(self, mock_agents):
+    def test_generate_comment(self, mock_agent_profiles, mock_agents):
         """Test comment generation"""
         agent = ClaudeAgent("test_claude_1")
         agent.profile = {
@@ -129,7 +141,9 @@ class TestGeminiAgent:
     """Test Gemini agent specific behavior"""
 
     @pytest.mark.asyncio
-    async def test_analyze_and_comment_with_reply(self, mock_agents):
+    async def test_analyze_and_comment_with_reply(
+        self, mock_agent_profiles, mock_agents
+    ):
         """Test Gemini agent replying to existing comments"""
         agent = GeminiAgent("test_gemini_1")
 
@@ -157,7 +171,7 @@ class TestGeminiAgent:
         assert isinstance(call_args[0][1], str)  # comment text
         # Parent comment ID might be passed
 
-    def test_generate_reply_comment(self, mock_agents):
+    def test_generate_reply_comment(self, mock_agent_profiles, mock_agents):
         """Test reply comment generation"""
         agent = GeminiAgent("test_gemini_1")
         agent.profile = {

@@ -1,0 +1,613 @@
+time="2025-07-18T12:48:53-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:53-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:53-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:53-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:53-04:00" level=warning msg="/home/miku/Documents/repos/AgentSocial/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+All done! ✨ 🍰 ✨
+53 files would be left unchanged.
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="/home/miku/Documents/repos/AgentSocial/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+Skipped 2 files
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:54-04:00" level=warning msg="/home/miku/Documents/repos/AgentSocial/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+0
+time="2025-07-18T12:48:55-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:55-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:55-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:55-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:55-04:00" level=warning msg="/home/miku/Documents/repos/AgentSocial/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+./scripts/gemini-pr-review.py:148:1: C901 'analyze_large_pr' is too complex (11)
+./scripts/test-gemini-mcp-server.py:13:1: C901 'test_http_server' is too complex (14)
+./scripts/test-gemini-mcp-server.py:95:1: C901 'test_stdio_server' is too complex (13)
+./tools/mcp/gemini_mcp_server.py:211:5: C901 'MCPServer._get_gemini_status' is too complex (13)
+4     C901 'analyze_large_pr' is too complex (11)
+4
+time="2025-07-18T12:48:56-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:56-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:56-04:00" level=warning msg="The \"GITHUB_READ_TOKEN\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:56-04:00" level=warning msg="The \"NEWS_API_KEY\" variable is not set. Defaulting to a blank string."
+time="2025-07-18T12:48:56-04:00" level=warning msg="/home/miku/Documents/repos/AgentSocial/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+************* Module tools.mcp.gemini_mcp_server_http
+tools/mcp/gemini_mcp_server_http.py:42: [C0413(wrong-import-position), ] Import "from tools.gemini.gemini_integration import GeminiIntegration" should be placed at the top of the module
+tools/mcp/gemini_mcp_server_http.py:58: [C0115(missing-class-docstring), ConsultGeminiResponse] Missing class docstring
+tools/mcp/gemini_mcp_server_http.py:64: [C0115(missing-class-docstring), ClearHistoryResponse] Missing class docstring
+tools/mcp/gemini_mcp_server_http.py:167: [W0621(redefined-outer-name), run_http_server] Redefining name 'port' from outer scope (line 180)
+************* Module tools.mcp.gemini_mcp_server
+tools/mcp/gemini_mcp_server.py:15: [R0402(consider-using-from-import), ] Use 'from mcp import types' instead
+tools/mcp/gemini_mcp_server.py:40: [C0413(wrong-import-position), ] Import "from tools.gemini.gemini_integration import get_integration" should be placed at the top of the module
+tools/mcp/gemini_mcp_server.py:43: [C0115(missing-class-docstring), MCPServer] Missing class docstring
+tools/mcp/gemini_mcp_server.py:64: [W1514(unspecified-encoding), MCPServer._load_gemini_config] Using open without explicitly specifying an encoding
+tools/mcp/gemini_mcp_server.py:96: [W1514(unspecified-encoding), MCPServer._load_gemini_config] Using open without explicitly specifying an encoding
+tools/mcp/gemini_mcp_server.py:139: [W0613(unused-argument), MCPServer._setup_tools.gemini_status] Unused argument 'arguments'
+tools/mcp/gemini_mcp_server.py:165: [W0613(unused-argument), MCPServer._setup_tools.clear_gemini_history] Unused argument 'arguments'
+tools/mcp/gemini_mcp_server.py:232: [R1702(too-many-nested-blocks), MCPServer._get_gemini_status] Too many nested blocks (6/5)
+tools/mcp/gemini_mcp_server.py:211: [R0915(too-many-statements), MCPServer._get_gemini_status] Too many statements (68/50)
+tools/mcp/gemini_mcp_server.py:242: [W0612(unused-variable), MCPServer._get_gemini_status] Unused variable 'stdout'
+tools/mcp/gemini_mcp_server.py:426: [C0412(ungrouped-imports), ] Imports from package tools are not grouped
+************* Module main
+main.py:36: [W3101(missing-timeout), MCPClient.execute_tool] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+main.py:48: [W3101(missing-timeout), MCPClient.list_tools] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+************* Module setup
+setup.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+************* Module tests.test_bulletin_board_full
+tests/test_bulletin_board_full.py:114: [C0301(line-too-long), ] Line too long (116/88)
+tests/test_bulletin_board_full.py:130: [C0301(line-too-long), ] Line too long (116/88)
+tests/test_bulletin_board_full.py:179: [C0301(line-too-long), ] Line too long (116/88)
+tests/test_bulletin_board_full.py:183: [C0301(line-too-long), ] Line too long (117/88)
+tests/test_bulletin_board_full.py:16: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.agent_runner import ClaudeAgent" should be placed at the top of the module
+tests/test_bulletin_board_full.py:17: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector" should be placed at the top of the module
+tests/test_bulletin_board_full.py:21: [C0413(wrong-import-position), ] Import "from bulletin_board.config.settings import Settings" should be placed at the top of the module
+tests/test_bulletin_board_full.py:22: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session" should be placed at the top of the module
+tests/test_bulletin_board_full.py:193: [W0612(unused-variable), test_agent_commenting] Unused variable 'i'
+tests/test_bulletin_board_full.py:226: [C0415(import-outside-toplevel), test_web_interface] Import outside toplevel (bulletin_board.app.app.app)
+tests/test_bulletin_board_full.py:311: [C0415(import-outside-toplevel), demonstrate_full_system] Import outside toplevel (traceback)
+tests/test_bulletin_board_full.py:271: [W0612(unused-variable), demonstrate_full_system] Unused variable 'engine'
+************* Module tests.test_mcp_tools
+tests/test_mcp_tools.py:32: [C0413(wrong-import-position), ] Import "from tools.mcp.mcp_server import MCPTools" should be placed at the top of the module
+tests/test_mcp_tools.py:142: [W1404(implicit-str-concat), ] Implicit string concatenation found in assignment
+tests/test_mcp_tools.py:265: [W0613(unused-argument), TestMCPServer.test_execute_tool_success.mock_format_check] Unused argument 'args'
+tests/test_mcp_tools.py:265: [W0613(unused-argument), TestMCPServer.test_execute_tool_success.mock_format_check] Unused argument 'kwargs'
+************* Module tests.test_bulletin_board_validation
+tests/test_bulletin_board_validation.py:13: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.agent_profiles import AGENT_PROFILES" should be placed at the top of the module
+tests/test_bulletin_board_validation.py:14: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.init_agents import init_agents" should be placed at the top of the module
+tests/test_bulletin_board_validation.py:15: [C0413(wrong-import-position), ] Import "from bulletin_board.config.settings import Settings" should be placed at the top of the module
+tests/test_bulletin_board_validation.py:16: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session" should be placed at the top of the module
+tests/test_bulletin_board_validation.py:40: [C0415(import-outside-toplevel), test_database_creation] Import outside toplevel (sqlalchemy.inspect)
+************* Module tests.bulletin_board.conftest
+tests/bulletin_board/conftest.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+tests/bulletin_board/conftest.py:8: [W0401(wildcard-import), ] Wildcard import fixtures
+tests/bulletin_board/conftest.py:14: [W0621(redefined-outer-name), mock_agents] Redefining name 'test_db_session' from outer scope (line 8)
+tests/bulletin_board/conftest.py:43: [W0621(redefined-outer-name), mock_posts] Redefining name 'test_db_session' from outer scope (line 8)
+tests/bulletin_board/conftest.py:8: [W0614(unused-wildcard-import), ] Unused import(s) test_db_engine, test_db_session, mock_settings, mock_db_functions, app, client, api_headers, patch, create_engine, sessionmaker, StaticPool, test_settings and Base from wildcard import of fixtures
+************* Module tests.bulletin_board.async_fixtures
+tests/bulletin_board/async_fixtures.py:44: [C0115(missing-class-docstring), mock_async_context_manager._create_async_cm.AsyncContextManager] Missing class docstring
+************* Module tests.bulletin_board.test_agents
+tests/bulletin_board/test_agents.py:42: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_agents.py:60: [C0301(line-too-long), ] Line too long (121/88)
+tests/bulletin_board/test_agents.py:77: [C0301(line-too-long), ] Line too long (121/88)
+tests/bulletin_board/test_agents.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+tests/bulletin_board/test_agents.py:9: [C0413(wrong-import-position), ] Import "import asyncio" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:10: [C0413(wrong-import-position), ] Import "from unittest.mock import AsyncMock, Mock, patch" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:12: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:14: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.agent_profiles import AGENT_PROFILES" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:15: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.agent_runner import ClaudeAgent, GeminiAgent, run_agent, run_all_agents" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:27: [W0613(unused-argument), TestAgentRunner.test_get_recent_posts_success] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:51: [W0613(unused-argument), TestAgentRunner.test_post_comment_success] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:68: [W0613(unused-argument), TestAgentRunner.test_post_comment_failure] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:89: [W0613(unused-argument), TestClaudeAgent.test_analyze_and_comment] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:122: [W0212(protected-access), TestClaudeAgent.test_generate_comment] Access to a protected member _generate_comment of a client class
+tests/bulletin_board/test_agents.py:113: [W0613(unused-argument), TestClaudeAgent.test_generate_comment] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:132: [W0613(unused-argument), TestGeminiAgent.test_analyze_and_comment_with_reply] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:169: [W0212(protected-access), TestGeminiAgent.test_generate_reply_comment] Access to a protected member _generate_comment of a client class
+tests/bulletin_board/test_agents.py:160: [W0613(unused-argument), TestGeminiAgent.test_generate_reply_comment] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:183: [C0103(invalid-name), TestAgentRunners.test_run_specific_agent] Variable name "MockClaude" doesn't conform to snake_case naming style
+************* Module tests.bulletin_board.test_integration
+tests/bulletin_board/test_integration.py:222: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_integration.py:225: [C0301(line-too-long), ] Line too long (121/88)
+tests/bulletin_board/test_integration.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+tests/bulletin_board/test_integration.py:9: [C0413(wrong-import-position), ] Import "import json" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:10: [C0413(wrong-import-position), ] Import "import tempfile" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:11: [C0413(wrong-import-position), ] Import "from datetime import datetime, timedelta" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:12: [C0413(wrong-import-position), ] Import "from unittest.mock import AsyncMock, patch" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:14: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:16: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.agent_runner import run_all_agents" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:17: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.feed_collector import run_collectors" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:18: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.init_agents import init_agents" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:19: [C0413(wrong-import-position), ] Import "from bulletin_board.app.app import app" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:20: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import create_tables, get_db_engine, get_session" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:87: [C0415(import-outside-toplevel), TestBulletinBoardIntegration.test_database_initialization] Import outside toplevel (bulletin_board.database.models.AgentProfile)
+tests/bulletin_board/test_integration.py:141: [R1705(no-else-return), TestBulletinBoardIntegration.test_feed_collection_cycle.get_mock] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+tests/bulletin_board/test_integration.py:140: [W0613(unused-argument), TestBulletinBoardIntegration.test_feed_collection_cycle.get_mock] Unused argument 'kwargs'
+tests/bulletin_board/test_integration.py:154: [C0415(import-outside-toplevel), TestBulletinBoardIntegration.test_feed_collection_cycle] Import outside toplevel (bulletin_board.database.models.Post)
+tests/bulletin_board/test_integration.py:173: [C0415(import-outside-toplevel), TestBulletinBoardIntegration.test_agent_commenting_cycle] Import outside toplevel (bulletin_board.database.models.Post)
+tests/bulletin_board/test_integration.py:234: [C0415(import-outside-toplevel), TestBulletinBoardIntegration.test_agent_commenting_cycle] Import outside toplevel (bulletin_board.database.models.Comment)
+tests/bulletin_board/test_integration.py:251: [C0415(import-outside-toplevel), TestBulletinBoardIntegration.test_web_interface_integration] Import outside toplevel (bulletin_board.database.models.Comment, bulletin_board.database.models.Post)
+tests/bulletin_board/test_integration.py:312: [C0415(import-outside-toplevel), TestEndToEndScenarios.test_full_bulletin_board_cycle] Import outside toplevel (bulletin_board.database.models.Post)
+tests/bulletin_board/test_integration.py:300: [R0903(too-few-public-methods), TestEndToEndScenarios] Too few public methods (1/2)
+************* Module tests.bulletin_board.test_feed_collectors
+tests/bulletin_board/test_feed_collectors.py:40: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_feed_collectors.py:65: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_feed_collectors.py:98: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_feed_collectors.py:124: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_feed_collectors.py:158: [C0301(line-too-long), ] Line too long (120/88)
+tests/bulletin_board/test_feed_collectors.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+tests/bulletin_board/test_feed_collectors.py:9: [C0413(wrong-import-position), ] Import "import json" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:10: [C0413(wrong-import-position), ] Import "from datetime import datetime" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:11: [C0413(wrong-import-position), ] Import "from unittest.mock import AsyncMock, Mock, patch" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:13: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:15: [C0413(wrong-import-position), ] Import "from bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector, run_collectors" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:20: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import Post" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:172: [W0613(unused-argument), TestRunCollectors.test_run_all_collectors] Unused argument 'mock_github_response'
+tests/bulletin_board/test_feed_collectors.py:172: [W0613(unused-argument), TestRunCollectors.test_run_all_collectors] Unused argument 'mock_news_response'
+tests/bulletin_board/test_feed_collectors.py:167: [R0903(too-few-public-methods), TestRunCollectors] Too few public methods (1/2)
+************* Module tests.bulletin_board.test_database
+tests/bulletin_board/test_database.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+tests/bulletin_board/test_database.py:9: [C0413(wrong-import-position), ] Import "from datetime import datetime, timedelta" should be placed at the top of the module
+tests/bulletin_board/test_database.py:11: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_database.py:12: [C0413(wrong-import-position), ] Import "from sqlalchemy import create_engine, inspect" should be placed at the top of the module
+tests/bulletin_board/test_database.py:13: [C0413(wrong-import-position), ] Import "from sqlalchemy.exc import IntegrityError" should be placed at the top of the module
+tests/bulletin_board/test_database.py:15: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session" should be placed at the top of the module
+************* Module tests.bulletin_board.test_web_api
+tests/bulletin_board/test_web_api.py:11: [C0413(wrong-import-position), ] Import "import json" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:12: [C0413(wrong-import-position), ] Import "from unittest.mock import patch" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:14: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:16: [C0413(wrong-import-position), ] Import "from bulletin_board.app.app import app" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:17: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import Comment" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:31: [W0613(unused-argument), TestBulletinBoardAPI.mock_db_session] Unused argument 'mock_agents'
+tests/bulletin_board/test_web_api.py:42: [W0613(unused-argument), TestBulletinBoardAPI.test_get_recent_posts] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:69: [W0613(unused-argument), TestBulletinBoardAPI.test_get_nonexistent_post] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:74: [W0613(unused-argument), TestBulletinBoardAPI.test_get_agents] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:96: [W0613(unused-argument), TestAgentEndpoints.mock_db_session] Unused argument 'mock_agents'
+tests/bulletin_board/test_web_api.py:109: [W0613(unused-argument), TestAgentEndpoints.test_agent_recent_posts_localhost_allowed] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:141: [W0613(unused-argument), TestAgentEndpoints.test_create_comment_missing_fields] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:153: [W0613(unused-argument), TestAgentEndpoints.test_create_comment_invalid_agent] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:166: [W0613(unused-argument), TestAgentEndpoints.test_create_comment_old_post] Unused argument 'mock_db_session'
+************* Module tests.bulletin_board.fixtures
+tests/bulletin_board/fixtures.py:32: [W0621(redefined-outer-name), test_db_session] Redefining name 'test_db_engine' from outer scope (line 15)
+tests/bulletin_board/fixtures.py:34: [C0103(invalid-name), test_db_session] Variable name "Session" doesn't conform to snake_case naming style
+tests/bulletin_board/fixtures.py:54: [W0621(redefined-outer-name), mock_db_functions] Redefining name 'test_db_engine' from outer scope (line 15)
+tests/bulletin_board/fixtures.py:57: [W0613(unused-argument), mock_db_functions.mock_get_engine] Unused argument 'url'
+tests/bulletin_board/fixtures.py:63: [C0103(invalid-name), mock_db_functions.mock_get_session] Variable name "Session" doesn't conform to snake_case naming style
+tests/bulletin_board/fixtures.py:82: [W0621(redefined-outer-name), app] Redefining name 'mock_settings' from outer scope (line 42)
+tests/bulletin_board/fixtures.py:82: [W0621(redefined-outer-name), app] Redefining name 'mock_db_functions' from outer scope (line 54)
+tests/bulletin_board/fixtures.py:84: [C0415(import-outside-toplevel), app] Import outside toplevel (bulletin_board.app.app.app)
+tests/bulletin_board/fixtures.py:90: [C0415(import-outside-toplevel), app] Import outside toplevel (bulletin_board.app.app)
+tests/bulletin_board/fixtures.py:82: [W0613(unused-argument), app] Unused argument 'mock_settings'
+tests/bulletin_board/fixtures.py:82: [W0613(unused-argument), app] Unused argument 'mock_db_functions'
+tests/bulletin_board/fixtures.py:99: [W0621(redefined-outer-name), client] Redefining name 'app' from outer scope (line 82)
+************* Module examples.gemini-consultation
+examples/gemini-consultation.py:1: [C0103(invalid-name), ] Module name "gemini-consultation" doesn't conform to snake_case naming style
+examples/gemini-consultation.py:22: [W0621(redefined-outer-name), consult_gemini] Redefining name 'response' from outer scope (line 41)
+examples/gemini-consultation.py:22: [W3101(missing-timeout), consult_gemini] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+examples/gemini-consultation.py:26: [R1705(no-else-return), consult_gemini] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+examples/gemini-consultation.py:52: [C0103(invalid-name), ] Constant name "code_context" doesn't conform to UPPER_CASE naming style
+************* Module examples.full-workflow
+examples/full-workflow.py:1: [C0103(invalid-name), ] Module name "full-workflow" doesn't conform to snake_case naming style
+examples/full-workflow.py:27: [W3101(missing-timeout), MCPWorkflow.execute_tool] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+examples/full-workflow.py:29: [R1705(no-else-return), MCPWorkflow.execute_tool] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+examples/full-workflow.py:155: [W0613(unused-argument), MCPWorkflow._create_architecture_animation] Unused argument 'project_info'
+************* Module examples.manim-animation
+examples/manim-animation.py:1: [C0103(invalid-name), ] Module name "manim-animation" doesn't conform to snake_case naming style
+examples/manim-animation.py:22: [W0621(redefined-outer-name), create_animation] Redefining name 'result' from outer scope (line 59)
+examples/manim-animation.py:19: [W3101(missing-timeout), create_animation] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+examples/manim-animation.py:23: [R1705(no-else-return), create_animation] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+examples/manim-animation.py:39: [C0103(invalid-name), ] Constant name "text_animation" doesn't conform to UPPER_CASE naming style
+examples/manim-animation.py:69: [C0103(invalid-name), ] Constant name "math_animation" doesn't conform to UPPER_CASE naming style
+examples/manim-animation.py:108: [C0103(invalid-name), ] Constant name "algorithm_animation" doesn't conform to UPPER_CASE naming style
+************* Module examples.latex-compilation
+examples/latex-compilation.py:1: [C0103(invalid-name), ] Module name "latex-compilation" doesn't conform to snake_case naming style
+examples/latex-compilation.py:22: [W0621(redefined-outer-name), compile_latex] Redefining name 'result' from outer scope (line 104)
+examples/latex-compilation.py:19: [W3101(missing-timeout), compile_latex] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+examples/latex-compilation.py:23: [R1705(no-else-return), compile_latex] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+examples/latex-compilation.py:39: [C0103(invalid-name), ] Constant name "simple_article" doesn't conform to UPPER_CASE naming style
+examples/latex-compilation.py:114: [C0103(invalid-name), ] Constant name "technical_report" doesn't conform to UPPER_CASE naming style
+examples/latex-compilation.py:230: [C0103(invalid-name), ] Constant name "presentation" doesn't conform to UPPER_CASE naming style
+************* Module scripts.test-mcp-server
+scripts/test-mcp-server.py:1: [C0103(invalid-name), ] Module name "test-mcp-server" doesn't conform to snake_case naming style
+scripts/test-mcp-server.py:29: [W3101(missing-timeout), MCPServerTester.test_endpoint] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+scripts/test-mcp-server.py:31: [W3101(missing-timeout), MCPServerTester.test_endpoint] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+************* Module scripts.test-gemini-mcp-server
+scripts/test-gemini-mcp-server.py:1: [C0103(invalid-name), ] Module name "test-gemini-mcp-server" doesn't conform to snake_case naming style
+scripts/test-gemini-mcp-server.py:24: [W3101(missing-timeout), test_http_server] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+scripts/test-gemini-mcp-server.py:38: [W3101(missing-timeout), test_http_server] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+scripts/test-gemini-mcp-server.py:58: [W3101(missing-timeout), test_http_server] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+scripts/test-gemini-mcp-server.py:78: [W3101(missing-timeout), test_http_server] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+scripts/test-gemini-mcp-server.py:13: [R0912(too-many-branches), test_http_server] Too many branches (13/12)
+scripts/test-gemini-mcp-server.py:13: [R0915(too-many-statements), test_http_server] Too many statements (53/50)
+scripts/test-gemini-mcp-server.py:103: [R1702(too-many-nested-blocks), test_stdio_server] Too many nested blocks (6/5)
+scripts/test-gemini-mcp-server.py:184: [C0116(missing-function-docstring), main] Missing function or method docstring
+************* Module scripts.mcp-http-bridge
+scripts/mcp-http-bridge.py:1: [C0103(invalid-name), ] Module name "mcp-http-bridge" doesn't conform to snake_case naming style
+scripts/mcp-http-bridge.py:131: [R1705(no-else-return), list_tools] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+scripts/mcp-http-bridge.py:143: [W0102(dangerous-default-value), execute_tool] Dangerous default value {} as argument
+scripts/mcp-http-bridge.py:152: [R1705(no-else-return), execute_tool] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+************* Module scripts.gemini-pr-review
+scripts/gemini-pr-review.py:1: [C0103(invalid-name), ] Module name "gemini-pr-review" doesn't conform to snake_case naming style
+scripts/gemini-pr-review.py:44: [W1514(unspecified-encoding), get_changed_files] Using open without explicitly specifying an encoding
+scripts/gemini-pr-review.py:135: [W1514(unspecified-encoding), get_project_context] Using open without explicitly specifying an encoding
+scripts/gemini-pr-review.py:226: [W0613(unused-argument), analyze_file_group] Unused argument 'project_context'
+scripts/gemini-pr-review.py:382: [W1514(unspecified-encoding), post_pr_comment] Using open without explicitly specifying an encoding
+scripts/gemini-pr-review.py:405: [W1514(unspecified-encoding), post_pr_comment] Using open without explicitly specifying an encoding
+scripts/gemini-pr-review.py:451: [W1514(unspecified-encoding), main] Using open without explicitly specifying an encoding
+************* Module scripts.validate-bulletin-board
+scripts/validate-bulletin-board.py:1: [C0103(invalid-name), ] Module name "validate-bulletin-board" doesn't conform to snake_case naming style
+scripts/validate-bulletin-board.py:18: [C0413(wrong-import-position), ] Import "from bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session, init_session_factory" should be placed at the top of the module
+scripts/validate-bulletin-board.py:27: [C0413(wrong-import-position), ] Import "from bulletin_board.utils.logging import configure_logging, get_logger" should be placed at the top of the module
+scripts/validate-bulletin-board.py:166: [C0415(import-outside-toplevel), test_api_endpoints] Import outside toplevel (bulletin_board.app.app_refactored.app)
+scripts/validate-bulletin-board.py:174: [C0415(import-outside-toplevel), test_api_endpoints] Import outside toplevel (bulletin_board.app.app_refactored.get_engine)
+scripts/validate-bulletin-board.py:161: [R0915(too-many-statements), test_api_endpoints] Too many statements (51/50)
+scripts/validate-bulletin-board.py:252: [C0415(import-outside-toplevel), test_error_handling] Import outside toplevel (bulletin_board.app.app_refactored.app)
+scripts/validate-bulletin-board.py:332: [R1705(no-else-return), main] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+************* Module bulletin_board.agents.agent_runner
+bulletin_board/agents/agent_runner.py:38: [R1705(no-else-return), AgentRunner.get_recent_posts] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+bulletin_board/agents/agent_runner.py:61: [R1705(no-else-return), AgentRunner.post_comment] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+bulletin_board/agents/agent_runner.py:137: [W0613(unused-argument), ClaudeAgent._generate_comment] Unused argument 'post'
+bulletin_board/agents/agent_runner.py:212: [W0613(unused-argument), GeminiAgent._generate_comment] Unused argument 'post'
+bulletin_board/agents/agent_runner.py:268: [C0415(import-outside-toplevel), run_all_agents] Import outside toplevel (bulletin_board.agents.agent_profiles.AGENT_PROFILES)
+************* Module bulletin_board.agents.agent_profiles
+bulletin_board/agents/agent_profiles.py:23: [W1514(unspecified-encoding), load_agent_profiles] Using open without explicitly specifying an encoding
+************* Module bulletin_board.agents.feed_collector
+bulletin_board/agents/feed_collector.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+bulletin_board/agents/feed_collector.py:20: [R0903(too-few-public-methods), FeedCollector] Too few public methods (1/2)
+bulletin_board/agents/feed_collector.py:87: [R1705(no-else-return), GitHubFavoritesCollector._fetch_github_file] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+bulletin_board/agents/feed_collector.py:31: [R0903(too-few-public-methods), GitHubFavoritesCollector] Too few public methods (1/2)
+bulletin_board/agents/feed_collector.py:192: [R1705(no-else-return), NewsCollector._fetch_news] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+bulletin_board/agents/feed_collector.py:142: [R0903(too-few-public-methods), NewsCollector] Too few public methods (1/2)
+bulletin_board/agents/feed_collector.py:254: [W0621(redefined-outer-name), run_collectors] Redefining name 'engine' from outer scope (line 275)
+************* Module bulletin_board.app.app_refactored
+bulletin_board/app/app_refactored.py:53: [C0103(invalid-name), ] Constant name "engine" doesn't conform to UPPER_CASE naming style
+************* Module bulletin_board.app.app
+bulletin_board/app/app.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+bulletin_board/app/app.py:22: [C0103(invalid-name), ] Constant name "engine" doesn't conform to UPPER_CASE naming style
+************* Module bulletin_board.database.models
+bulletin_board/database/models.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+bulletin_board/database/models.py:19: [C0115(missing-class-docstring), AgentProfile] Missing class docstring
+bulletin_board/database/models.py:19: [R0903(too-few-public-methods), AgentProfile] Too few public methods (0/2)
+bulletin_board/database/models.py:34: [C0115(missing-class-docstring), Post] Missing class docstring
+bulletin_board/database/models.py:34: [R0903(too-few-public-methods), Post] Too few public methods (0/2)
+bulletin_board/database/models.py:52: [C0115(missing-class-docstring), Comment] Missing class docstring
+bulletin_board/database/models.py:52: [R0903(too-few-public-methods), Comment] Too few public methods (0/2)
+bulletin_board/database/models.py:70: [R1705(no-else-return), get_db_engine] Unnecessary "else" after "return", remove the "else" and de-indent the code inside it
+bulletin_board/database/models.py:100: [C0103(invalid-name), ] Constant name "_SessionFactory" doesn't conform to UPPER_CASE naming style
+bulletin_board/database/models.py:101: [C0103(invalid-name), ] Constant name "_ScopedSession" doesn't conform to UPPER_CASE naming style
+************* Module bulletin_board.config.test_settings
+bulletin_board/config/test_settings.py:21: [C0103(invalid-name), TestSettings] Attribute name "ALLOWED_AGENT_IPS" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:11: [C0103(invalid-name), TestSettings] Attribute name "DATABASE_URL" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:14: [C0103(invalid-name), TestSettings] Attribute name "APP_HOST" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:15: [C0103(invalid-name), TestSettings] Attribute name "APP_PORT" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:16: [C0103(invalid-name), TestSettings] Attribute name "APP_DEBUG" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:19: [C0103(invalid-name), TestSettings] Attribute name "AGENT_ANALYSIS_CUTOFF_HOURS" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:20: [C0103(invalid-name), TestSettings] Attribute name "INTERNAL_NETWORK_ONLY" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:24: [C0103(invalid-name), TestSettings] Attribute name "GITHUB_API_URL" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:25: [C0103(invalid-name), TestSettings] Attribute name "GITHUB_READ_TOKEN" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:26: [C0103(invalid-name), TestSettings] Attribute name "NEWS_API_URL" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:27: [C0103(invalid-name), TestSettings] Attribute name "NEWS_API_KEY" doesn't conform to snake_case naming style
+bulletin_board/config/test_settings.py:30: [C0103(invalid-name), TestSettings] Attribute name "BULLETIN_BOARD_API_URL" doesn't conform to snake_case naming style
+************* Module bulletin_board.config.settings
+bulletin_board/config/settings.py:1: [C0114(missing-module-docstring), ] Missing module docstring
+bulletin_board/config/settings.py:80: [C0415(import-outside-toplevel), Settings._load_config] Import outside toplevel (sys)
+bulletin_board/config/settings.py:6: [R0903(too-few-public-methods), Settings] Too few public methods (1/2)
+************* Module bulletin_board.api.health
+bulletin_board/api/health.py:112: [C0415(import-outside-toplevel), detailed_health_check] Import outside toplevel (psutil)
+************* Module bulletin_board.api.schemas
+bulletin_board/api/schemas.py:30: [W0107(unnecessary-pass), AgentProfileCreate] Unnecessary pass statement
+bulletin_board/api/schemas.py:40: [C0115(missing-class-docstring), AgentProfile.Config] Missing class docstring
+bulletin_board/api/schemas.py:40: [R0903(too-few-public-methods), AgentProfile.Config] Too few public methods (0/2)
+bulletin_board/api/schemas.py:62: [W0107(unnecessary-pass), PostCreate] Unnecessary pass statement
+bulletin_board/api/schemas.py:73: [C0115(missing-class-docstring), Post.Config] Missing class docstring
+bulletin_board/api/schemas.py:73: [R0903(too-few-public-methods), Post.Config] Too few public methods (0/2)
+bulletin_board/api/schemas.py:83: [C0116(missing-function-docstring), CommentBase.content_not_empty] Missing function or method docstring
+bulletin_board/api/schemas.py:109: [C0115(missing-class-docstring), Comment.Config] Missing class docstring
+bulletin_board/api/schemas.py:109: [R0903(too-few-public-methods), Comment.Config] Too few public methods (0/2)
+bulletin_board/api/schemas.py:121: [C0115(missing-class-docstring), PostWithComments.Config] Missing class docstring
+bulletin_board/api/schemas.py:121: [R0903(too-few-public-methods), PostWithComments.Config] Too few public methods (0/2)
+bulletin_board/api/schemas.py:153: [C0116(missing-function-docstring), PaginationParams.offset] Missing function or method docstring
+bulletin_board/api/schemas.py:157: [C0116(missing-function-docstring), PaginationParams.limit] Missing function or method docstring
+bulletin_board/api/schemas.py:171: [C0116(missing-function-docstring), PaginatedResponse.calculate_pages] Missing function or method docstring
+bulletin_board/api/schemas.py:171: [W0613(unused-argument), PaginatedResponse.calculate_pages] Unused argument 'v'
+************* Module bulletin_board.utils.version
+bulletin_board/utils/version.py:62: [W1514(unspecified-encoding), get_version] Using open without explicitly specifying an encoding
+************* Module bulletin_board.utils.exceptions
+bulletin_board/utils/exceptions.py:24: [W0107(unnecessary-pass), DatabaseError] Unnecessary pass statement
+bulletin_board/utils/exceptions.py:30: [W0107(unnecessary-pass), ValidationError] Unnecessary pass statement
+************* Module bulletin_board.utils.error_handlers
+bulletin_board/utils/error_handlers.py:118: [W0613(unused-argument), register_error_handlers.bad_request] Unused argument 'error'
+bulletin_board/utils/error_handlers.py:122: [W0613(unused-argument), register_error_handlers.not_found] Unused argument 'error'
+bulletin_board/utils/error_handlers.py:126: [W0613(unused-argument), register_error_handlers.method_not_allowed] Unused argument 'error'
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[211:245]
+==bulletin_board.app.app_refactored:[287:321]
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for post in posts:
+        # Include existing comments for context
+        comments = []
+        for comment in post.comments:
+            comments.append(
+                {
+                    "agent_id": comment.agent_id,
+                    "content": comment.content,
+                    "created_at": comment.created_at.isoformat(),
+                }
+            )
+
+        result.append(
+            {
+                "id": post.id,
+                "title": post.title,
+                "content": post.content,
+                "source": post.source,
+                "created_at": post.created_at.isoformat(),
+                "comments": comments,
+            }
+        )
+
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[91:115]
+==bulletin_board.app.app_refactored:[152:176]
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for post in posts:
+        result.append(
+            {
+                "id": post.id,
+                "title": post.title,
+                "content": post.content,
+                "source": post.source,
+                "url": post.url,
+                "created_at": post.created_at.isoformat(),
+                "comment_count": len(post.comments),
+            }
+        )
+
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[129:155]
+==bulletin_board.app.app_refactored:[191:217]
+        comments = []
+        for comment in post.comments:
+            comments.append(
+                {
+                    "id": comment.id,
+                    "agent_id": comment.agent_id,
+                    "agent_name": (
+                        comment.agent.display_name if comment.agent else "Unknown"
+                    ),
+                    "content": comment.content,
+                    "created_at": comment.created_at.isoformat(),
+                    "parent_id": comment.parent_comment_id,
+                }
+            )
+
+        result = {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "source": post.source,
+            "url": post.url,
+            "created_at": post.created_at.isoformat(),
+            "metadata": post.post_metadata,
+            "comments": comments,
+        }
+
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[35:60]
+==bulletin_board.app.app_refactored:[107:132]
+    if not Settings.INTERNAL_NETWORK_ONLY:
+        return True
+
+    client_ip = request.remote_addr
+
+    # Allow localhost
+    if client_ip in ["127.0.0.1", "::1"]:
+        return True
+
+    # Check allowed networks
+    for allowed_network in Settings.ALLOWED_AGENT_IPS:
+        try:
+            if ipaddress.ip_address(client_ip) in ipaddress.ip_network(allowed_network):
+                return True
+        except ValueError:
+            continue
+
+    return False
+
+
+@app.before_request
+def limit_remote_addr():
+    """Restrict access to internal network for agent endpoints"""
+    if request.path.startswith("/api/agent/"):
+        if not check_internal_access():
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==examples.latex-compilation:[16:35]
+==examples.manim-animation:[16:35]
+    }
+
+    response = requests.post(url, json=payload)
+
+    if response.status_code == 200:
+        result = response.json()
+        if result["success"]:
+            return result["result"]
+        else:
+            print(f"Error: {result.get('error')}")
+            return None
+    else:
+        print(f"HTTP Error: {response.status_code}")
+        return None
+
+
+# Example LaTeX documents
+if __name__ == "__main__":
+    # Example 1: Simple article
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==examples.gemini-consultation:[21:38]
+==examples.manim-animation:[18:35]
+    response = requests.post(url, json=payload)
+
+    if response.status_code == 200:
+        result = response.json()
+        if result["success"]:
+            return result["result"]
+        else:
+            print(f"Error: {result.get('error')}")
+            return None
+    else:
+        print(f"HTTP Error: {response.status_code}")
+        return None
+
+
+# Example usage
+if __name__ == "__main__":
+    # Example 1: Simple technical question
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[254:267]
+==bulletin_board.app.app_refactored:[332:345]
+        agents = session.query(AgentProfile).filter_by(is_active=True).all()
+
+        result = []
+        for agent in agents:
+            result.append(
+                {
+                    "agent_id": agent.agent_id,
+                    "display_name": agent.display_name,
+                    "agent_software": agent.agent_software,
+                    "role_description": agent.role_description,
+                }
+            )
+
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[91:103]
+==bulletin_board.app.app_refactored:[287:300]
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
+
+    result = []
+    for post in posts:
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[211:224]
+==bulletin_board.app.app_refactored:[152:164]
+        cutoff_time = datetime.utcnow() - timedelta(
+            hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+        )
+        posts = (
+            session.query(Post)
+            .filter(Post.created_at > cutoff_time)
+            .order_by(Post.created_at.desc())
+            .all()
+        )
+
+        result = []
+        for post in posts:
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==tools.mcp.gemini_mcp_server:[21:30]
+==tools.mcp.gemini_mcp_server_http:[24:33]
+    if os.path.exists("/.dockerenv") or os.environ.get("CONTAINER_ENV"):
+        print(
+            "ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr
+        )
+        print(
+            "The Gemini CLI requires Docker access and must run on the host system.",
+            file=sys.stderr,
+        )
+        print("Please launch this server directly on the host with:", file=sys.stderr)
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==scripts.validate-bulletin-board:[46:53]
+==tests.test_bulletin_board_full:[52:59]
+            context_instructions="Be helpful in testing",
+            is_active=True,
+        ),
+        AgentProfile(
+            agent_id="test_gemini",
+            display_name="Test Gemini",
+            agent_software="gemini_cli",
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[105:111]
+==bulletin_board.app.app_refactored:[207:213]
+                "id": post.id,
+                "title": post.title,
+                "content": post.content,
+                "source": post.source,
+                "url": post.url,
+                "created_at": post.created_at.isoformat(),
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[145:151]
+==bulletin_board.app.app_refactored:[166:172]
+        "id": post.id,
+        "title": post.title,
+        "content": post.content,
+        "source": post.source,
+        "url": post.url,
+        "created_at": post.created_at.isoformat(),
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[103:109]
+==bulletin_board.app.app_refactored:[310:316]
+            result.append(
+                {
+                    "id": post.id,
+                    "title": post.title,
+                    "content": post.content,
+                    "source": post.source,
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==bulletin_board.app.app:[234:240]
+==bulletin_board.app.app_refactored:[164:170]
+            result.append(
+                {
+                    "id": post.id,
+                    "title": post.title,
+                    "content": post.content,
+                    "source": post.source,
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==tests.bulletin_board.async_fixtures:[58:64]
+==tests.bulletin_board.conftest:[107:113]
+    return {
+        "status": "ok",
+        "totalResults": 2,
+        "articles": [
+            {
+                "source": {"id": "techcrunch", "name": "TechCrunch"},
+bulletin_board/utils/error_handlers.py:1: [R0801(duplicate-code), ] Similar lines in 2 files
+==scripts.validate-bulletin-board:[37:45]
+==tests.test_bulletin_board_full:[43:51]
+    session = get_session(engine)
+
+    # Create test agents
+    agents = [
+        AgentProfile(
+            agent_id="test_claude",
+            display_name="Test Claude",
+            agent_software="claude_code",
+
+-----------------------------------
+Your code has been rated at 9.25/10
+
