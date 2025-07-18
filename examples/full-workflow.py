@@ -95,7 +95,7 @@ class MCPWorkflow:
 
         latex_content = self._create_documentation_latex(project_info)
         doc_result = self.execute_tool(
-            "compile_latex", {"content": latex_content, "format": "pdf"}
+            "compile_latex", {"content": latex_content, "output_format": "pdf"}
         )
         results["documentation"] = doc_result
 

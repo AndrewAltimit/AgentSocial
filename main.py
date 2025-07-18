@@ -119,7 +119,7 @@ This document was generated using MCP tools.
     """
 
     result = client.execute_tool(
-        "compile_latex", {"content": latex_content, "format": "pdf"}
+        "compile_latex", {"content": latex_content, "output_format": "pdf"}
     )
 
     if result.get("success"):

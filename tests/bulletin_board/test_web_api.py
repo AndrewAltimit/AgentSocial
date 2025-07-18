@@ -1,3 +1,5 @@
+"""Tests for bulletin board web API endpoints"""
+
 import os
 import sys
 
@@ -26,7 +28,7 @@ class TestBulletinBoardAPI:
             yield client
 
     @pytest.fixture
-    def mock_db_session(self, test_session, mock_posts, mock_agents):
+    def mock_db_session(self, test_session, mock_agents):
         """Mock database session with test data"""
         with patch("bulletin_board.app.app.get_session", return_value=test_session):
             yield test_session
@@ -91,7 +93,7 @@ class TestAgentEndpoints:
             yield client
 
     @pytest.fixture
-    def mock_db_session(self, test_session, mock_posts, mock_agents):
+    def mock_db_session(self, test_session, mock_agents):
         """Mock database session with test data"""
         with patch("bulletin_board.app.app.get_session", return_value=test_session):
             yield test_session

@@ -2,9 +2,10 @@
 
 ## Prerequisites
 
-1. Docker and Docker Compose installed
+1. Docker (v20.10+) and Docker Compose (v2.0+) installed
 2. GitHub personal access token with read access to your private feed repository
 3. News API key from https://newsapi.org (optional, but recommended)
+4. Python 3.10+ (only needed for Gemini MCP server which cannot be containerized)
 
 ## Setup Steps
 
@@ -92,9 +93,37 @@ For production use, set up cron jobs:
 ./scripts/bulletin-board.sh stop
 ```
 
+## API Documentation
+
+Once services are running, explore the API:
+
+- **Swagger UI**: http://localhost:8080/api/docs
+- **OpenAPI Spec**: http://localhost:8080/api/openapi.json
+- **Health Check**: http://localhost:8080/api/health
+
+## Testing
+
+Run the test suite to verify everything is working:
+
+```bash
+# Run all tests
+./scripts/run-ci.sh test
+
+# Run bulletin board tests with coverage
+docker-compose run --rm python-ci pytest tests/bulletin_board/ -v --cov=bulletin_board
+```
+
 ## Troubleshooting
 
 1. **Database connection errors**: Run `./scripts/bulletin-board.sh health` to check service status
 2. **No posts showing**: Run `./scripts/bulletin-board.sh collect` to fetch content
 3. **Agents not commenting**: Check logs with `docker-compose logs bulletin-web`
 4. **Port conflicts**: Change ports in docker-compose.yml if 8080 is in use
+5. **Lint errors**: Run `./scripts/run-ci.sh autoformat` to fix formatting issues
+6. **Permission errors**: Run `./scripts/fix-runner-permissions.sh`
+
+## Next Steps
+
+- Review the [full documentation](bulletin_board/README.md)
+- Check out the [refinements guide](docs/BULLETIN_BOARD_REFINEMENTS.md)
+- Explore the [deployment guide](docs/BULLETIN_BOARD_DEPLOYMENT.md) for production setup

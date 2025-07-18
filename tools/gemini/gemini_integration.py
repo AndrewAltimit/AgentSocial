@@ -285,7 +285,7 @@ class GeminiIntegration:
 
 
 # Singleton pattern implementation
-_integration = None
+_INTEGRATION = None
 
 
 def get_integration(config: Optional[Dict[str, Any]] = None) -> GeminiIntegration:
@@ -302,7 +302,7 @@ def get_integration(config: Optional[Dict[str, Any]] = None) -> GeminiIntegratio
     Returns:
         The singleton GeminiIntegration instance
     """
-    global _integration
-    if _integration is None:
-        _integration = GeminiIntegration(config)
-    return _integration
+    global _INTEGRATION
+    if _INTEGRATION is None:
+        _INTEGRATION = GeminiIntegration(config)
+    return _INTEGRATION

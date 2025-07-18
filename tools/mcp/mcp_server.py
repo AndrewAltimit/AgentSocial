@@ -8,13 +8,14 @@ import asyncio
 import json
 import logging
 import os
+import shutil
 import subprocess
 import tempfile
 from typing import Any, Dict, Optional
 
 import mcp.server.stdio
-import mcp.types as types
 from fastapi import FastAPI, HTTPException
+from mcp import types
 from pydantic import BaseModel
 
 # Configure logging
@@ -26,11 +27,15 @@ app = FastAPI(title="MCP Server", version="1.0.0")
 
 
 class ToolRequest(BaseModel):
+    """Request model for MCP tool invocation"""
+
     tool: str
     arguments: Dict[str, Any]
 
 
 class ToolResponse(BaseModel):
+    """Response model for MCP tool invocation"""
+
     success: bool
     result: Any
     error: Optional[str] = None
@@ -131,25 +136,25 @@ class MCPTools:
             return {"error": str(e)}
 
     @staticmethod
-    async def compile_latex(content: str, format: str = "pdf") -> Dict[str, Any]:
+    async def compile_latex(content: str, output_format: str = "pdf") -> Dict[str, Any]:
         """Compile LaTeX document"""
         try:
             # Create temporary directory
             with tempfile.TemporaryDirectory() as tmpdir:
                 # Write LaTeX file
                 tex_file = os.path.join(tmpdir, "document.tex")
-                with open(tex_file, "w") as f:
+                with open(tex_file, "w", encoding="utf-8") as f:
                     f.write(content)
 
                 # Compile based on format
-                if format == "pdf":
+                if output_format == "pdf":
                     cmd = ["pdflatex", "-interaction=nonstopmode", tex_file]
-                elif format == "dvi":
+                elif output_format == "dvi":
                     cmd = ["latex", "-interaction=nonstopmode", tex_file]
-                elif format == "ps":
+                elif output_format == "ps":
                     cmd = ["latex", "-interaction=nonstopmode", tex_file]
                 else:
-                    return {"error": f"Unsupported format: {format}"}
+                    return {"error": f"Unsupported format: {output_format}"}
 
                 # Run compilation (twice for references)
                 for _ in range(2):
@@ -158,29 +163,27 @@ class MCPTools:
                     )
 
                 # Convert DVI to PS if needed
-                if format == "ps" and result.returncode == 0:
+                if output_format == "ps" and result.returncode == 0:
                     dvi_file = os.path.join(tmpdir, "document.dvi")
                     ps_file = os.path.join(tmpdir, "document.ps")
                     subprocess.run(["dvips", dvi_file, "-o", ps_file])
 
                 # Check for output
-                output_file = os.path.join(tmpdir, f"document.{format}")
+                output_file = os.path.join(tmpdir, f"document.{output_format}")
                 if os.path.exists(output_file):
                     # Copy to output directory
                     output_dir = "/app/output/latex"
                     os.makedirs(output_dir, exist_ok=True)
 
-                    import shutil
-
                     output_path = os.path.join(
-                        output_dir, f"document_{os.getpid()}.{format}"
+                        output_dir, f"document_{os.getpid()}.{output_format}"
                     )
                     shutil.copy(output_file, output_path)
 
                     return {
                         "success": True,
                         "output_path": output_path,
-                        "format": format,
+                        "format": output_format,
                     }
 
                 return {
