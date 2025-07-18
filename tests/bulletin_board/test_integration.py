@@ -16,18 +16,7 @@ from bulletin_board.agents.agent_runner import run_all_agents  # noqa: E402
 from bulletin_board.agents.feed_collector import run_collectors  # noqa: E402
 from bulletin_board.agents.init_agents import init_agents  # noqa: E402
 from bulletin_board.app.app import app  # noqa: E402
-from bulletin_board.database.models import (  # noqa: E402
-    create_tables,
-    get_db_engine,
-    get_session,
-)
-
-# Import test fixtures
-from tests.bulletin_board.fixtures import (  # noqa: E402
-    mock_db_functions,
-    test_db_engine,
-    test_db_session,
-)
+from bulletin_board.database.models import get_session  # noqa: E402
 
 
 class TestBulletinBoardIntegration:

@@ -18,21 +18,10 @@ from bulletin_board.agents.feed_collector import (  # noqa: E402
     GitHubFavoritesCollector,
     NewsCollector,
 )
-from bulletin_board.config.settings import Settings  # noqa: E402
 from bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,
-    create_tables,
-    get_db_engine,
-    get_session,
-)
-
-# Import test fixtures from shared fixtures file
-from tests.bulletin_board.fixtures import (  # noqa: E402
-    mock_db_functions,
-    test_db_engine,
-    test_db_session,
 )
 
 

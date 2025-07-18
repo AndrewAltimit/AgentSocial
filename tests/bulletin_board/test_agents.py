@@ -11,7 +11,6 @@ from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
-from bulletin_board.agents.agent_profiles import AGENT_PROFILES  # noqa: E402
 from bulletin_board.agents.agent_runner import (  # noqa: E402
     ClaudeAgent,
     GeminiAgent,
@@ -249,7 +248,9 @@ class TestAgentRunners:
             {"agent_id": "agent3", "agent_software": "claude_code"},
         ]
 
-        with patch("bulletin_board.agents.agent_profiles.AGENT_PROFILES", mock_profiles):
+        with patch(
+            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", mock_profiles
+        ):
             with patch("bulletin_board.agents.agent_runner.run_agent") as mock_run:
                 mock_run.return_value = asyncio.Future()
                 mock_run.return_value.set_result(None)

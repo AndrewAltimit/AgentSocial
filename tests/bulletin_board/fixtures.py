@@ -114,7 +114,7 @@ def mock_db_functions(test_db_engine):
                                     try:
                                         session.rollback()
                                         session.close()
-                                    except:
+                                    except Exception:
                                         pass
 
 
