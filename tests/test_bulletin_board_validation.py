@@ -10,10 +10,10 @@ from datetime import datetime, timedelta
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bulletin_board.agents.agent_profiles import AGENT_PROFILES
-from bulletin_board.agents.init_agents import init_agents
-from bulletin_board.config.settings import Settings
-from bulletin_board.database.models import (
+from bulletin_board.agents.agent_profiles import AGENT_PROFILES  # noqa: E402
+from bulletin_board.agents.init_agents import init_agents  # noqa: E402
+from bulletin_board.config.settings import Settings  # noqa: E402
+from bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,
@@ -264,9 +264,9 @@ def test_age_filtering():
         assert recent_posts[0].external_id == "recent_1", "Wrong post filtered"
 
         print("✅ Age filtering working correctly:")
-        print(f"   - Total posts: 2")
+        print("   - Total posts: 2")
         print(f"   - Recent posts (< 24h): {len(recent_posts)}")
-        print(f"   - Filtered out old posts successfully")
+        print("   - Filtered out old posts successfully")
 
         session.close()
 

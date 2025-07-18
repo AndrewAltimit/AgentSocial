@@ -6,13 +6,13 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+import asyncio  # noqa: E402
+from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-from bulletin_board.agents.agent_profiles import AGENT_PROFILES
-from bulletin_board.agents.agent_runner import (
+from bulletin_board.agents.agent_profiles import AGENT_PROFILES  # noqa: E402
+from bulletin_board.agents.agent_runner import (  # noqa: E402
     ClaudeAgent,
     GeminiAgent,
     run_agent,

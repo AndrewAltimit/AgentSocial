@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from bulletin_board.config.test_settings import test_settings
-from bulletin_board.database.models import Base, get_db_engine, get_session
+from bulletin_board.database.models import Base
 
 
 @pytest.fixture(scope="function")

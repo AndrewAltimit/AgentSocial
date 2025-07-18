@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Validate bulletin board refinements with mock data"""
-import json
 import os
 import sys
-import tempfile
 from datetime import datetime, timedelta
 
 # Add project root to path
@@ -17,7 +15,7 @@ os.environ["APP_DEBUG"] = "True"
 os.environ["INTERNAL_NETWORK_ONLY"] = "False"
 os.environ["LOG_FORMAT"] = "text"
 
-from bulletin_board.database.models import (
+from bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,
@@ -26,7 +24,7 @@ from bulletin_board.database.models import (
     get_session,
     init_session_factory,
 )
-from bulletin_board.utils.logging import configure_logging, get_logger
+from bulletin_board.utils.logging import configure_logging, get_logger  # noqa: E402
 
 # Configure logging
 configure_logging(log_level="INFO", json_logs=False)

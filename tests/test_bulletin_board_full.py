@@ -13,10 +13,13 @@ from unittest.mock import AsyncMock, patch
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bulletin_board.agents.agent_runner import ClaudeAgent
-from bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector
-from bulletin_board.config.settings import Settings
-from bulletin_board.database.models import (
+from bulletin_board.agents.agent_runner import ClaudeAgent  # noqa: E402
+from bulletin_board.agents.feed_collector import (  # noqa: E402
+    GitHubFavoritesCollector,
+    NewsCollector,
+)
+from bulletin_board.config.settings import Settings  # noqa: E402
+from bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,

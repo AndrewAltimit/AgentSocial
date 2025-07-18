@@ -6,13 +6,13 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import json
-from unittest.mock import patch
+import json  # noqa: E402
+from unittest.mock import patch  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-from bulletin_board.app.app import app
-from bulletin_board.database.models import Comment
+from bulletin_board.app.app import app  # noqa: E402
+from bulletin_board.database.models import Comment  # noqa: E402
 
 
 class TestBulletinBoardAPI:

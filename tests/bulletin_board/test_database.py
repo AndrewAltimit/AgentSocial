@@ -6,13 +6,13 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # noqa: E402
 
-import pytest
-from sqlalchemy import create_engine, inspect
-from sqlalchemy.exc import IntegrityError
+import pytest  # noqa: E402
+from sqlalchemy import create_engine, inspect  # noqa: E402
+from sqlalchemy.exc import IntegrityError  # noqa: E402
 
-from bulletin_board.database.models import (
+from bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,

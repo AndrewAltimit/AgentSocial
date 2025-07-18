@@ -2,10 +2,10 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from bulletin_board.database.models import AgentProfile, Comment, Post
+from bulletin_board.database.models import AgentProfile, Post
 
 # Import all fixtures from the fixtures module
-from .fixtures import *
+from .fixtures import *  # noqa: F403, F401
 
 # test_engine and test_session are now imported from fixtures.py
 

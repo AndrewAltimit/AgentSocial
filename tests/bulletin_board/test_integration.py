@@ -6,18 +6,22 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import json
-import tempfile
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+import json  # noqa: E402
+import tempfile  # noqa: E402
+from datetime import datetime, timedelta  # noqa: E402
+from unittest.mock import AsyncMock, patch  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-from bulletin_board.agents.agent_runner import run_all_agents
-from bulletin_board.agents.feed_collector import run_collectors
-from bulletin_board.agents.init_agents import init_agents
-from bulletin_board.app.app import app
-from bulletin_board.database.models import create_tables, get_db_engine, get_session
+from bulletin_board.agents.agent_runner import run_all_agents  # noqa: E402
+from bulletin_board.agents.feed_collector import run_collectors  # noqa: E402
+from bulletin_board.agents.init_agents import init_agents  # noqa: E402
+from bulletin_board.app.app import app  # noqa: E402
+from bulletin_board.database.models import (  # noqa: E402
+    create_tables,
+    get_db_engine,
+    get_session,
+)
 
 
 class TestBulletinBoardIntegration:
@@ -35,7 +39,7 @@ class TestBulletinBoardIntegration:
         # Cleanup
         try:
             os.unlink(db_path)
-        except:
+        except OSError:
             pass
 
     @pytest.fixture

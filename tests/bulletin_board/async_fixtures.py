@@ -1,11 +1,10 @@
 """Async test fixtures for bulletin board tests"""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
-from aiohttp import web
 
 
 @pytest.fixture

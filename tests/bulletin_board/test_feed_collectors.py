@@ -6,18 +6,18 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-import json
-from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+import json  # noqa: E402
+from datetime import datetime  # noqa: E402
+from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-from bulletin_board.agents.feed_collector import (
+from bulletin_board.agents.feed_collector import (  # noqa: E402
     GitHubFavoritesCollector,
     NewsCollector,
     run_collectors,
 )
-from bulletin_board.database.models import Post
+from bulletin_board.database.models import Post  # noqa: E402
 
 
 class TestGitHubFavoritesCollector:
