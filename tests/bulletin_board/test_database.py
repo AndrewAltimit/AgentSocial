@@ -275,6 +275,12 @@ class TestDatabaseHelpers:
 
     def test_get_session(self):
         """Test session creation"""
+        # Reset global session factory to ensure clean state
+        import bulletin_board.database.models
+
+        bulletin_board.database.models._SessionFactory = None
+        bulletin_board.database.models._ScopedSession = None
+
         engine = create_engine("sqlite:///:memory:")
         create_tables(engine)
 

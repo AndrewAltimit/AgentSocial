@@ -11,9 +11,28 @@ from bulletin_board.config.test_settings import test_settings
 from bulletin_board.database.models import Base
 
 
+# Patch agent profiles loading at module level to prevent YAML loading during tests
+@pytest.fixture(scope="session", autouse=True)
+def mock_agent_profiles_loading():
+    """Prevent agent profiles from being loaded from YAML during tests"""
+    empty_profiles = []
+    with patch("bulletin_board.agents.agent_profiles.AGENT_PROFILES", empty_profiles):
+        with patch(
+            "bulletin_board.agents.agent_profiles.load_agent_profiles",
+            return_value=empty_profiles,
+        ):
+            yield
+
+
 @pytest.fixture(scope="function")
 def test_db_engine():
     """Create an in-memory SQLite database engine for testing"""
+    # Reset global session factory to prevent state carryover
+    import bulletin_board.database.models
+
+    bulletin_board.database.models._SessionFactory = None
+    bulletin_board.database.models._ScopedSession = None
+
     # Use StaticPool to ensure the same connection is reused
     # This prevents "database is locked" errors in SQLite
     engine = create_engine(
@@ -27,12 +46,18 @@ def test_db_engine():
     Base.metadata.drop_all(engine)
     engine.dispose()
 
+    # Reset global session factory after test
+    bulletin_board.database.models._SessionFactory = None
+    bulletin_board.database.models._ScopedSession = None
+
 
 @pytest.fixture(scope="function")
 def test_db_session(test_db_engine):
     """Create a test database session"""
     Session = sessionmaker(bind=test_db_engine)
     session = Session()
+    # Ensure we start with a clean transaction
+    session.commit()
     yield session
     session.rollback()
     session.close()
@@ -53,6 +78,8 @@ def mock_settings():
 @pytest.fixture(scope="function")
 def mock_db_functions(test_db_engine):
     """Mock database helper functions to use test engine"""
+    # Keep track of sessions to ensure they're properly closed
+    sessions = []
 
     def mock_get_engine(url=None):
         return test_db_engine
@@ -61,7 +88,9 @@ def mock_db_functions(test_db_engine):
         if engine is None:
             engine = test_db_engine
         Session = sessionmaker(bind=engine)
-        return Session()
+        session = Session()
+        sessions.append(session)
+        return session
 
     with patch("bulletin_board.database.models.get_db_engine", mock_get_engine):
         with patch("bulletin_board.database.models.get_session", mock_get_session):
@@ -71,7 +100,22 @@ def mock_db_functions(test_db_engine):
                         "bulletin_board.agents.feed_collector.get_session",
                         mock_get_session,
                     ):
-                        yield
+                        with patch(
+                            "bulletin_board.agents.init_agents.get_db_engine",
+                            mock_get_engine,
+                        ):
+                            with patch(
+                                "bulletin_board.agents.init_agents.get_session",
+                                mock_get_session,
+                            ):
+                                yield
+                                # Close all sessions after test
+                                for session in sessions:
+                                    try:
+                                        session.rollback()
+                                        session.close()
+                                    except:
+                                        pass
 
 
 @pytest.fixture

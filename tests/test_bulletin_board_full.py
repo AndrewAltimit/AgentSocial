@@ -25,21 +25,21 @@ from bulletin_board.database.models import (  # noqa: E402
     Post,
     create_tables,
     get_db_engine,
+    get_session,
+)
+
+# Import test fixtures from shared fixtures file
+from tests.bulletin_board.fixtures import (  # noqa: E402
+    mock_db_functions,
+    test_db_engine,
+    test_db_session,
 )
 
 
 @pytest.fixture(scope="function")
-def test_db():
+def test_db(test_db_engine, test_db_session):
     """Create a test database"""
-    from sqlalchemy.orm import sessionmaker
-
-    # Use in-memory database to avoid file permission issues
-    engine = get_db_engine("sqlite:///:memory:")
-    create_tables(engine)
-
-    # Create a new session directly instead of using get_session
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    session = test_db_session
 
     # Create test agents
     agents = [
@@ -67,11 +67,7 @@ def test_db():
 
     print(f"✅ Created {len(agents)} test agents")
 
-    yield engine, session
-
-    # Cleanup
-    session.close()
-    engine.dispose()
+    yield test_db_engine, session
 
 
 @pytest.fixture
@@ -255,7 +251,7 @@ async def test_agent_commenting(session):
         print("✅ Gemini agent replied to Claude's comment")
 
 
-def test_web_interface(test_db):
+def test_web_interface(test_db, mock_db_functions):
     """Test web interface endpoints"""
     print("\n🌐 Testing web interface...")
 
@@ -293,55 +289,36 @@ def test_web_interface(test_db):
 
     post1_id = post1.id
 
-    # Override database URL for Flask app
-    original_url = Settings.DATABASE_URL
-    Settings.DATABASE_URL = "sqlite:///:memory:"  # Use in-memory for Flask app too
+    # Import app and configure for testing
+    from bulletin_board.app.app import app
 
-    # Patch the database functions to use our test database
-    from sqlalchemy.orm import sessionmaker
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        # Test getting posts
+        response = client.get("/api/posts")
+        assert response.status_code == 200
+        posts = json.loads(response.data)
+        print(f"✅ API returned {len(posts)} posts")
 
-    Session = sessionmaker(bind=engine)
+        # Test getting single post with comments
+        response = client.get(f"/api/posts/{post1_id}")
+        assert response.status_code == 200
+        post_data = json.loads(response.data)
+        print(
+            f"✅ Retrieved post '{post_data['title']}' with "  # noqa: E501
+            f"{len(post_data['comments'])} comments"
+        )
 
-    def get_test_session(engine=None):
-        return Session()
+        # Test getting agents
+        response = client.get("/api/agents")
+        assert response.status_code == 200
+        agents = json.loads(response.data)
+        print(f"✅ API returned {len(agents)} active agents")
 
-    with patch("bulletin_board.database.models.get_db_engine", return_value=engine):
-        with patch(
-            "bulletin_board.database.models.get_session", side_effect=get_test_session
-        ):
-            # Import app after patching
-            from bulletin_board.app.app import app
-
-            app.config["TESTING"] = True
-            with app.test_client() as client:
-                # Test getting posts
-                response = client.get("/api/posts")
-                assert response.status_code == 200
-                posts = json.loads(response.data)
-                print(f"✅ API returned {len(posts)} posts")
-
-                # Test getting single post with comments
-                response = client.get(f"/api/posts/{post1_id}")
-                assert response.status_code == 200
-                post_data = json.loads(response.data)
-                print(
-                    f"✅ Retrieved post '{post_data['title']}' with "  # noqa: E501
-                    f"{len(post_data['comments'])} comments"
-                )
-
-                # Test getting agents
-                response = client.get("/api/agents")
-                assert response.status_code == 200
-                agents = json.loads(response.data)
-                print(f"✅ API returned {len(agents)} active agents")
-
-                # Test main page
-                response = client.get("/")
-                assert response.status_code == 200
-                print("✅ Web interface homepage loads successfully")
-
-    # Restore original URL
-    Settings.DATABASE_URL = original_url
+        # Test main page
+        response = client.get("/")
+        assert response.status_code == 200
+        print("✅ Web interface homepage loads successfully")
 
 
 # Tests can be run with: pytest tests/test_bulletin_board_full.py -v

@@ -206,30 +206,55 @@ class TestAgentRunners:
     @pytest.mark.asyncio
     async def test_run_specific_agent(self):
         """Test running a specific agent"""
-        with patch("bulletin_board.agents.agent_runner.ClaudeAgent") as MockClaude:
-            mock_agent = Mock()
-            mock_agent.run = AsyncMock()
-            MockClaude.return_value = mock_agent
+        # Mock the agent profile
+        mock_profile = {
+            "agent_id": "tech_enthusiast_claude",
+            "agent_software": "claude_code",
+            "display_name": "Tech Enthusiast",
+            "role_description": "Tech expert",
+            "context_instructions": "Be helpful",
+        }
 
-            await run_agent("tech_enthusiast_claude")
+        with patch(
+            "bulletin_board.agents.agent_runner.get_agent_by_id",
+            return_value=mock_profile,
+        ):
+            with patch("bulletin_board.agents.agent_runner.ClaudeAgent") as MockClaude:
+                mock_agent = Mock()
+                mock_agent.run = AsyncMock()
+                MockClaude.return_value = mock_agent
 
-            MockClaude.assert_called_once_with("tech_enthusiast_claude")
-            mock_agent.run.assert_called_once()
+                await run_agent("tech_enthusiast_claude")
+
+                MockClaude.assert_called_once_with("tech_enthusiast_claude")
+                mock_agent.run.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_run_unknown_agent(self):
         """Test handling unknown agent ID"""
-        # Should handle gracefully
-        await run_agent("unknown_agent_id")
+        # Mock get_agent_by_id to return None for unknown agent
+        with patch(
+            "bulletin_board.agents.agent_runner.get_agent_by_id", return_value=None
+        ):
+            # Should handle gracefully
+            await run_agent("unknown_agent_id")
 
     @pytest.mark.asyncio
     async def test_run_all_agents(self):
         """Test running all configured agents"""
-        with patch("bulletin_board.agents.agent_runner.run_agent") as mock_run:
-            mock_run.return_value = asyncio.Future()
-            mock_run.return_value.set_result(None)
+        # Mock agent profiles
+        mock_profiles = [
+            {"agent_id": "agent1", "agent_software": "claude_code"},
+            {"agent_id": "agent2", "agent_software": "gemini_cli"},
+            {"agent_id": "agent3", "agent_software": "claude_code"},
+        ]
 
-            await run_all_agents()
+        with patch("bulletin_board.agents.agent_profiles.AGENT_PROFILES", mock_profiles):
+            with patch("bulletin_board.agents.agent_runner.run_agent") as mock_run:
+                mock_run.return_value = asyncio.Future()
+                mock_run.return_value.set_result(None)
 
-            # Should be called once for each agent profile
-            assert mock_run.call_count == len(AGENT_PROFILES)
+                await run_all_agents()
+
+                # Should be called once for each agent profile
+                assert mock_run.call_count == len(mock_profiles)

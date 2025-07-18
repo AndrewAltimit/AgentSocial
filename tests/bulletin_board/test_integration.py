@@ -22,6 +22,13 @@ from bulletin_board.database.models import (  # noqa: E402
     get_session,
 )
 
+# Import test fixtures
+from tests.bulletin_board.fixtures import (  # noqa: E402
+    mock_db_functions,
+    test_db_engine,
+    test_db_session,
+)
+
 
 class TestBulletinBoardIntegration:
     """Full integration tests for bulletin board system"""
@@ -65,23 +72,56 @@ class TestBulletinBoardIntegration:
                         ):
                             yield env_vars
 
-    def test_database_initialization(self, mock_environment):
+    def test_database_initialization(
+        self, mock_environment, mock_db_functions, test_db_engine
+    ):
         """Test database schema creation and agent initialization"""
-        engine = get_db_engine(mock_environment["DATABASE_URL"])
-        create_tables(engine)
+        # Mock agent profiles to have predictable test data
+        test_profiles = [
+            {
+                "agent_id": "tech_enthusiast_claude",
+                "display_name": "Tech Enthusiast",
+                "agent_software": "claude_code",
+                "role_description": "Tech expert",
+                "context_instructions": "Be helpful",
+            },
+            {
+                "agent_id": "security_analyst_gemini",
+                "display_name": "Security Analyst",
+                "agent_software": "gemini_cli",
+                "role_description": "Security expert",
+                "context_instructions": "Be secure",
+            },
+            {
+                "agent_id": "business_strategist_claude",
+                "display_name": "Business Strategist",
+                "agent_software": "claude_code",
+                "role_description": "Business expert",
+                "context_instructions": "Be strategic",
+            },
+            {
+                "agent_id": "ai_researcher_gemini",
+                "display_name": "AI Researcher",
+                "agent_software": "gemini_cli",
+                "role_description": "AI expert",
+                "context_instructions": "Be analytical",
+            },
+            {
+                "agent_id": "developer_advocate_claude",
+                "display_name": "Developer Advocate",
+                "agent_software": "claude_code",
+                "role_description": "Dev advocate",
+                "context_instructions": "Be supportive",
+            },
+        ]
 
-        # Initialize agents with mocked database functions
         with patch(
-            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
         ):
-            with patch(
-                "bulletin_board.agents.init_agents.get_session",
-                return_value=get_session(engine),
-            ):
-                init_agents()
+            init_agents()
 
         # Verify agents were created
-        session = get_session(engine)
+        session = get_session(test_db_engine)
         from bulletin_board.database.models import AgentProfile
 
         agents = session.query(AgentProfile).all()
@@ -93,10 +133,11 @@ class TestBulletinBoardIntegration:
         assert "security_analyst_gemini" in agent_ids
 
     @pytest.mark.asyncio
-    async def test_feed_collection_cycle(self, mock_environment):
+    async def test_feed_collection_cycle(
+        self, mock_environment, mock_db_functions, test_db_engine
+    ):
         """Test complete feed collection cycle"""
-        engine = get_db_engine(mock_environment["DATABASE_URL"])
-        create_tables(engine)
+        engine = test_db_engine
 
         # Mock API responses
         github_favorites = [
@@ -159,7 +200,7 @@ class TestBulletinBoardIntegration:
             await run_collectors(engine)
 
         # Verify posts were created
-        session = get_session(engine)
+        session = get_session(test_db_engine)
         from bulletin_board.database.models import Post
 
         posts = session.query(Post).all()
@@ -171,23 +212,35 @@ class TestBulletinBoardIntegration:
         assert "Test News" in titles
 
     @pytest.mark.asyncio
-    async def test_agent_commenting_cycle(self, mock_environment):
+    async def test_agent_commenting_cycle(
+        self, mock_environment, mock_db_functions, test_db_engine
+    ):
         """Test agents commenting on posts"""
-        engine = get_db_engine(mock_environment["DATABASE_URL"])
-        create_tables(engine)
+        # Mock agent profiles
+        test_profiles = [
+            {
+                "agent_id": "tech_enthusiast_claude",
+                "display_name": "Tech Enthusiast",
+                "agent_software": "claude_code",
+                "role_description": "Tech expert",
+                "context_instructions": "Be helpful",
+            },
+            {
+                "agent_id": "security_analyst_gemini",
+                "display_name": "Security Analyst",
+                "agent_software": "gemini_cli",
+                "role_description": "Security expert",
+                "context_instructions": "Be secure",
+            },
+        ]
 
-        # Mock the database functions in init_agents to use our test database
         with patch(
-            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
         ):
-            with patch(
-                "bulletin_board.agents.init_agents.get_session",
-                return_value=get_session(engine),
-            ):
-                init_agents()
+            init_agents()
 
         # Create test posts
-        session = get_session(engine)
+        session = get_session(test_db_engine)
         from bulletin_board.database.models import Post
 
         post1 = Post(
@@ -264,7 +317,7 @@ class TestBulletinBoardIntegration:
                 await run_all_agents()
 
         # Verify some comments were created
-        session = get_session(engine)
+        session = get_session(test_db_engine)
         from bulletin_board.database.models import Comment
 
         comments = session.query(Comment).all()
@@ -274,23 +327,28 @@ class TestBulletinBoardIntegration:
         # The exact number depends on the agent logic
         assert len(comments) >= 0  # At least no errors
 
-    def test_web_interface_integration(self, mock_environment):
+    def test_web_interface_integration(
+        self, mock_environment, mock_db_functions, test_db_engine
+    ):
         """Test web interface with full stack"""
-        engine = get_db_engine(mock_environment["DATABASE_URL"])
-        create_tables(engine)
+        # Mock agent profiles
+        test_profiles = [
+            {
+                "agent_id": "tech_enthusiast_claude",
+                "display_name": "Tech Enthusiast",
+                "agent_software": "claude_code",
+                "role_description": "Tech expert",
+                "context_instructions": "Be helpful",
+            }
+        ]
 
-        # Initialize agents with mocked database functions
         with patch(
-            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
         ):
-            with patch(
-                "bulletin_board.agents.init_agents.get_session",
-                return_value=get_session(engine),
-            ):
-                init_agents()
+            init_agents()
 
         # Create test data
-        session = get_session(engine)
+        session = get_session(test_db_engine)
         from bulletin_board.database.models import Comment, Post
 
         post = Post(
@@ -346,17 +404,10 @@ class TestEndToEndScenarios:
     """Test complete end-to-end scenarios"""
 
     @pytest.fixture
-    def temp_db(self):
-        """Create an in-memory SQLite database"""
-        # Use in-memory database to avoid file permission issues
-        db_url = "sqlite:///:memory:"
-        yield db_url
-
-    @pytest.fixture
-    def mock_environment(self, temp_db):
+    def mock_environment(self, test_db_engine):
         """Set up mock environment variables"""
         env_vars = {
-            "DATABASE_URL": temp_db,
+            "DATABASE_URL": "sqlite:///:memory:",
             "GITHUB_READ_TOKEN": "mock_github_token",
             "NEWS_API_KEY": "mock_news_key",
             "GITHUB_FEED_REPO": "test/repo",
@@ -366,7 +417,10 @@ class TestEndToEndScenarios:
 
         with patch.dict(os.environ, env_vars):
             # Also patch Settings to use test values
-            with patch("bulletin_board.config.settings.Settings.DATABASE_URL", temp_db):
+            with patch(
+                "bulletin_board.config.settings.Settings.DATABASE_URL",
+                "sqlite:///:memory:",
+            ):
                 with patch(
                     "bulletin_board.config.settings.Settings.INTERNAL_NETWORK_ONLY",
                     False,
@@ -374,23 +428,28 @@ class TestEndToEndScenarios:
                     yield env_vars
 
     @pytest.mark.asyncio
-    async def test_full_bulletin_board_cycle(self, mock_environment):
+    async def test_full_bulletin_board_cycle(
+        self, mock_environment, mock_db_functions, test_db_engine
+    ):
         """Test complete cycle: collect feeds -> agents comment -> web display"""
-        engine = get_db_engine(mock_environment["DATABASE_URL"])
-        create_tables(engine)
+        # Mock agent profiles
+        test_profiles = [
+            {
+                "agent_id": "tech_enthusiast_claude",
+                "display_name": "Tech Enthusiast",
+                "agent_software": "claude_code",
+                "role_description": "Tech expert",
+                "context_instructions": "Be helpful",
+            }
+        ]
 
-        # Initialize agents with mocked database functions
         with patch(
-            "bulletin_board.agents.init_agents.get_db_engine", return_value=engine
+            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
         ):
-            with patch(
-                "bulletin_board.agents.init_agents.get_session",
-                return_value=get_session(engine),
-            ):
-                init_agents()
+            init_agents()
 
         # Step 1: Simulate feed collection
-        session = get_session(engine)
+        session = get_session(test_db_engine)
         from bulletin_board.database.models import Post
 
         post = Post(
