@@ -1,29 +1,40 @@
 """Refactored Flask application with all new features integrated"""
+
 import ipaddress
 import time
 from datetime import datetime, timedelta
-from flask import Flask, abort, jsonify, render_template, request, g
+
+from flask import Flask, abort, g, jsonify, render_template, request
 from flask_cors import CORS
 from sqlalchemy import and_
 
+from bulletin_board.api.health import health_bp
+from bulletin_board.api.openapi import init_swagger
+from bulletin_board.api.schemas import CommentCreate, ErrorResponse
+from bulletin_board.api.validators import validate_json
 from bulletin_board.config.settings import Settings
 from bulletin_board.database.models import (
     AgentProfile,
     Comment,
     Post,
+    close_session,
     create_tables,
     get_db_engine,
     get_session,
     init_session_factory,
-    close_session
 )
-from bulletin_board.utils.logging import configure_logging, get_logger, log_api_request, log_api_response
 from bulletin_board.utils.error_handlers import register_error_handlers
-from bulletin_board.utils.exceptions import NotFoundError, AuthorizationError, ValidationError
-from bulletin_board.api.openapi import init_swagger
-from bulletin_board.api.health import health_bp
-from bulletin_board.api.validators import validate_json
-from bulletin_board.api.schemas import CommentCreate, ErrorResponse
+from bulletin_board.utils.exceptions import (
+    AuthorizationError,
+    NotFoundError,
+    ValidationError,
+)
+from bulletin_board.utils.logging import (
+    configure_logging,
+    get_logger,
+    log_api_request,
+    log_api_response,
+)
 
 # Configure logging
 configure_logging(log_level=Settings.LOG_LEVEL, json_logs=Settings.LOG_FORMAT == "json")
@@ -50,7 +61,10 @@ def get_engine():
     """Get or create database engine"""
     global engine
     if engine is None:
-        logger.info("Initializing database engine", database_url=Settings.DATABASE_URL.split("@")[-1])
+        logger.info(
+            "Initializing database engine",
+            database_url=Settings.DATABASE_URL.split("@")[-1],
+        )
         engine = get_db_engine(Settings.DATABASE_URL)
         init_session_factory(engine)
         create_tables(engine)
@@ -61,16 +75,16 @@ def get_engine():
 def before_request():
     """Set up request context"""
     g.start_time = time.time()
-    g.request_id = request.headers.get('X-Request-ID', None)
-    
+    g.request_id = request.headers.get("X-Request-ID", None)
+
     # Log request
     log_api_request(
         method=request.method,
         path=request.path,
         remote_addr=request.remote_addr,
-        user_agent=request.headers.get('User-Agent')
+        user_agent=request.headers.get("User-Agent"),
     )
-    
+
     # Initialize database if needed
     get_engine()
 
@@ -78,18 +92,18 @@ def before_request():
 @app.after_request
 def after_request(response):
     """Log response and clean up"""
-    if hasattr(g, 'start_time'):
+    if hasattr(g, "start_time"):
         duration_ms = (time.time() - g.start_time) * 1000
         log_api_response(
             method=request.method,
             path=request.path,
             status_code=response.status_code,
-            duration_ms=duration_ms
+            duration_ms=duration_ms,
         )
-    
+
     # Clean up database session
     close_session()
-    
+
     return response
 
 
@@ -123,7 +137,7 @@ def limit_remote_addr():
             logger.warning(
                 "unauthorized_access_attempt",
                 path=request.path,
-                remote_addr=request.remote_addr
+                remote_addr=request.remote_addr,
             )
             raise AuthorizationError("Access denied")
 
@@ -218,7 +232,11 @@ def create_comment(validated_data: CommentCreate):
 
     try:
         # Verify agent exists
-        agent = session.query(AgentProfile).filter_by(agent_id=validated_data.agent_id).first()
+        agent = (
+            session.query(AgentProfile)
+            .filter_by(agent_id=validated_data.agent_id)
+            .first()
+        )
         if not agent or not agent.is_active:
             raise AuthorizationError("Invalid or inactive agent")
 
@@ -228,7 +246,9 @@ def create_comment(validated_data: CommentCreate):
         )
         post = (
             session.query(Post)
-            .filter(and_(Post.id == validated_data.post_id, Post.created_at > cutoff_time))
+            .filter(
+                and_(Post.id == validated_data.post_id, Post.created_at > cutoff_time)
+            )
             .first()
         )
 
@@ -250,7 +270,7 @@ def create_comment(validated_data: CommentCreate):
             "comment_created",
             comment_id=comment.id,
             post_id=validated_data.post_id,
-            agent_id=validated_data.agent_id
+            agent_id=validated_data.agent_id,
         )
 
         result = {"id": comment.id, "created_at": comment.created_at.isoformat()}
@@ -337,6 +357,6 @@ if __name__ == "__main__":
         "Starting bulletin board application",
         host=Settings.APP_HOST,
         port=Settings.APP_PORT,
-        debug=Settings.APP_DEBUG
+        debug=Settings.APP_DEBUG,
     )
     app.run(host=Settings.APP_HOST, port=Settings.APP_PORT, debug=Settings.APP_DEBUG)

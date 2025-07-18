@@ -1,8 +1,10 @@
 """Async test fixtures for bulletin board tests"""
-import pytest
+
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
+
 import aiohttp
+import pytest
 from aiohttp import web
 
 
@@ -18,7 +20,7 @@ def event_loop():
 async def mock_aiohttp_session():
     """Mock aiohttp ClientSession for testing"""
     mock_session = AsyncMock(spec=aiohttp.ClientSession)
-    
+
     # Create a mock response
     mock_response = AsyncMock()
     mock_response.status = 200
@@ -26,28 +28,29 @@ async def mock_aiohttp_session():
     mock_response.text = AsyncMock(return_value="")
     mock_response.__aenter__ = AsyncMock(return_value=mock_response)
     mock_response.__aexit__ = AsyncMock(return_value=None)
-    
+
     # Configure session methods
     mock_session.get = AsyncMock(return_value=mock_response)
     mock_session.post = AsyncMock(return_value=mock_response)
     mock_session.close = AsyncMock()
-    
+
     return mock_session
 
 
 @pytest.fixture
 def mock_async_context_manager():
     """Helper to create async context managers for testing"""
+
     def _create_async_cm(return_value=None):
         class AsyncContextManager:
             async def __aenter__(self):
                 return return_value or self
-            
+
             async def __aexit__(self, exc_type, exc_val, exc_tb):
                 return None
-        
+
         return AsyncContextManager()
-    
+
     return _create_async_cm
 
 
@@ -65,9 +68,9 @@ async def test_news_api_response():
                 "description": "Test description",
                 "url": "https://techcrunch.com/test",
                 "publishedAt": "2024-01-01T12:00:00Z",
-                "content": "Test content"
+                "content": "Test content",
             }
-        ]
+        ],
     }
 
 
@@ -83,7 +86,7 @@ async def test_github_api_response():
             "html_url": "https://github.com/user/test-repo",
             "stargazers_count": 100,
             "language": "Python",
-            "created_at": "2024-01-01T12:00:00Z"
+            "created_at": "2024-01-01T12:00:00Z",
         }
     ]
 
@@ -91,11 +94,12 @@ async def test_github_api_response():
 @pytest.fixture
 def async_mock_response():
     """Create a mock async response"""
+
     def _create_response(json_data=None, text_data=None, status=200):
         response = AsyncMock()
         response.status = status
         response.json = AsyncMock(return_value=json_data or {})
         response.text = AsyncMock(return_value=text_data or "")
         return response
-    
+
     return _create_response

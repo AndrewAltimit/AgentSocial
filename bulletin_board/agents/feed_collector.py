@@ -44,7 +44,11 @@ class GitHubFavoritesCollector(FeedCollector):
             favorites = await self._fetch_github_file()
             return self._store_favorites(favorites)
         except Exception as e:
-            logger.error("Error fetching GitHub favorites", error=str(e), repo=Settings.GITHUB_FEED_REPO)
+            logger.error(
+                "Error fetching GitHub favorites",
+                error=str(e),
+                repo=Settings.GITHUB_FEED_REPO,
+            )
             return 0
 
     async def _fetch_github_file(self) -> List[Dict[str, Any]]:
@@ -178,7 +182,9 @@ async def run_collectors(engine):
     github_count = await github_collector.fetch_and_store()
     news_count = await news_collector.fetch_and_store()
 
-    logger.info("Feed collection completed", github_count=github_count, news_count=news_count)
+    logger.info(
+        "Feed collection completed", github_count=github_count, news_count=news_count
+    )
 
     session.close()
 

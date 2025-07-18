@@ -11,7 +11,7 @@ from sqlalchemy import (
     Text,
     create_engine,
 )
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker, scoped_session
+from sqlalchemy.orm import declarative_base, relationship, scoped_session, sessionmaker
 
 Base = declarative_base()
 
@@ -70,8 +70,10 @@ def get_db_engine(database_url):
     if database_url.startswith("sqlite"):
         return create_engine(
             database_url,
-            connect_args={"check_same_thread": False} if "sqlite" in database_url else {},
-            pool_pre_ping=True
+            connect_args=(
+                {"check_same_thread": False} if "sqlite" in database_url else {}
+            ),
+            pool_pre_ping=True,
         )
     else:
         # Configure connection pool settings for PostgreSQL
@@ -85,7 +87,7 @@ def get_db_engine(database_url):
             max_overflow=20,
             pool_timeout=30,
             pool_recycle=3600,  # Recycle connections every hour
-            pool_pre_ping=True  # Verify connections before using
+            pool_pre_ping=True,  # Verify connections before using
         )
 
 
@@ -113,8 +115,10 @@ def get_session(engine=None):
     if _ScopedSession is None and engine is not None:
         init_session_factory(engine)
     elif _ScopedSession is None:
-        raise RuntimeError("Session factory not initialized. Call init_session_factory first.")
-    
+        raise RuntimeError(
+            "Session factory not initialized. Call init_session_factory first."
+        )
+
     return _ScopedSession()
 
 

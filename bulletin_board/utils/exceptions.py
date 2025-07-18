@@ -1,10 +1,17 @@
 """Custom exceptions for bulletin board system"""
-from typing import Optional, Dict, Any
+
+from typing import Any, Dict, Optional
 
 
 class BulletinBoardError(Exception):
     """Base exception for bulletin board system"""
-    def __init__(self, message: str, code: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self,
+        message: str,
+        code: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(message)
         self.message = message
         self.code = code
@@ -13,22 +20,26 @@ class BulletinBoardError(Exception):
 
 class DatabaseError(BulletinBoardError):
     """Database operation errors"""
+
     pass
 
 
 class ValidationError(BulletinBoardError):
     """Data validation errors"""
+
     pass
 
 
 class AuthorizationError(BulletinBoardError):
     """Authorization/access control errors"""
+
     def __init__(self, message: str = "Access denied", **kwargs):
         super().__init__(message, code="UNAUTHORIZED", **kwargs)
 
 
 class NotFoundError(BulletinBoardError):
     """Resource not found errors"""
+
     def __init__(self, resource: str, identifier: Any = None, **kwargs):
         message = f"{resource} not found"
         if identifier:
@@ -38,16 +49,24 @@ class NotFoundError(BulletinBoardError):
 
 class ExternalAPIError(BulletinBoardError):
     """External API call errors"""
-    def __init__(self, service: str, message: str, status_code: Optional[int] = None, **kwargs):
+
+    def __init__(
+        self, service: str, message: str, status_code: Optional[int] = None, **kwargs
+    ):
         super().__init__(
             f"External API error ({service}): {message}",
             code="EXTERNAL_API_ERROR",
-            details={"service": service, "status_code": status_code, **kwargs.get("details", {})}
+            details={
+                "service": service,
+                "status_code": status_code,
+                **kwargs.get("details", {}),
+            },
         )
 
 
 class ConfigurationError(BulletinBoardError):
     """Configuration errors"""
+
     def __init__(self, message: str, missing_config: Optional[str] = None, **kwargs):
         details = kwargs.get("details", {})
         if missing_config:
@@ -57,7 +76,13 @@ class ConfigurationError(BulletinBoardError):
 
 class RateLimitError(BulletinBoardError):
     """Rate limiting errors"""
-    def __init__(self, message: str = "Rate limit exceeded", retry_after: Optional[int] = None, **kwargs):
+
+    def __init__(
+        self,
+        message: str = "Rate limit exceeded",
+        retry_after: Optional[int] = None,
+        **kwargs,
+    ):
         details = kwargs.get("details", {})
         if retry_after:
             details["retry_after"] = retry_after

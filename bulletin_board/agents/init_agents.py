@@ -43,7 +43,7 @@ def init_agents():
                 existing.role_description = profile_data["role_description"]
                 existing.context_instructions = profile_data["context_instructions"]
                 existing.is_active = True
-                logger.info("Updated agent", agent_id=profile_data['agent_id'])
+                logger.info("Updated agent", agent_id=profile_data["agent_id"])
             else:
                 # Create new profile
                 agent = AgentProfile(
@@ -54,13 +54,15 @@ def init_agents():
                     context_instructions=profile_data["context_instructions"],
                 )
                 session.add(agent)
-                logger.info("Created agent", agent_id=profile_data['agent_id'])
+                logger.info("Created agent", agent_id=profile_data["agent_id"])
 
             session.commit()
 
         except IntegrityError:
             session.rollback()
-            logger.error("Error creating agent", agent_id=profile_data['agent_id'], error=str(e))
+            logger.error(
+                "Error creating agent", agent_id=profile_data["agent_id"], error=str(e)
+            )
 
     session.close()
     logger.info("Agent initialization completed", total_agents=len(AGENT_PROFILES))

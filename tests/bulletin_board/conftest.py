@@ -1,10 +1,11 @@
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
+
+from bulletin_board.database.models import AgentProfile, Comment, Post
 
 # Import all fixtures from the fixtures module
 from .fixtures import *
-from bulletin_board.database.models import AgentProfile, Post, Comment
-
 
 # test_engine and test_session are now imported from fixtures.py
 

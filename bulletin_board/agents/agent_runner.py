@@ -38,7 +38,11 @@ class AgentRunner:
                 if response.status == 200:
                     return await response.json()
                 else:
-                    logger.error("Error fetching posts", status=response.status, agent_id=self.agent_id)
+                    logger.error(
+                        "Error fetching posts",
+                        status=response.status,
+                        agent_id=self.agent_id,
+                    )
                     return []
 
     async def post_comment(
@@ -57,7 +61,12 @@ class AgentRunner:
                 if response.status == 201:
                     return True
                 else:
-                    logger.error("Error posting comment", status=response.status, agent_id=self.agent_id, post_id=post_id)
+                    logger.error(
+                        "Error posting comment",
+                        status=response.status,
+                        agent_id=self.agent_id,
+                        post_id=post_id,
+                    )
                     return False
 
     async def analyze_and_comment(self, posts: List[Dict[str, Any]]) -> int:
@@ -67,7 +76,11 @@ class AgentRunner:
 
     async def run(self):
         """Main agent run loop"""
-        logger.info("Starting agent", agent_id=self.agent_id, display_name=self.profile['display_name'])
+        logger.info(
+            "Starting agent",
+            agent_id=self.agent_id,
+            display_name=self.profile["display_name"],
+        )
 
         posts = await self.get_recent_posts()
         if not posts:
@@ -77,7 +90,9 @@ class AgentRunner:
         logger.info("Found recent posts", agent_id=self.agent_id, post_count=len(posts))
 
         comments_made = await self.analyze_and_comment(posts)
-        logger.info("Agent run completed", agent_id=self.agent_id, comments_made=comments_made)
+        logger.info(
+            "Agent run completed", agent_id=self.agent_id, comments_made=comments_made
+        )
 
 
 class ClaudeAgent(AgentRunner):
@@ -107,7 +122,12 @@ class ClaudeAgent(AgentRunner):
 
             if await self.post_comment(post["id"], comment):
                 comments_made += 1
-                logger.info("Commented on post", agent_id=self.agent_id, post_id=post["id"], post_title=post['title'][:50])
+                logger.info(
+                    "Commented on post",
+                    agent_id=self.agent_id,
+                    post_id=post["id"],
+                    post_title=post["title"][:50],
+                )
 
             # Small delay between comments
             await asyncio.sleep(2)
@@ -167,7 +187,13 @@ class GeminiAgent(AgentRunner):
                 action = (
                     "Replied to comment on" if parent_comment_id else "Commented on"
                 )
-                logger.info(f"{action} post", agent_id=self.agent_id, post_id=post["id"], post_title=post['title'][:50], parent_comment_id=parent_comment_id)
+                logger.info(
+                    f"{action} post",
+                    agent_id=self.agent_id,
+                    post_id=post["id"],
+                    post_title=post["title"][:50],
+                    parent_comment_id=parent_comment_id,
+                )
 
             # Small delay between comments
             await asyncio.sleep(2)
@@ -206,7 +232,11 @@ async def run_agent(agent_id: str):
     elif profile["agent_software"] == "gemini_cli":
         agent = GeminiAgent(agent_id)
     else:
-        logger.error("Unknown agent software", agent_id=agent_id, agent_software=profile['agent_software'])
+        logger.error(
+            "Unknown agent software",
+            agent_id=agent_id,
+            agent_software=profile["agent_software"],
+        )
         return
 
     await agent.run()

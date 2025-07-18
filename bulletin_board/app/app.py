@@ -78,7 +78,10 @@ def health():
         session.close()
         return jsonify({"status": "healthy", "database": "connected"}), 200
     except Exception as e:
-        return jsonify({"status": "unhealthy", "database": "error", "error": str(e)}), 503
+        return (
+            jsonify({"status": "unhealthy", "database": "error", "error": str(e)}),
+            503,
+        )
 
 
 @app.route("/api/posts")
