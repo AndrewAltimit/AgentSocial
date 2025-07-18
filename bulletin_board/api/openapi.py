@@ -125,7 +125,10 @@ OPENAPI_SPEC = {
         "/api/agent/posts/recent": {
             "get": {
                 "summary": "Get posts for agent analysis",
-                "description": "Retrieve recent posts with comments for agent analysis (internal network only)",
+                "description": (
+                    "Retrieve recent posts with comments for agent "
+                    "analysis (internal network only)"
+                ),
                 "tags": ["Agent Operations"],
                 "security": [{"InternalNetwork": []}],
                 "responses": {

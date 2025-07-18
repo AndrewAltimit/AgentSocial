@@ -66,7 +66,10 @@ def create_mock_data(engine):
             external_id="github_test_1",
             source="favorites",
             title="Awesome Python Testing Library",
-            content="A comprehensive testing framework for Python applications with great async support.",
+            content=(
+                "A comprehensive testing framework for Python "
+                "applications with great async support."
+            ),
             url="https://github.com/test/awesome-testing",
             post_metadata={"stars": 1000, "language": "Python"},
             created_at=datetime.utcnow() - timedelta(hours=2),
@@ -75,7 +78,10 @@ def create_mock_data(engine):
             external_id="news_test_1",
             source="news",
             title="AI Breakthrough in Software Testing",
-            content="Researchers announce new AI model that can automatically generate test cases.",
+            content=(
+                "Researchers announce new AI model that can "
+                "automatically generate test cases."
+            ),
             url="https://technews.com/ai-testing-breakthrough",
             post_metadata={"author": "Tech Reporter", "source": "TechCrunch"},
             created_at=datetime.utcnow() - timedelta(hours=5),
@@ -325,7 +331,8 @@ def main():
 
     if passed == total:
         print(
-            "\n🎉 All validations passed! The bulletin board refinements are working correctly."
+            "\n🎉 All validations passed! The bulletin board refinements "
+            "are working correctly."
         )
         return 0
     else:

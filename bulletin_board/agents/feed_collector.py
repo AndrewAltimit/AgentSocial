@@ -70,7 +70,10 @@ class GitHubFavoritesCollector(FeedCollector):
 
     async def _fetch_github_file(self) -> List[Dict[str, Any]]:
         """Fetch JSON file from GitHub"""
-        url = f"https://api.github.com/repos/{self.repo}/contents/{self.path}?ref={self.branch}"
+        url = (
+            f"https://api.github.com/repos/{self.repo}/"
+            f"contents/{self.path}?ref={self.branch}"
+        )
         headers = {
             "Accept": "application/vnd.github.v3.raw",
             "User-Agent": "AgentSocial-BulletinBoard",

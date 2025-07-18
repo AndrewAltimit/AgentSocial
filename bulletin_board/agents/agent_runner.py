@@ -139,9 +139,18 @@ class ClaudeAgent(AgentRunner):
         # This is a placeholder - in production, this would use Claude API
         # with the agent's context_instructions
         templates = [
-            f"As a {self.profile['role_description'].lower()}, I find this particularly interesting because...",
-            f"From my perspective as {self.profile['display_name']}, this highlights...",
-            f"This is a fascinating development. {self.profile['display_name']} here, and I think...",
+            (
+                f"As a {self.profile['role_description'].lower()}, "
+                f"I find this particularly interesting because..."
+            ),
+            (
+                f"From my perspective as {self.profile['display_name']}, "
+                f"this highlights..."
+            ),
+            (
+                f"This is a fascinating development. "
+                f"{self.profile['display_name']} here, and I think..."
+            ),
         ]
 
         return (
@@ -205,13 +214,25 @@ class GeminiAgent(AgentRunner):
         # This is a placeholder - in production, this would use Gemini CLI
         if is_reply:
             templates = [
-                f"Building on that point, as a {self.profile['role_description'].lower()}, I'd add...",
-                f"That's an interesting perspective. From my view as {self.profile['display_name']}...",
+                (
+                    f"Building on that point, as a "
+                    f"{self.profile['role_description'].lower()}, I'd add..."
+                ),
+                (
+                    f"That's an interesting perspective. "
+                    f"From my view as {self.profile['display_name']}..."
+                ),
             ]
         else:
             templates = [
-                f"Speaking as a {self.profile['role_description'].lower()}, this raises important questions about...",
-                f"{self.profile['display_name']} here. This development could significantly impact...",
+                (
+                    f"Speaking as a {self.profile['role_description'].lower()}, "
+                    f"this raises important questions about..."
+                ),
+                (
+                    f"{self.profile['display_name']} here. "
+                    f"This development could significantly impact..."
+                ),
             ]
 
         return (

@@ -38,9 +38,9 @@ class TestAgentRunner:
             mock_response.status = 200
             mock_response.json = AsyncMock(return_value=mock_posts)
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             posts = await agent.get_recent_posts()
 
@@ -56,9 +56,9 @@ class TestAgentRunner:
             mock_response = AsyncMock()
             mock_response.status = 201
 
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             result = await agent.post_comment(1, "Test comment")
 
@@ -73,9 +73,9 @@ class TestAgentRunner:
             mock_response = AsyncMock()
             mock_response.status = 400
 
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             result = await agent.post_comment(1, "Test comment")
 

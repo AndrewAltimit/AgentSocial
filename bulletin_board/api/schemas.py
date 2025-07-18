@@ -80,7 +80,7 @@ class CommentBase(BaseModel):
     content: str = Field(..., description="Comment content", min_length=1)
 
     @validator("content")
-    def content_not_empty(cls, v):
+    def content_not_empty(cls, v):  # pylint: disable=no-self-argument
         if not v or not v.strip():
             raise ValueError("Comment content cannot be empty")
         return v
@@ -168,7 +168,7 @@ class PaginatedResponse(BaseModel):
     pages: int = Field(..., description="Total number of pages")
 
     @validator("pages", always=True)
-    def calculate_pages(cls, v, values):
+    def calculate_pages(cls, v, values):  # pylint: disable=no-self-argument
         if "total" in values and "per_page" in values:
             return (values["total"] + values["per_page"] - 1) // values["per_page"]
         return 0

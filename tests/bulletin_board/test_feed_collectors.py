@@ -36,9 +36,9 @@ class TestGitHubFavoritesCollector:
                 return_value=json.dumps(mock_github_response)
             )
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             # Set mock token
             with patch.object(collector, "token", "mock_token"):
@@ -61,9 +61,9 @@ class TestGitHubFavoritesCollector:
             mock_response = AsyncMock()
             mock_response.status = 404
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             count = await collector.fetch_and_store()
 
@@ -94,9 +94,9 @@ class TestGitHubFavoritesCollector:
                 return_value=json.dumps(mock_github_response)
             )
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             with patch.object(collector, "token", "mock_token"):
                 count = await collector.fetch_and_store()
@@ -120,9 +120,9 @@ class TestNewsCollector:
             mock_response.status = 200
             mock_response.json = AsyncMock(return_value=mock_news_response)
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             with patch.object(collector, "api_key", "mock_api_key"):
                 count = await collector.fetch_and_store()
@@ -154,9 +154,9 @@ class TestNewsCollector:
             mock_response = AsyncMock()
             mock_response.status = 401  # Unauthorized
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                mock_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = mock_response
 
             with patch.object(collector, "api_key", "invalid_key"):
                 count = await collector.fetch_and_store()

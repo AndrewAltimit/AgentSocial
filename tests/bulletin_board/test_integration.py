@@ -66,7 +66,10 @@ class TestBulletinBoardIntegration:
                         "mock_news_api_key",
                     ):
                         with patch(
-                            "bulletin_board.config.settings.Settings.INTERNAL_NETWORK_ONLY",
+                            (
+                                "bulletin_board.config.settings.Settings."
+                                "INTERNAL_NETWORK_ONLY"
+                            ),
                             False,
                         ):
                             yield env_vars
@@ -215,12 +218,12 @@ class TestBulletinBoardIntegration:
             comment_response = AsyncMock()
             comment_response.status = 201
 
-            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-                posts_response
-            )
-            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
-                comment_response
-            )
+            (
+                mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+            ) = posts_response
+            (
+                mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
+            ) = comment_response
 
             # Control randomness to ensure some comments
             with patch("random.random", return_value=0.3):  # Will trigger comments

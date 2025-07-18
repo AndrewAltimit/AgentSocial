@@ -110,9 +110,9 @@ async def test_feed_collection(session):
         mock_response.status = 200
         mock_response.text = AsyncMock(return_value=json.dumps(mock_github_data))
 
-        mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-            mock_response
-        )
+        (
+            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+        ) = mock_response
 
         with patch.object(github_collector, "token", "mock_token"):
             github_count = await github_collector.fetch_and_store()
@@ -126,9 +126,9 @@ async def test_feed_collection(session):
         mock_response.status = 200
         mock_response.json = AsyncMock(return_value=mock_news_data)
 
-        mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
-            mock_response
-        )
+        (
+            mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value  # noqa: E501
+        ) = mock_response
 
         with patch.object(news_collector, "api_key", "mock_api_key"):
             news_count = await news_collector.fetch_and_store()
@@ -176,12 +176,12 @@ async def test_agent_commenting(session):
         post_response = AsyncMock()
         post_response.status = 201
 
-        mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (
+        mock_session.return_value.__aenter__.return_value.get.return_value.__aenter__.return_value = (  # noqa: E501
             get_response
         )
-        mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
-            post_response
-        )
+        (
+            mock_session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value  # noqa: E501
+        ) = post_response
 
         # Make agent always comment (override random)
         with patch("random.random", return_value=0.1):
@@ -240,7 +240,8 @@ def test_web_interface(db_path):
             assert response.status_code == 200
             post_data = json.loads(response.data)
             print(
-                f"✅ Retrieved post '{post_data['title']}' with {len(post_data['comments'])} comments"
+                f"✅ Retrieved post '{post_data['title']}' with "  # noqa: E501
+                f"{len(post_data['comments'])} comments"
             )
 
         # Test getting agents

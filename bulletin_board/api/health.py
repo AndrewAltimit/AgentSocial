@@ -78,12 +78,14 @@ def detailed_health_check():
         ).scalar()
         post_count = session.execute(
             text(
-                "SELECT COUNT(*) FROM posts WHERE created_at > datetime('now', '-24 hours')"
+                "SELECT COUNT(*) FROM posts "
+                "WHERE created_at > datetime('now', '-24 hours')"
             )
         ).scalar()
         comment_count = session.execute(
             text(
-                "SELECT COUNT(*) FROM comments WHERE created_at > datetime('now', '-24 hours')"
+                "SELECT COUNT(*) FROM comments "
+                "WHERE created_at > datetime('now', '-24 hours')"
             )
         ).scalar()
 

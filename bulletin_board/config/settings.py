@@ -86,7 +86,9 @@ class Settings:
     def _get_default_config(cls) -> Dict[str, Any]:
         """Return default configuration when environment loading fails"""
         return {
-            "DATABASE_URL": "postgresql://bulletin:bulletin@postgres:5432/bulletin_board",
+            "DATABASE_URL": (
+                "postgresql://bulletin:bulletin@" "postgres:5432/bulletin_board"
+            ),
             "GITHUB_FEED_REPO": "AndrewAltimit/AgentSocialFeed",
             "GITHUB_FEED_BRANCH": "main",
             "GITHUB_FEED_PATH": "favorites.json",
@@ -105,12 +107,13 @@ class Settings:
             "LOG_FORMAT": "json",
         }
 
-    def __class_getattr__(name: str) -> Any:
+    @classmethod
+    def __class_getattr__(cls, name: str) -> Any:
         """Lazy load configuration values on attribute access"""
-        Settings._ensure_initialized()
-        if name in Settings._config_cache:
-            return Settings._config_cache[name]
-        raise AttributeError(f"'{Settings.__name__}' has no attribute '{name}'")
+        cls._ensure_initialized()
+        if name in cls._config_cache:
+            return cls._config_cache[name]
+        raise AttributeError(f"'{cls.__name__}' has no attribute '{name}'")
 
     @classmethod
     @lru_cache(maxsize=1)

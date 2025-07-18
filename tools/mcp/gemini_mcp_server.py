@@ -117,7 +117,10 @@ class MCPServer:
                 return [
                     types.TextContent(
                         type="text",
-                        text="❌ Error: 'query' parameter is required for Gemini consultation",
+                        text=(
+                            "❌ Error: 'query' parameter is required for "
+                            "Gemini consultation"
+                        ),
                     )
                 ]
 
@@ -227,7 +230,8 @@ class MCPServer:
 
         # Check if Gemini CLI is available
         try:
-            # Test with a simple prompt rather than --version (which may not be supported)
+            # Test with a simple prompt rather than --version
+            # (which may not be supported)
             check_process = await asyncio.create_subprocess_exec(
                 self.gemini.cli_command,
                 "-p",
@@ -411,7 +415,8 @@ if __name__ == "__main__":
     # If port is specified, run as HTTP server (for backward compatibility/testing)
     if args.port:
         print(
-            "Warning: Running in HTTP mode. For production, use stdio mode (no --port argument)"
+            "Warning: Running in HTTP mode. For production, use stdio mode "
+            "(no --port argument)"
         )
         # Import and run the HTTP server
         try:

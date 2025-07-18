@@ -61,9 +61,9 @@ def test_agent_initialization():
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
         db_path = f.name
 
+    original_url = Settings.DATABASE_URL
     try:
         # Override database URL
-        original_url = Settings.DATABASE_URL
         Settings.DATABASE_URL = f"sqlite:///{db_path}"
 
         # Initialize agents
