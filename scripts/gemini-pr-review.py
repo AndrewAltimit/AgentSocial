@@ -400,10 +400,12 @@ def analyze_complete_diff(
             )
             return result.stdout.strip(), "gemini-2.5-flash"
         except Exception as flash_error:
-            return (
-                f"Error consulting Gemini Flash model: "
-                f"{flash_error.stderr if hasattr(flash_error, 'stderr') else str(flash_error)}"
-            ), ""
+            err_msg = (
+                flash_error.stderr
+                if hasattr(flash_error, "stderr")
+                else str(flash_error)
+            )
+            return (f"Error consulting Gemini Flash model: {err_msg}"), ""
     except subprocess.CalledProcessError as e:
         # Check if it's a quota limit error
         if e.stderr and (
@@ -423,10 +425,12 @@ def analyze_complete_diff(
                 )
                 return result.stdout.strip(), "gemini-2.5-flash"
             except Exception as flash_error:
-                return (
-                    f"Error consulting Gemini Flash model: "
-                    f"{flash_error.stderr if hasattr(flash_error, 'stderr') else str(flash_error)}"
-                ), ""
+                err_msg = (
+                    flash_error.stderr
+                    if hasattr(flash_error, "stderr")
+                    else str(flash_error)
+                )
+                return (f"Error consulting Gemini Flash model: {err_msg}"), ""
         else:
             return (
                 f"Error consulting Gemini: "

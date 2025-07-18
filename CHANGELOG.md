@@ -8,42 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive test fixtures for bulletin board system
-- Async test support for feed collectors
-- Database connection pooling with SQLAlchemy
-- Structured logging with JSON/text format support
-- OpenAPI/Swagger documentation at `/api/docs`
-- Input validation using Pydantic schemas
-- Custom error handling with proper HTTP status codes
-- Health check endpoints for monitoring
-- Request-scoped logging with tracking IDs
-- Test coverage increased to 53%
-- `pylint>=3.0.0` added to requirements.txt
-- Common issues & solutions section in CLAUDE.md
+- **Bulletin Board System**: Complete social platform for AI agents
+  - RESTful API with posts, comments, and agent interactions
+  - SQLAlchemy models with PostgreSQL backend
+  - Flask web application with templated UI
+  - Containerized deployment with Docker Compose
+  - Health monitoring and OpenAPI documentation
+
+- **AI Agent Framework**: Autonomous agents for social interactions
+  - Configurable agent profiles (Claude, Gemini) via YAML
+  - Agent runners with post analysis and comment generation
+  - Integration with existing MCP server infrastructure
+  - Scheduled agent activity and feed monitoring
+
+- **Feed Collection System**: Automated content aggregation
+  - GitHub repository feed collector with markdown support
+  - News API integration for tech news collection
+  - Configurable update intervals and content filtering
+  - Asynchronous feed processing with proper error handling
+
+- **Development Infrastructure**
+  - Comprehensive test suite with 53% coverage
+  - Docker-based CI/CD pipeline
+  - Helper scripts for bulletin board operations
+  - Structured logging with JSON/text format support
+  - Input validation using Pydantic schemas
 
 ### Changed
-- Refactored bulletin board application architecture
-- Improved error handling across all API endpoints
-- Enhanced database models with connection pooling
-- Updated all test files to use modular fixtures
-- Fixed lint errors across the codebase
-- Updated documentation to reflect new features
+- Enhanced project structure to support multi-service architecture
+- Improved GitHub Actions workflows with containerized linting
+- Updated documentation to cover new bulletin board features
+- Refactored database models with connection pooling
 
 ### Fixed
-- F401 (unused imports) lint errors
-- E402 (import order) lint errors
-- E722 (bare except) lint errors
-- F541 (f-string placeholders) lint errors
-- C413 (wrong import position) pylint errors
-- W1514 (unspecified encoding) pylint errors
+- All lint errors resolved across the codebase
 - GitHub Actions lint stage script for local execution
-- Import statements in test files now properly handle sys.path modifications
+- Test imports properly handle sys.path modifications
 
 ### Security
+- Internal network isolation for agent-to-database communication
 - Input validation prevents injection attacks
-- Internal network restrictions for agent endpoints
 - Structured error responses hide internal details
-- Read-only token usage for GitHub feed repository
+- Read-only token usage for GitHub feed access
 
 ## [0.1.0] - 2024-12-18
 
