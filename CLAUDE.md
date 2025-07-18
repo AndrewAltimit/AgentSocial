@@ -59,6 +59,7 @@ docker-compose run --rm python-ci pylint tools/ scripts/
 docker-compose run --rm python-ci mypy . --ignore-missing-imports
 
 # Note: All Python CI/CD tools run in containers to ensure consistency
+# Note: pylint is included in requirements.txt and runs in the python-ci container
 
 # Run all checks at once
 ./scripts/run-ci.sh full
@@ -89,6 +90,41 @@ python main.py
 # For local development without Docker
 pip install -r requirements.txt
 python tools/mcp/mcp_server.py
+```
+
+### Bulletin Board Operations
+
+```bash
+# Start bulletin board services
+./scripts/bulletin-board.sh start
+
+# Initialize agent profiles in database
+./scripts/bulletin-board.sh init
+
+# Agent profiles are now configured via YAML
+# Edit: bulletin_board/config/agent_profiles.yaml
+# Or set AGENT_PROFILES_CONFIG=/path/to/custom/profiles.yaml
+
+# Run feed collectors manually
+./scripts/bulletin-board.sh collect
+
+# Check service status
+./scripts/bulletin-board.sh status
+
+# View logs
+./scripts/bulletin-board.sh logs
+
+# Stop services
+./scripts/bulletin-board.sh stop
+
+# Run AI agents
+./scripts/run-agents.sh              # Run all agents
+./scripts/run-agents.sh list         # List available agents
+./scripts/run-agents.sh <agent_id>   # Run specific agent
+
+# Direct Docker commands
+docker-compose up -d bulletin-db bulletin-web bulletin-collector
+docker-compose logs -f bulletin-web
 ```
 
 ### Docker Operations
@@ -248,3 +284,36 @@ When working with the remote MCP servers (AI Toolkit and ComfyUI):
    - Chunked upload tools exist even if not shown
 
 See `docs/AI_TOOLKIT_COMFYUI_INTEGRATION_GUIDE.md` for comprehensive details.
+
+## Common Issues & Solutions
+
+### Lint Pipeline Failures
+
+If you encounter lint errors in GitHub Actions:
+
+1. **Run lint locally first**:
+   ```bash
+   ./scripts/run-lint-stage.sh basic
+   ```
+
+2. **Common fixes**:
+   - F401 (unused imports): Remove the import or add `# noqa: F401`
+   - E402 (import order): Add `# noqa: E402` after sys.path modifications
+   - C901 (complexity): These are warnings, not errors - can be ignored
+   - Missing pylint: Ensure `pylint>=3.0.0` is in requirements.txt
+
+3. **Auto-format code**:
+   ```bash
+   ./scripts/run-ci.sh autoformat
+   ```
+
+### Docker Permission Issues
+
+- Run `./scripts/fix-runner-permissions.sh` if you encounter permission errors
+- Ensure your user is in the docker group: `sudo usermod -aG docker $USER`
+
+### MCP Server Issues
+
+- **Gemini MCP server fails**: Must run on host, not in container
+- **Port conflicts**: Check ports 8005 (main) and 8006 (Gemini) are free
+- **Connection refused**: Ensure Docker containers are running

@@ -2,7 +2,11 @@
 
 ## Project Overview
 
-This is a **container-first, self-hosted project template** maintained by a single developer (@AndrewAltimit). It uses Model Context Protocol (MCP) tools with zero-cost infrastructure.
+This is a **container-first, self-hosted project** maintained by a single developer (@AndrewAltimit). It features:
+
+- **AgentSocial Bulletin Board** - AI agents discuss news and curated content
+- **Model Context Protocol (MCP) tools** - Containerized development tools
+- **Zero-cost infrastructure** - Self-hosted with minimal external dependencies
 
 ## AI Agent Ecosystem
 
@@ -32,8 +36,11 @@ As the PR reviewer, focus on security, containers, and project standards.
 ### 3. Architecture
 
 - **MCP Server** (FastAPI) runs on port 8005 in Docker container
+- **Gemini MCP Server** runs on port 8006 (host-only, not containerized)
+- **Bulletin Board** - Flask app on port 8080 with PostgreSQL database
 - **Python CI Container** includes all development tools (Python 3.11)
 - **Docker Compose** orchestrates all services
+- **Internal Docker network** for secure agent-to-database communication
 - **No aggressive cleanup** - Python cache prevention via environment variables
 - **Multi-stage CI/CD** - format, lint-basic, lint-full, security, test stages
 
@@ -47,6 +54,9 @@ As the PR reviewer, focus on security, containers, and project standards.
 4. **Script correctness** - Shell scripts should use proper error handling (set -e)
 5. **Python imports** - Ensure compatibility with containerized environment
 6. **MCP tool changes** - Verify tools follow async patterns and error handling
+7. **Bulletin Board security** - Internal network isolation, access restrictions
+8. **Database interactions** - SQLAlchemy models, no SQL injection risks
+9. **Agent endpoints** - Must be restricted to internal network only
 
 ### IGNORE or deprioritize
 
@@ -82,6 +92,11 @@ As the PR reviewer, focus on security, containers, and project standards.
 ## Project Structure
 
 ```
+├── bulletin_board/      # AI agents bulletin board system
+│   ├── agents/         # Agent profiles and runners
+│   ├── app/            # Flask web application
+│   ├── database/       # PostgreSQL models and schema
+│   └── config/         # Configuration management
 ├── docker/              # Container definitions
 ├── tools/               # MCP server and tools
 ├── scripts/             # Helper scripts (run-ci.sh, etc.)
@@ -105,6 +120,9 @@ As the PR reviewer, focus on security, containers, and project standards.
 5. **tools/mcp/mcp_server.py** - Core MCP functionality
 6. **scripts/run-ci.sh** - Main CI/CD entry point
 7. **.mcp.json** - Tool configuration and rate limits
+8. **bulletin_board/app/app.py** - Flask app with security restrictions
+9. **bulletin_board/database/models.py** - Database schema definitions
+10. **scripts/bulletin-board.sh** - Bulletin board management script
 
 ## Code Review Examples
 

@@ -45,7 +45,9 @@ class TestMCPTools:
             result = await MCPTools.format_check("test.py", "python")
 
             assert result["formatted"] is True
-            mock_run.assert_called_once_with(["black", "--check", "test.py"], capture_output=True, text=True)
+            mock_run.assert_called_once_with(
+                ["black", "--check", "test.py"], capture_output=True, text=True
+            )
 
     @pytest.mark.asyncio
     async def test_format_check_unsupported_language(self):
@@ -74,7 +76,8 @@ class TestMCPTools:
             # Mock lint with issues
             mock_run.return_value = Mock(
                 returncode=1,
-                stdout="test.py:10:1: E302 expected 2 blank lines\n" "test.py:20:80: E501 line too long",
+                stdout="test.py:10:1: E302 expected 2 blank lines\n"
+                "test.py:20:80: E501 line too long",
                 stderr="",
             )
 
@@ -93,14 +96,21 @@ class TestMCPTools:
                         with patch("os.makedirs") as mock_makedirs:
                             with patch("builtins.open", mock_open()) as _mock_file:
                                 # Setup mocks
-                                mock_tmpdir.return_value.__enter__.return_value = "/tmp/test"
+                                mock_tmpdir.return_value.__enter__.return_value = (
+                                    "/tmp/test"
+                                )
                                 mock_run.return_value = Mock(returncode=0)
                                 mock_exists.return_value = True
                                 mock_makedirs.return_value = None
 
                                 # Test compilation
-                                latex_content = r"\documentclass{article}" r"\begin{document}Test\end{document}"
-                                result = await MCPTools.compile_latex(latex_content, "pdf")
+                                latex_content = (
+                                    r"\documentclass{article}"
+                                    r"\begin{document}Test\end{document}"
+                                )
+                                result = await MCPTools.compile_latex(
+                                    latex_content, "pdf"
+                                )
 
                                 assert result["success"] is True
                                 assert result["format"] == "pdf"
@@ -128,7 +138,9 @@ class TestMCPTools:
                             mock_makedirs.return_value = None
 
                             # Test animation
-                            script = "from manim import *\n" "class TestScene(Scene): pass"
+                            script = (
+                                "from manim import *\n" "class TestScene(Scene): pass"
+                            )
                             result = await MCPTools.create_manim_animation(script)
 
                             assert result["success"] is True
@@ -176,7 +188,9 @@ class TestMCPServer:
                         "format_check": {"description": "Check code formatting"},
                         "lint": {"description": "Lint code"},
                         "compile_latex": {"description": "Compile LaTeX"},
-                        "create_manim_animation": {"description": "Create Manim animation"},
+                        "create_manim_animation": {
+                            "description": "Create Manim animation"
+                        },
                     }
                 )
             else:
@@ -193,7 +207,9 @@ class TestMCPServer:
                     response.json = Mock(return_value={"detail": "Tool not found"})
                 else:
                     response.status_code = 200
-                    response.json = Mock(return_value={"success": True, "result": {"formatted": True}})
+                    response.json = Mock(
+                        return_value={"success": True, "result": {"formatted": True}}
+                    )
             else:
                 response.status_code = 404
                 response.json = Mock(return_value={"detail": "Not found"})
@@ -235,7 +251,9 @@ class TestMCPServer:
 
     def test_execute_tool_invalid(self, client):
         """Test executing invalid tool"""
-        response = client.post("/tools/execute", json={"tool": "invalid_tool", "arguments": {}})
+        response = client.post(
+            "/tools/execute", json={"tool": "invalid_tool", "arguments": {}}
+        )
 
         assert response.status_code == 404
         assert "Tool not found" in response.json()["detail"]

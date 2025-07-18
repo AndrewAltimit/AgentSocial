@@ -20,7 +20,9 @@ from mcp.server import InitializationOptions, NotificationOptions, Server
 def check_container_and_exit():
     """Check if running in a container and exit immediately if true."""
     if os.path.exists("/.dockerenv") or os.environ.get("CONTAINER_ENV"):
-        print("ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr)
+        print(
+            "ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr
+        )
         print(
             "The Gemini CLI requires Docker access and must run on the host system.",
             file=sys.stderr,
@@ -77,11 +79,13 @@ class MCPServer:
             "timeout": int(os.getenv("GEMINI_TIMEOUT", "60")),
             "rate_limit_delay": float(os.getenv("GEMINI_RATE_LIMIT", "2")),
             "max_context_length": int(os.getenv("GEMINI_MAX_CONTEXT", "4000")),
-            "log_consultations": os.getenv("GEMINI_LOG_CONSULTATIONS", "true").lower() == "true",
+            "log_consultations": os.getenv("GEMINI_LOG_CONSULTATIONS", "true").lower()
+            == "true",
             "model": os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             "sandbox_mode": os.getenv("GEMINI_SANDBOX", "false").lower() == "true",
             "debug_mode": os.getenv("GEMINI_DEBUG", "false").lower() == "true",
-            "include_history": os.getenv("GEMINI_INCLUDE_HISTORY", "true").lower() == "true",
+            "include_history": os.getenv("GEMINI_INCLUDE_HISTORY", "true").lower()
+            == "true",
             "max_history_entries": int(os.getenv("GEMINI_MAX_HISTORY", "10")),
         }
 
@@ -113,7 +117,10 @@ class MCPServer:
                 return [
                     types.TextContent(
                         type="text",
-                        text="❌ Error: 'query' parameter is required for Gemini consultation",
+                        text=(
+                            "❌ Error: 'query' parameter is required for "
+                            "Gemini consultation"
+                        ),
                     )
                 ]
 
@@ -147,7 +154,11 @@ class MCPServer:
                 self.gemini.auto_consult = bool(enable)
 
             status = "enabled" if self.gemini.auto_consult else "disabled"
-            return [types.TextContent(type="text", text=f"✅ Gemini auto-consultation is now {status}")]
+            return [
+                types.TextContent(
+                    type="text", text=f"✅ Gemini auto-consultation is now {status}"
+                )
+            ]
 
         @self.server.call_tool()
         async def clear_gemini_history(
@@ -157,7 +168,9 @@ class MCPServer:
             result = self.gemini.clear_conversation_history()
             return [types.TextContent(type="text", text=f"✅ {result['message']}")]
 
-    async def _format_gemini_response(self, result: Dict[str, Any]) -> List[types.TextContent]:
+    async def _format_gemini_response(
+        self, result: Dict[str, Any]
+    ) -> List[types.TextContent]:
         """Format Gemini consultation response for MCP output."""
         output_lines = []
         output_lines.append("🤖 Gemini Consultation Response")
@@ -181,7 +194,9 @@ class MCPServer:
 
         elif result["status"] == "timeout":
             output_lines.append(f"❌ {result['error']}")
-            output_lines.append("💡 Try increasing the timeout or simplifying the query")
+            output_lines.append(
+                "💡 Try increasing the timeout or simplifying the query"
+            )
 
         else:  # error
             output_lines.append(f"❌ Error: {result.get('error', 'Unknown error')}")
@@ -202,8 +217,12 @@ class MCPServer:
 
         # Configuration status
         output_lines.append("⚙️  Configuration:")
-        output_lines.append(f"  • Enabled: {'✅ Yes' if self.gemini.enabled else '❌ No'}")
-        output_lines.append(f"  • Auto-consult: {'✅ Yes' if self.gemini.auto_consult else '❌ No'}")
+        output_lines.append(
+            f"  • Enabled: {'✅ Yes' if self.gemini.enabled else '❌ No'}"
+        )
+        output_lines.append(
+            f"  • Auto-consult: {'✅ Yes' if self.gemini.auto_consult else '❌ No'}"
+        )
         output_lines.append(f"  • CLI command: {self.gemini.cli_command}")
         output_lines.append(f"  • Timeout: {self.gemini.timeout}s")
         output_lines.append(f"  • Rate limit: {self.gemini.rate_limit_delay}s")
@@ -211,7 +230,8 @@ class MCPServer:
 
         # Check if Gemini CLI is available
         try:
-            # Test with a simple prompt rather than --version (which may not be supported)
+            # Test with a simple prompt rather than --version
+            # (which may not be supported)
             check_process = await asyncio.create_subprocess_exec(
                 self.gemini.cli_command,
                 "-p",
@@ -219,7 +239,9 @@ class MCPServer:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await asyncio.wait_for(check_process.communicate(), timeout=10)
+            stdout, stderr = await asyncio.wait_for(
+                check_process.communicate(), timeout=10
+            )
 
             if check_process.returncode == 0:
                 output_lines.append("✅ Gemini CLI is available and working")
@@ -248,11 +270,18 @@ class MCPServer:
                 output_lines.append(f"  Error: {error_msg}")
 
                 # Check for authentication issues
-                if "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+                if (
+                    "authentication" in error_msg.lower()
+                    or "api key" in error_msg.lower()
+                ):
                     output_lines.append("")
                     output_lines.append("🔑 Authentication required:")
-                    output_lines.append("  1. Set GEMINI_API_KEY environment variable, or")
-                    output_lines.append("  2. Run 'gemini' interactively to authenticate with Google")
+                    output_lines.append(
+                        "  1. Set GEMINI_API_KEY environment variable, or"
+                    )
+                    output_lines.append(
+                        "  2. Run 'gemini' interactively to authenticate with Google"
+                    )
 
         except asyncio.TimeoutError:
             output_lines.append("❌ Gemini CLI test timed out")
@@ -273,7 +302,9 @@ class MCPServer:
         # Consultation statistics
         stats = self.gemini.get_consultation_stats()
         output_lines.append("📊 Consultation Statistics:")
-        output_lines.append(f"  • Total consultations: {stats.get('total_consultations', 0)}")
+        output_lines.append(
+            f"  • Total consultations: {stats.get('total_consultations', 0)}"
+        )
 
         completed = stats.get("completed_consultations", 0)
         output_lines.append(f"  • Completed: {completed}")
@@ -281,7 +312,11 @@ class MCPServer:
         if completed > 0:
             avg_time = stats.get("average_execution_time", 0)
             output_lines.append(f"  • Average time: {avg_time:.2f}s")
-            total_time = sum(e.get("execution_time", 0) for e in self.gemini.consultation_log if e.get("status") == "success")
+            total_time = sum(
+                e.get("execution_time", 0)
+                for e in self.gemini.consultation_log
+                if e.get("status") == "success"
+            )
             output_lines.append(f"  • Total time: {total_time:.2f}s")
 
         output_lines.append("")
@@ -299,7 +334,9 @@ class MCPServer:
         """
         return self.gemini.detect_uncertainty(response)
 
-    async def maybe_consult_gemini(self, response: str, context: str = "") -> Optional[Dict[str, Any]]:
+    async def maybe_consult_gemini(
+        self, response: str, context: str = ""
+    ) -> Optional[Dict[str, Any]]:
         """
         Check if response contains uncertainty and consult Gemini if needed.
 
@@ -320,9 +357,13 @@ class MCPServer:
             query = f"Please provide a second opinion on this analysis:\n\n{response}"
 
             # Add uncertainty patterns to context
-            enhanced_context = f"{context}\n\nUncertainty detected in: {', '.join(patterns)}"
+            enhanced_context = (
+                f"{context}\n\nUncertainty detected in: {', '.join(patterns)}"
+            )
 
-            result = await self.gemini.consult_gemini(query=query, context=enhanced_context, comparison_mode=True)
+            result = await self.gemini.consult_gemini(
+                query=query, context=enhanced_context, comparison_mode=True
+            )
 
             return result
 
@@ -373,7 +414,10 @@ if __name__ == "__main__":
 
     # If port is specified, run as HTTP server (for backward compatibility/testing)
     if args.port:
-        print("Warning: Running in HTTP mode. For production, use stdio mode (no --port argument)")
+        print(
+            "Warning: Running in HTTP mode. For production, use stdio mode "
+            "(no --port argument)"
+        )
         # Import and run the HTTP server
         try:
             from gemini_mcp_server_http import run_http_server
