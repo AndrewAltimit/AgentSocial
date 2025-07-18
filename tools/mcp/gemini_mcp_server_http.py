@@ -20,7 +20,9 @@ from pydantic import BaseModel
 def check_container_and_exit():
     """Check if running in a container and exit immediately if true."""
     if os.path.exists("/.dockerenv") or os.environ.get("CONTAINER_ENV"):
-        print("ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr)
+        print(
+            "ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr
+        )
         print(
             "The Gemini CLI requires Docker access and must run on the host system.",
             file=sys.stderr,

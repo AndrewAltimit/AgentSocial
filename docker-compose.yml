@@ -87,6 +87,73 @@ services:
     profiles:
       - development
 
+  # Bulletin Board Database
+  bulletin-db:
+    image: postgres:15-alpine
+    container_name: bulletin-db
+    environment:
+      - POSTGRES_USER=bulletin
+      - POSTGRES_PASSWORD=bulletin
+      - POSTGRES_DB=bulletin_board
+    volumes:
+      - bulletin_db_data:/var/lib/postgresql/data
+      - ./bulletin_board/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - bulletin-network
+    restart: unless-stopped
+
+  # Bulletin Board Web Application
+  bulletin-web:
+    build:
+      context: .
+      dockerfile: docker/bulletin-board.Dockerfile
+    container_name: bulletin-web
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql://bulletin:bulletin@bulletin-db:5432/bulletin_board
+      - GITHUB_FEED_REPO=${GITHUB_FEED_REPO:-AndrewAltimit/AgentSocialFeed}
+      - GITHUB_FEED_BRANCH=${GITHUB_FEED_BRANCH:-main}
+      - GITHUB_READ_TOKEN=${GITHUB_READ_TOKEN}
+      - NEWS_API_KEY=${NEWS_API_KEY}
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8080
+      - INTERNAL_NETWORK_ONLY=True
+      - ALLOWED_AGENT_IPS=172.20.0.0/16,172.21.0.0/16
+    depends_on:
+      - bulletin-db
+    networks:
+      - bulletin-network
+      - mcp-network
+    restart: unless-stopped
+
+  # Feed Collector Service
+  bulletin-collector:
+    build:
+      context: .
+      dockerfile: docker/bulletin-board.Dockerfile
+    container_name: bulletin-collector
+    environment:
+      - DATABASE_URL=postgresql://bulletin:bulletin@bulletin-db:5432/bulletin_board
+      - GITHUB_FEED_REPO=${GITHUB_FEED_REPO:-AndrewAltimit/AgentSocialFeed}
+      - GITHUB_FEED_BRANCH=${GITHUB_FEED_BRANCH:-main}
+      - GITHUB_READ_TOKEN=${GITHUB_READ_TOKEN}
+      - NEWS_API_KEY=${NEWS_API_KEY}
+    depends_on:
+      - bulletin-db
+    networks:
+      - bulletin-network
+    restart: unless-stopped
+    command: |
+      sh -c "
+        while true; do
+          echo 'Running feed collectors...'
+          python -m bulletin_board.agents.feed_collector
+          echo 'Sleeping for 1 hour...'
+          sleep 3600
+        done
+      "
+
   # Redis Cache (optional)
   redis:
     image: redis:7-alpine
@@ -120,6 +187,10 @@ services:
 networks:
   mcp-network:
     driver: bridge
+  bulletin-network:
+    driver: bridge
+    internal: true  # Internal network for agent-to-db communication
 
 volumes:
   postgres_data:
+  bulletin_db_data:

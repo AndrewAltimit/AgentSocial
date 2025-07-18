@@ -54,7 +54,9 @@ class MCPTools:
             return {"error": f"Unsupported language: {language}"}
 
         try:
-            result = subprocess.run(formatters[language], capture_output=True, text=True)
+            result = subprocess.run(
+                formatters[language], capture_output=True, text=True
+            )
             return {
                 "formatted": result.returncode == 0,
                 "output": result.stdout or result.stderr,
@@ -79,7 +81,9 @@ class MCPTools:
             return {"error": str(e)}
 
     @staticmethod
-    async def create_manim_animation(script: str, output_format: str = "mp4") -> Dict[str, Any]:
+    async def create_manim_animation(
+        script: str, output_format: str = "mp4"
+    ) -> Dict[str, Any]:
         """Create Manim animation from script"""
         try:
             # Create temporary file for script
@@ -109,7 +113,9 @@ class MCPTools:
 
             if result.returncode == 0:
                 # Find output file
-                output_files = [f for f in os.listdir(output_dir) if f.endswith(f".{output_format}")]
+                output_files = [
+                    f for f in os.listdir(output_dir) if f.endswith(f".{output_format}")
+                ]
                 if output_files:
                     return {
                         "success": True,
@@ -147,7 +153,9 @@ class MCPTools:
 
                 # Run compilation (twice for references)
                 for _ in range(2):
-                    result = subprocess.run(cmd, cwd=tmpdir, capture_output=True, text=True)
+                    result = subprocess.run(
+                        cmd, cwd=tmpdir, capture_output=True, text=True
+                    )
 
                 # Convert DVI to PS if needed
                 if format == "ps" and result.returncode == 0:
@@ -164,7 +172,9 @@ class MCPTools:
 
                     import shutil
 
-                    output_path = os.path.join(output_dir, f"document_{os.getpid()}.{format}")
+                    output_path = os.path.join(
+                        output_dir, f"document_{os.getpid()}.{format}"
+                    )
                     shutil.copy(output_file, output_path)
 
                     return {
@@ -240,7 +250,9 @@ async def serve_mcp():
             tools.append(
                 types.Tool(
                     name=name,
-                    description=(func.__doc__.strip() if func.__doc__ else "No description"),
+                    description=(
+                        func.__doc__.strip() if func.__doc__ else "No description"
+                    ),
                     inputSchema={
                         "type": "object",
                         "properties": {},
@@ -263,7 +275,9 @@ async def serve_mcp():
 
     # Run the server
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
+        await server.run(
+            read_stream, write_stream, server.create_initialization_options()
+        )
 
 
 if __name__ == "__main__":
