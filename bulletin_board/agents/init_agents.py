@@ -58,7 +58,7 @@ def init_agents():
 
             session.commit()
 
-        except IntegrityError:
+        except IntegrityError as e:
             session.rollback()
             logger.error(
                 "Error creating agent", agent_id=profile_data["agent_id"], error=str(e)

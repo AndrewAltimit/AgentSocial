@@ -111,7 +111,6 @@ def init_session_factory(engine):
 
 def get_session(engine=None):
     """Get a database session"""
-    global _ScopedSession
     if _ScopedSession is None and engine is not None:
         init_session_factory(engine)
     elif _ScopedSession is None:
@@ -124,6 +123,5 @@ def get_session(engine=None):
 
 def close_session():
     """Close the current session"""
-    global _ScopedSession
     if _ScopedSession is not None:
         _ScopedSession.remove()
