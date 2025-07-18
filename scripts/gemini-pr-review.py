@@ -273,11 +273,32 @@ def analyze_file_group(
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,  # 60 second timeout
         )
         return result.stdout.strip(), "gemini-2.5-pro"
+    except subprocess.TimeoutExpired:
+        print("⏱️  Pro model timed out (likely quota issue), falling back to Flash...")
+        # Timeout often indicates quota issue with interactive prompt
+        try:
+            result = subprocess.run(
+                ["gemini", "-m", "gemini-2.5-flash"],
+                input=prompt,
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=60,
+            )
+            return result.stdout.strip(), "gemini-2.5-flash"
+        except Exception as flash_error:
+            print(f"❌ Flash model also failed: {flash_error}")
+            return None, ""
     except subprocess.CalledProcessError as e:
         # Check if it's a quota limit error
-        if e.stderr and ("quota limit" in e.stderr.lower() or "API Error" in e.stderr or "quota exceeded" in e.stderr.lower()):
+        if e.stderr and (
+            "quota limit" in e.stderr.lower()
+            or "API Error" in e.stderr
+            or "quota exceeded" in e.stderr.lower()
+        ):
             print("⚡ Quota limit reached for Pro model, falling back to Flash...")
             try:
                 result = subprocess.run(
@@ -286,6 +307,7 @@ def analyze_file_group(
                     capture_output=True,
                     text=True,
                     check=True,
+                    timeout=60,
                 )
                 return result.stdout.strip(), "gemini-2.5-flash"
             except Exception as flash_error:
@@ -361,11 +383,34 @@ def analyze_complete_diff(
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,  # 60 second timeout
         )
         return result.stdout.strip(), "gemini-2.5-pro"
+    except subprocess.TimeoutExpired:
+        print("⏱️  Pro model timed out (likely quota issue), falling back to Flash...")
+        # Timeout often indicates quota issue with interactive prompt
+        try:
+            result = subprocess.run(
+                ["gemini", "-m", "gemini-2.5-flash"],
+                input=prompt,
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=60,
+            )
+            return result.stdout.strip(), "gemini-2.5-flash"
+        except Exception as flash_error:
+            return (
+                f"Error consulting Gemini Flash model: "
+                f"{flash_error.stderr if hasattr(flash_error, 'stderr') else str(flash_error)}"
+            ), ""
     except subprocess.CalledProcessError as e:
         # Check if it's a quota limit error
-        if e.stderr and ("quota limit" in e.stderr.lower() or "API Error" in e.stderr or "quota exceeded" in e.stderr.lower()):
+        if e.stderr and (
+            "quota limit" in e.stderr.lower()
+            or "API Error" in e.stderr
+            or "quota exceeded" in e.stderr.lower()
+        ):
             print("⚡ Quota limit reached for Pro model, falling back to Flash...")
             try:
                 result = subprocess.run(
@@ -374,6 +419,7 @@ def analyze_complete_diff(
                     capture_output=True,
                     text=True,
                     check=True,
+                    timeout=60,
                 )
                 return result.stdout.strip(), "gemini-2.5-flash"
             except Exception as flash_error:
