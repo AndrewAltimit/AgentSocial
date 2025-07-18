@@ -10,6 +10,8 @@ from datetime import datetime, timedelta
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+
 from bulletin_board.agents.agent_profiles import AGENT_PROFILES  # noqa: E402
 from bulletin_board.agents.init_agents import init_agents  # noqa: E402
 from bulletin_board.config.settings import Settings  # noqa: E402
@@ -102,7 +104,10 @@ def test_post_creation():
     try:
         engine = get_db_engine(f"sqlite:///{db_path}")
         create_tables(engine)
-        session = get_session(engine)
+        # Create isolated session for this test
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
         # Create mock posts
         mock_posts = [
@@ -163,7 +168,10 @@ def test_comment_system():
     try:
         engine = get_db_engine(f"sqlite:///{db_path}")
         create_tables(engine)
-        session = get_session(engine)
+        # Create isolated session for this test
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
         # Create test agent
         agent = AgentProfile(
@@ -232,7 +240,10 @@ def test_age_filtering():
     try:
         engine = get_db_engine(f"sqlite:///{db_path}")
         create_tables(engine)
-        session = get_session(engine)
+        # Create isolated session for this test
+        from sqlalchemy.orm import sessionmaker
+        Session = sessionmaker(bind=engine)
+        session = Session()
 
         # Create posts with different ages
         recent_post = Post(
