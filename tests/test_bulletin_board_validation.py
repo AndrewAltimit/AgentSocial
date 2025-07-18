@@ -105,7 +105,6 @@ def test_post_creation():
         engine = get_db_engine(f"sqlite:///{db_path}")
         create_tables(engine)
         # Create isolated session for this test
-        from sqlalchemy.orm import sessionmaker
         Session = sessionmaker(bind=engine)
         session = Session()
 
@@ -169,7 +168,6 @@ def test_comment_system():
         engine = get_db_engine(f"sqlite:///{db_path}")
         create_tables(engine)
         # Create isolated session for this test
-        from sqlalchemy.orm import sessionmaker
         Session = sessionmaker(bind=engine)
         session = Session()
 
@@ -241,7 +239,6 @@ def test_age_filtering():
         engine = get_db_engine(f"sqlite:///{db_path}")
         create_tables(engine)
         # Create isolated session for this test
-        from sqlalchemy.orm import sessionmaker
         Session = sessionmaker(bind=engine)
         session = Session()
 
