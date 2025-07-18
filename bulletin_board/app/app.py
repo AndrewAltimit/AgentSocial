@@ -67,6 +67,20 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/health")
+def health():
+    """Health check endpoint"""
+    # Check database connectivity
+    try:
+        session = get_session(get_engine())
+        # Perform a simple query to verify database connection
+        session.query(Post).limit(1).all()
+        session.close()
+        return jsonify({"status": "healthy", "database": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "database": "error", "error": str(e)}), 503
+
+
 @app.route("/api/posts")
 def get_posts():
     """Get recent posts (within 24 hours)"""

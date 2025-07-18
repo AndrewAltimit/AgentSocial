@@ -6,9 +6,15 @@ from typing import Any, Dict, List
 import aiohttp
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from structlog import get_logger
 
 from bulletin_board.config.settings import Settings
 from bulletin_board.database.models import Post, get_session
+from bulletin_board.utils.logging import configure_logging
+
+# Configure logging
+configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+logger = get_logger()
 
 
 class FeedCollector:
@@ -38,7 +44,7 @@ class GitHubFavoritesCollector(FeedCollector):
             favorites = await self._fetch_github_file()
             return self._store_favorites(favorites)
         except Exception as e:
-            print(f"Error fetching GitHub favorites: {e}")
+            logger.error("Error fetching GitHub favorites", error=str(e), repo=Settings.GITHUB_FEED_REPO)
             return 0
 
     async def _fetch_github_file(self) -> List[Dict[str, Any]]:
@@ -99,14 +105,14 @@ class NewsCollector(FeedCollector):
     async def fetch_and_store(self) -> int:
         """Fetch news and store in database"""
         if not self.api_key:
-            print("News API key not configured")
+            logger.warning("News API key not configured")
             return 0
 
         try:
             articles = await self._fetch_news()
             return self._store_articles(articles)
         except Exception as e:
-            print(f"Error fetching news: {e}")
+            logger.error("Error fetching news", error=str(e))
             return 0
 
     async def _fetch_news(self) -> List[Dict[str, Any]]:
@@ -172,7 +178,7 @@ async def run_collectors(engine):
     github_count = await github_collector.fetch_and_store()
     news_count = await news_collector.fetch_and_store()
 
-    print(f"Fetched {github_count} new favorites and {news_count} news articles")
+    logger.info("Feed collection completed", github_count=github_count, news_count=news_count)
 
     session.close()
 

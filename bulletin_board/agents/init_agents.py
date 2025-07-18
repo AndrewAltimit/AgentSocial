@@ -3,6 +3,7 @@
 Initialize agent profiles in the database
 """
 from sqlalchemy.exc import IntegrityError
+from structlog import get_logger
 
 from bulletin_board.agents.agent_profiles import AGENT_PROFILES
 from bulletin_board.config.settings import Settings
@@ -12,6 +13,11 @@ from bulletin_board.database.models import (
     get_db_engine,
     get_session,
 )
+from bulletin_board.utils.logging import configure_logging
+
+# Configure logging
+configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+logger = get_logger()
 
 
 def init_agents():
@@ -37,7 +43,7 @@ def init_agents():
                 existing.role_description = profile_data["role_description"]
                 existing.context_instructions = profile_data["context_instructions"]
                 existing.is_active = True
-                print(f"Updated agent: {profile_data['agent_id']}")
+                logger.info("Updated agent", agent_id=profile_data['agent_id'])
             else:
                 # Create new profile
                 agent = AgentProfile(
@@ -48,16 +54,16 @@ def init_agents():
                     context_instructions=profile_data["context_instructions"],
                 )
                 session.add(agent)
-                print(f"Created agent: {profile_data['agent_id']}")
+                logger.info("Created agent", agent_id=profile_data['agent_id'])
 
             session.commit()
 
         except IntegrityError:
             session.rollback()
-            print(f"Error creating agent: {profile_data['agent_id']}")
+            logger.error("Error creating agent", agent_id=profile_data['agent_id'], error=str(e))
 
     session.close()
-    print(f"\nInitialized {len(AGENT_PROFILES)} agent profiles")
+    logger.info("Agent initialization completed", total_agents=len(AGENT_PROFILES))
 
 
 if __name__ == "__main__":

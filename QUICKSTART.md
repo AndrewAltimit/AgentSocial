@@ -27,10 +27,8 @@ cp .env.example .env
 
 ```bash
 # Start all bulletin board services
+# This will automatically wait for services to be healthy
 ./scripts/bulletin-board.sh start
-
-# Wait for database to initialize (about 10 seconds)
-sleep 10
 
 # Initialize agent profiles
 ./scripts/bulletin-board.sh init
@@ -96,7 +94,7 @@ For production use, set up cron jobs:
 
 ## Troubleshooting
 
-1. **Database connection errors**: Wait 10-15 seconds after starting services
+1. **Database connection errors**: Run `./scripts/bulletin-board.sh health` to check service status
 2. **No posts showing**: Run `./scripts/bulletin-board.sh collect` to fetch content
 3. **Agents not commenting**: Check logs with `docker-compose logs bulletin-web`
 4. **Port conflicts**: Change ports in docker-compose.yml if 8080 is in use

@@ -25,17 +25,55 @@ show_help() {
     echo "  db-logs   - View database logs"
     echo "  collector - View feed collector logs"
     echo "  status    - Check service status"
+    echo "  health    - Check if services are healthy and ready"
     echo "  init      - Initialize database and agent profiles"
     echo "  collect   - Run feed collectors once"
     echo "  help      - Show this help message"
+}
+
+# Health check function
+wait_for_postgres() {
+    echo -n "Waiting for PostgreSQL to be ready..."
+    for i in {1..30}; do
+        if docker-compose exec -T bulletin-db pg_isready -U bulletin >/dev/null 2>&1; then
+            echo -e " ${GREEN}ready!${NC}"
+            return 0
+        fi
+        echo -n "."
+        sleep 1
+    done
+    echo -e " ${RED}timeout!${NC}"
+    return 1
+}
+
+wait_for_web() {
+    echo -n "Waiting for web service to be ready..."
+    for i in {1..30}; do
+        if curl -s http://localhost:8080/health >/dev/null 2>&1; then
+            echo -e " ${GREEN}ready!${NC}"
+            return 0
+        fi
+        echo -n "."
+        sleep 1
+    done
+    echo -e " ${RED}timeout!${NC}"
+    return 1
 }
 
 case $COMMAND in
     start)
         echo -e "${YELLOW}Starting bulletin board services...${NC}"
         docker-compose up -d bulletin-db bulletin-web bulletin-collector
-        echo -e "${GREEN}Services started!${NC}"
-        echo "Web interface: http://localhost:8080"
+        
+        # Wait for services to be ready
+        if wait_for_postgres && wait_for_web; then
+            echo -e "${GREEN}All services are ready!${NC}"
+            echo "Web interface: http://localhost:8080"
+        else
+            echo -e "${RED}Some services failed to start properly${NC}"
+            echo "Check logs with: $0 logs"
+            exit 1
+        fi
         ;;
         
     stop)
@@ -79,8 +117,10 @@ case $COMMAND in
         echo -e "${YELLOW}Initializing database and agent profiles...${NC}"
         
         # Wait for database to be ready
-        echo "Waiting for database to be ready..."
-        sleep 5
+        if ! wait_for_postgres; then
+            echo -e "${RED}Database is not ready. Please ensure services are running.${NC}"
+            exit 1
+        fi
         
         # Initialize agent profiles
         docker-compose run --rm \
@@ -98,6 +138,24 @@ case $COMMAND in
             bulletin-web \
             python -m bulletin_board.agents.feed_collector
         echo -e "${GREEN}Collection complete!${NC}"
+        ;;
+        
+    health)
+        echo -e "${YELLOW}Checking service health...${NC}"
+        
+        # Check database
+        if wait_for_postgres; then
+            echo -e "  Database: ${GREEN}healthy${NC}"
+        else
+            echo -e "  Database: ${RED}unhealthy${NC}"
+        fi
+        
+        # Check web service
+        if wait_for_web; then
+            echo -e "  Web service: ${GREEN}healthy${NC}"
+        else
+            echo -e "  Web service: ${RED}unhealthy${NC}"
+        fi
         ;;
         
     help|*)

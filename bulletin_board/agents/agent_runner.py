@@ -7,9 +7,15 @@ import random
 from typing import Any, Dict, List, Optional
 
 import aiohttp
+from structlog import get_logger
 
 from bulletin_board.agents.agent_profiles import get_agent_by_id
 from bulletin_board.config.settings import Settings
+from bulletin_board.utils.logging import configure_logging
+
+# Configure logging
+configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+logger = get_logger()
 
 
 class AgentRunner:
@@ -21,7 +27,7 @@ class AgentRunner:
         if not self.profile:
             raise ValueError(f"Unknown agent ID: {agent_id}")
 
-        self.base_url = f"http://localhost:{Settings.APP_PORT}"
+        self.base_url = Settings.BULLETIN_BOARD_URL
 
     async def get_recent_posts(self) -> List[Dict[str, Any]]:
         """Fetch recent posts from the bulletin board"""
@@ -32,7 +38,7 @@ class AgentRunner:
                 if response.status == 200:
                     return await response.json()
                 else:
-                    print(f"Error fetching posts: {response.status}")
+                    logger.error("Error fetching posts", status=response.status, agent_id=self.agent_id)
                     return []
 
     async def post_comment(
@@ -51,7 +57,7 @@ class AgentRunner:
                 if response.status == 201:
                     return True
                 else:
-                    print(f"Error posting comment: {response.status}")
+                    logger.error("Error posting comment", status=response.status, agent_id=self.agent_id, post_id=post_id)
                     return False
 
     async def analyze_and_comment(self, posts: List[Dict[str, Any]]) -> int:
@@ -61,17 +67,17 @@ class AgentRunner:
 
     async def run(self):
         """Main agent run loop"""
-        print(f"Starting agent: {self.profile['display_name']} ({self.agent_id})")
+        logger.info("Starting agent", agent_id=self.agent_id, display_name=self.profile['display_name'])
 
         posts = await self.get_recent_posts()
         if not posts:
-            print("No recent posts to analyze")
+            logger.info("No recent posts to analyze", agent_id=self.agent_id)
             return
 
-        print(f"Found {len(posts)} recent posts")
+        logger.info("Found recent posts", agent_id=self.agent_id, post_count=len(posts))
 
         comments_made = await self.analyze_and_comment(posts)
-        print(f"Agent made {comments_made} comments")
+        logger.info("Agent run completed", agent_id=self.agent_id, comments_made=comments_made)
 
 
 class ClaudeAgent(AgentRunner):
@@ -101,7 +107,7 @@ class ClaudeAgent(AgentRunner):
 
             if await self.post_comment(post["id"], comment):
                 comments_made += 1
-                print(f"Commented on post: {post['title'][:50]}...")
+                logger.info("Commented on post", agent_id=self.agent_id, post_id=post["id"], post_title=post['title'][:50])
 
             # Small delay between comments
             await asyncio.sleep(2)
@@ -161,7 +167,7 @@ class GeminiAgent(AgentRunner):
                 action = (
                     "Replied to comment on" if parent_comment_id else "Commented on"
                 )
-                print(f"{action} post: {post['title'][:50]}...")
+                logger.info(f"{action} post", agent_id=self.agent_id, post_id=post["id"], post_title=post['title'][:50], parent_comment_id=parent_comment_id)
 
             # Small delay between comments
             await asyncio.sleep(2)
@@ -192,7 +198,7 @@ async def run_agent(agent_id: str):
     """Run a specific agent"""
     profile = get_agent_by_id(agent_id)
     if not profile:
-        print(f"Unknown agent ID: {agent_id}")
+        logger.error("Unknown agent ID", agent_id=agent_id)
         return
 
     if profile["agent_software"] == "claude_code":
@@ -200,7 +206,7 @@ async def run_agent(agent_id: str):
     elif profile["agent_software"] == "gemini_cli":
         agent = GeminiAgent(agent_id)
     else:
-        print(f"Unknown agent software: {profile['agent_software']}")
+        logger.error("Unknown agent software", agent_id=agent_id, agent_software=profile['agent_software'])
         return
 
     await agent.run()
