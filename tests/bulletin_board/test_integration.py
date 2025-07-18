@@ -15,7 +15,6 @@ import pytest  # noqa: E402
 from bulletin_board.agents.agent_runner import run_all_agents  # noqa: E402
 from bulletin_board.agents.feed_collector import run_collectors  # noqa: E402
 from bulletin_board.agents.init_agents import init_agents  # noqa: E402
-from bulletin_board.app.app import app  # noqa: E402
 from bulletin_board.database.models import get_session  # noqa: E402
 
 
@@ -363,30 +362,35 @@ class TestBulletinBoardIntegration:
         session.close()
 
         # Test web endpoints
-        app.config["TESTING"] = True
-        with app.test_client() as client:
-            # Get posts
-            response = client.get("/api/posts")
-            assert response.status_code == 200
-            data = json.loads(response.data)
-            # Find our test post among all posts
-            test_post = next((p for p in data if p["title"] == "Web Test Post"), None)
-            assert test_post is not None
-            assert test_post["comment_count"] == 1
+        from bulletin_board.app.app import app
 
-            # Get single post with comments
-            response = client.get(f"/api/posts/{post_id}")
-            assert response.status_code == 200
-            data = json.loads(response.data)
-            assert data["title"] == "Web Test Post"
-            assert len(data["comments"]) == 1
-            assert data["comments"][0]["content"] == "Test comment from agent"
+        with patch("bulletin_board.app.app.engine", test_db_engine):
+            app.config["TESTING"] = True
+            with app.test_client() as client:
+                # Get posts
+                response = client.get("/api/posts")
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                # Find our test post among all posts
+                test_post = next(
+                    (p for p in data if p["title"] == "Web Test Post"), None
+                )
+                assert test_post is not None
+                assert test_post["comment_count"] == 1
 
-            # Get agents
-            response = client.get("/api/agents")
-            assert response.status_code == 200
-            data = json.loads(response.data)
-            assert len(data) == 5  # All configured agents
+                # Get single post with comments
+                response = client.get(f"/api/posts/{post_id}")
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert data["title"] == "Web Test Post"
+                assert len(data["comments"]) == 1
+                assert data["comments"][0]["content"] == "Test comment from agent"
+
+                # Get agents
+                response = client.get("/api/agents")
+                assert response.status_code == 200
+                data = json.loads(response.data)
+                assert len(data) == 5  # All configured agents
 
 
 class TestEndToEndScenarios:
@@ -421,6 +425,11 @@ class TestEndToEndScenarios:
         self, mock_environment, mock_db_functions, test_db_engine
     ):
         """Test complete cycle: collect feeds -> agents comment -> web display"""
+        # Reset Flask app engine to ensure clean state
+        import bulletin_board.app.app
+
+        bulletin_board.app.app.engine = None
+
         # Mock agent profiles
         test_profiles = [
             {
@@ -463,43 +472,48 @@ class TestEndToEndScenarios:
         session.close()
 
         # Step 2: Simulate agent commenting
-        app.config["TESTING"] = True
-        with app.test_client() as client:
-            # Agent posts comment
-            response = client.post(
-                "/api/agent/comment",
-                json={
-                    "post_id": post_id,
-                    "agent_id": "ai_researcher_gemini",
-                    "content": "This is a significant breakthrough in AI research!",
-                },
-            )
-            assert response.status_code == 201
+        from bulletin_board.app.app import app
 
-            # Another agent replies
-            comment_data = json.loads(response.data)
-            response = client.post(
-                "/api/agent/comment",
-                json={
-                    "post_id": post_id,
-                    "agent_id": "tech_enthusiast_claude",
-                    "content": "I agree! The implications are fascinating.",
-                    "parent_comment_id": comment_data["id"],
-                },
-            )
-            assert response.status_code == 201
+        # Ensure app uses test database
+        with patch("bulletin_board.app.app.engine", test_db_engine):
+            app.config["TESTING"] = True
+            with app.test_client() as client:
+                # Agent posts comment
+                response = client.post(
+                    "/api/agent/comment",
+                    json={
+                        "post_id": post_id,
+                        "agent_id": "ai_researcher_gemini",
+                        "content": "This is a significant breakthrough in AI research!",
+                    },
+                )
+                assert response.status_code == 201
+
+                # Another agent replies
+                comment_data = json.loads(response.data)
+                response = client.post(
+                    "/api/agent/comment",
+                    json={
+                        "post_id": post_id,
+                        "agent_id": "tech_enthusiast_claude",
+                        "content": "I agree! The implications are fascinating.",
+                        "parent_comment_id": comment_data["id"],
+                    },
+                )
+                assert response.status_code == 201
 
         # Step 3: Verify web display
-        with app.test_client() as client:
-            response = client.get(f"/api/posts/{post_id}")
-            assert response.status_code == 200
+        with patch("bulletin_board.app.app.engine", test_db_engine):
+            with app.test_client() as client:
+                response = client.get(f"/api/posts/{post_id}")
+                assert response.status_code == 200
 
-            data = json.loads(response.data)
-            assert data["title"] == "Breaking: New AI Model Released"
-            assert len(data["comments"]) == 2
+                data = json.loads(response.data)
+                assert data["title"] == "Breaking: New AI Model Released"
+                assert len(data["comments"]) == 2
 
-            # Verify comment thread
-            comments = sorted(data["comments"], key=lambda x: x["created_at"])
-            assert "significant breakthrough" in comments[0]["content"]
-            assert "implications are fascinating" in comments[1]["content"]
-            assert comments[1].get("parent_id") == comments[0]["id"]
+                # Verify comment thread
+                comments = sorted(data["comments"], key=lambda x: x["created_at"])
+                assert "significant breakthrough" in comments[0]["content"]
+                assert "implications are fascinating" in comments[1]["content"]
+                assert comments[1].get("parent_id") == comments[0]["id"]
