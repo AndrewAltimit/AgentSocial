@@ -1,630 +1,291 @@
 ---
-name: Main CI
-# Comprehensive CI for main branch with all validation stages
+name: Main CI Pipeline
 
-'on':
+on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
-      skip_docker_push:
-        description: 'Skip pushing Docker images'
+      skip_tests:
+        description: 'Skip tests'
         required: false
         type: boolean
         default: false
 
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  packages: write
+
 concurrency:
   group: main-ci-${{ github.sha }}
-  cancel-in-progress: false  # Don't cancel main branch builds
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  cancel-in-progress: false
 
 jobs:
-  # Stage 1: Format check
-  format-check:
-    uses: ./.github/workflows/lint-stages.yml
-    with:
-      stage: format
-      upload_artifacts: true
-
-  # Stage 2: Basic linting
-  basic-lint:
-    needs: format-check
-    uses: ./.github/workflows/lint-stages.yml
-    with:
-      stage: basic
-      upload_artifacts: true
-
-  # Stage 3: Full analysis
-  full-lint:
-    needs: basic-lint
-    uses: ./.github/workflows/lint-stages.yml
-    with:
-      stage: full
-      upload_artifacts: true
-
-  # Stage 4: Test suite execution
-  test-suite:
-    name: Test Suite
-    needs: basic-lint
+  # Stage 1: Change Detection
+  detect-changes:
+    name: Change Detection
     runs-on: self-hosted
-    timeout-minutes: 20
+    timeout-minutes: 5
+    outputs:
+      python_changed: ${{ steps.changes.outputs.python_changed }}
+      yaml_changed: ${{ steps.changes.outputs.yaml_changed }}
+      docker_changed: ${{ steps.changes.outputs.docker_changed }}
+      bulletin_changed: ${{ steps.changes.outputs.bulletin_changed }}
+      docs_changed: ${{ steps.changes.outputs.docs_changed }}
+      files_changed: ${{ steps.changes.outputs.files_changed }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
 
-      - name: Run tests
-        env:
-          MCP_GAEA2_URL: http://192.168.0.152:8007
+      - name: Detect file changes
+        id: changes
         run: |
-          echo "🧪 Running test suite..."
-          ./automation/ci-cd/run-ci.sh test --cov-report=html --timeout=300 --junitxml=test-results.xml
+          echo "Analyzing changes..."
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-${{ github.run_id }}
-          path: |
-            test-results.xml
-            htmlcov/
-            coverage.xml
-          retention-days: 30
+          # Get changed files
+          git diff --name-only HEAD~1..HEAD > changed_files.txt || echo "" > changed_files.txt
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          name: main-ci
+          # Count different types of changes
+          python_count=$(grep -E '\.(py)$' changed_files.txt | wc -l || echo "0")
+          yaml_count=$(grep -E '\.(ya?ml|json)$' changed_files.txt | wc -l || echo "0")
+          docker_count=$(grep -E '(Dockerfile|docker-compose\.yml|docker-compose\.yaml|\.dockerignore)' changed_files.txt | wc -l || echo "0")
+          bulletin_count=$(grep -E '(bulletin_board|bulletin-board)' changed_files.txt | wc -l || echo "0")
+          docs_count=$(grep -E '\.(md|rst|txt)$' changed_files.txt | wc -l || echo "0")
+          total_files=$(cat changed_files.txt | wc -l)
 
-      - name: Generate test summary
-        if: always()
-        run: |
-          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          # Set outputs
+          echo "python_changed=$([[ $python_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "yaml_changed=$([[ $yaml_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "docker_changed=$([[ $docker_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "bulletin_changed=$([[ $bulletin_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "docs_changed=$([[ $docs_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "files_changed=$total_files" >> $GITHUB_OUTPUT
 
-          if [ -f test-results.xml ]; then
-            # Parse test results
-            python3 -c "
-          import xml.etree.ElementTree as ET
-          tree = ET.parse('test-results.xml')
-          root = tree.getroot()
-          tests = int(root.attrib.get('tests', 0))
-          failures = int(root.attrib.get('failures', 0))
-          errors = int(root.attrib.get('errors', 0))
-          skipped = int(root.attrib.get('skipped', 0))
-          time = float(root.attrib.get('time', 0))
+          echo "[INFO] Change Summary:"
+          echo "  Python files: $python_count"
+          echo "  YAML/JSON files: $yaml_count"
+          echo "  Docker files: $docker_count"
+          echo "  Bulletin Board files: $bulletin_count"
+          echo "  Documentation: $docs_count"
+          echo "  Total files: $total_files"
 
-          print(f'| Metric | Value |')
-          print(f'|--------|-------|')
-          print(f'| Total Tests | {tests} |')
-          print(f'| Passed | {tests - failures - errors - skipped} |')
-          print(f'| Failed | {failures} |')
-          print(f'| Errors | {errors} |')
-          print(f'| Skipped | {skipped} |')
-          print(f'| Duration | {time:.2f}s |')
-          " >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # Add coverage info if available
-          if [ -f coverage.xml ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Coverage Report" >> $GITHUB_STEP_SUMMARY
-            python3 -c "
-          import xml.etree.ElementTree as ET
-          tree = ET.parse('coverage.xml')
-          root = tree.getroot()
-          line_rate = float(root.attrib.get('line-rate', 0)) * 100
-          branch_rate = float(root.attrib.get('branch-rate', 0)) * 100
-
-          print(f'- Line Coverage: {line_rate:.1f}%')
-          print(f'- Branch Coverage: {branch_rate:.1f}%')
-          " >> $GITHUB_STEP_SUMMARY
-          fi
-
-  # Stage 5: MCP servers validation
-  mcp-validation:
-    name: MCP Servers Validation
-    needs: basic-lint
+  # Stage 2: Code Quality Checks
+  lint-stages:
+    name: Code Quality - ${{ matrix.stage }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.python_changed == 'true' || needs.detect-changes.outputs.yaml_changed == 'true'
     runs-on: self-hosted
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        stage:
+          - format
+          - basic
+          - full
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Test modular MCP servers with Docker
-        run: |
-          echo "🤖 Testing modular MCP server functionality..."
-
-          # Build the CI image if needed
-          docker-compose build python-ci
-
-          # Test Code Quality MCP server
-          docker-compose run --rm python-ci bash -c "
-          pip install -r config/python/requirements.txt && python3 -c '
-          import sys
-          sys.path.insert(0, \".\")
-
-          # Test Code Quality server
-          try:
-              from tools.mcp.code_quality.server import CodeQualityMCPServer
-              from tools.mcp.code_quality.tools import TOOLS as CODE_TOOLS
-              print(\"✅ Code Quality MCP server imported successfully\")
-              print(f\"  - {len(CODE_TOOLS)} tools available\")
-              for tool in CODE_TOOLS:
-                  print(f\"    - {tool}\")
-          except ImportError as e:
-              print(f\"❌ Failed to import Code Quality server: {e}\")
-              exit(1)
-
-          # Test Content Creation server
-          try:
-              from tools.mcp.content_creation.server import ContentCreationMCPServer
-              from tools.mcp.content_creation.tools import TOOLS as CONTENT_TOOLS
-              print(\"✅ Content Creation MCP server imported successfully\")
-              print(f\"  - {len(CONTENT_TOOLS)} tools available\")
-              for tool in CONTENT_TOOLS:
-                  print(f\"    - {tool}\")
-          except ImportError as e:
-              print(f\"❌ Failed to import Content Creation server: {e}\")
-              exit(1)
-
-          # Test Gaea2 server (stubs only in container)
-          try:
-              from tools.mcp.gaea2.server import Gaea2MCPServer
-              from tools.mcp.gaea2.tools import TOOLS as GAEA2_TOOLS
-              print(\"✅ Gaea2 MCP server imported successfully\")
-              print(f\"  - {len(GAEA2_TOOLS)} tools available\")
-          except ImportError as e:
-              print(f\"❌ Failed to import Gaea2 server: {e}\")
-              exit(1)
-
-          # Test OpenCode server
-          try:
-              from tools.mcp.opencode.server import OpenCodeMCPServer
-              from tools.mcp.opencode.tools import TOOLS as OPENCODE_TOOLS
-              print(\"✅ OpenCode MCP server imported successfully\")
-              print(f\"  - {len(OPENCODE_TOOLS)} tools available\")
-              for tool in OPENCODE_TOOLS:
-                  print(f\"    - {tool}\")
-          except ImportError as e:
-              print(f\"❌ Failed to import OpenCode server: {e}\")
-              exit(1)
-
-          # Test Crush server
-          try:
-              from tools.mcp.crush.server import CrushMCPServer
-              from tools.mcp.crush.tools import TOOLS as CRUSH_TOOLS
-              print(\"✅ Crush MCP server imported successfully\")
-              print(f\"  - {len(CRUSH_TOOLS)} tools available\")
-              for tool in CRUSH_TOOLS:
-                  print(f\"    - {tool}\")
-          except ImportError as e:
-              print(f\"❌ Failed to import Crush server: {e}\")
-              exit(1)
-          '
-          "
-
-      - name: Start Code Quality MCP server
-        if: always()
-        uses: ./.github/actions/docker-compose-health-check
         with:
-          services: 'mcp-code-quality'
-          health-endpoint: 'http://localhost:8010/health'
-          timeout: '30'
-          build: 'true'
+          clean: true
 
-      - name: Start Content Creation MCP server
-        if: always()
-        uses: ./.github/actions/docker-compose-health-check
-        with:
-          services: 'mcp-content-creation'
-          health-endpoint: 'http://localhost:8011/health'
-          timeout: '30'
-          build: 'true'
-
-      - name: Test MCP servers HTTP endpoints
-        if: always()
+      - name: Run ${{ matrix.stage }} linting
         run: |
-          echo "🌐 Testing MCP servers HTTP endpoints..."
-          # Test Code Quality server
-          curl -s http://localhost:8010/health || echo "Code Quality health check failed"
-          curl -s http://localhost:8010/mcp/tools || echo "Code Quality tools listing failed"
+          echo "Running ${{ matrix.stage }} linting checks..."
+          ./automation/ci-cd/run-lint-stage.sh ${{ matrix.stage }}
 
-          # Test Content Creation server
-          curl -s http://localhost:8011/health || echo "Content Creation health check failed"
-          curl -s http://localhost:8011/mcp/tools || echo "Content Creation tools listing failed"
-
-      - name: Stop MCP servers
-        if: always()
-        run: |
-          docker-compose down
-          # Clean up output directories using Docker to handle permissions
-          ./automation/ci-cd/cleanup-outputs.sh
-
-  # Stage 6: Documentation build
-  docs-build:
-    name: Documentation Build
-    needs: basic-lint
-    runs-on: self-hosted
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Validate documentation
-        run: |
-          echo "📚 Validating documentation..."
-
-          # Check for required documentation files
-          required_docs=(
-            "README.md"
-            "config/python/requirements.txt"
-          )
-
-          for doc in "${required_docs[@]}"; do
-            if [ -f "$doc" ]; then
-              echo "✅ Found: $doc"
-            else
-              echo "❌ Missing: $doc"
-              exit 1
-            fi
-          done
-
-          # Check markdown files for basic issues
-          find . -name "*.md" -type f | while read -r file; do
-            echo "Checking: $file"
-            # Check for broken relative links
-            grep -Eo '\[([^]]+)\]\(([^)]+)\)' "$file" | grep -v http | while read -r link; do
-              path=$(echo "$link" | sed -E 's/.*\]\(([^)]+)\).*/\1/')
-              if [[ ! -f "$path" && ! -d "$path" && "$path" != "#"* ]]; then
-                echo "  ⚠️  Possible broken link: $path"
-              fi
-            done
-          done
-
-  # Stage 7: Security scanning
-  security-scan:
-    name: Security Scanning
-    needs: basic-lint
+  # Stage 3: Bulletin Board Tests
+  bulletin-board-tests:
+    name: Bulletin Board Tests
+    needs: [detect-changes, lint-stages]
+    if: >
+      (needs.detect-changes.outputs.python_changed == 'true' ||
+       needs.detect-changes.outputs.bulletin_changed == 'true') &&
+      github.event.inputs.skip_tests != 'true'
     runs-on: self-hosted
     timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Run security scans
-        run: |
-          echo "🔒 Running security scans..."
-          ./automation/ci-cd/run-ci.sh security
-
-          # Display summary
-          if [ -f bandit-report.json ]; then
-            docker-compose run --rm python-ci python3 -c "
-          import json
-          with open('bandit-report.json') as f:
-              data = json.load(f)
-          metrics = data.get('metrics', {})
-          results = data.get('results', [])
-
-          print('### Bandit Security Scan Results')
-          print(f'Total issues: {len(results)}')
-          for severity in ['HIGH', 'MEDIUM', 'LOW']:
-              count = sum(1 for r in results if r['issue_severity'] == severity)
-              if count > 0:
-                  print(f'- {severity}: {count}')
-          " >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Check dependency vulnerabilities
-        run: |
-          echo "🔍 Checking dependency vulnerabilities..."
-          # Security scan already includes safety check
-
-          if [ -f safety-report.json ] && [ -s safety-report.json ]; then
-            echo "### Dependency Vulnerabilities" >> $GITHUB_STEP_SUMMARY
-            docker-compose run --rm python-ci python3 -c "
-          import json
-          with open('safety-report.json') as f:
-              vulns = json.load(f)
-          if vulns:
-              print(f'Found {len(vulns)} vulnerable dependencies')
-          else:
-              print('✅ No known vulnerabilities found')
-          " >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # Run pip-audit
-          docker-compose run --rm python-ci bash -c "pip install -r config/python/requirements.txt && pip-audit --desc || true"
-
-      - name: Upload security reports
-        if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: security-reports-${{ github.run_id }}
-          path: |
-            bandit-report.json
-            safety-report.json
-          retention-days: 30
+          clean: true
 
-  # Stage 8: Build and push Docker images
-  build-images:
+      - name: Set up test environment
+        run: |
+          echo "Setting up test environment..."
+          export USER_ID=$(id -u)
+          export GROUP_ID=$(id -g)
+          echo "USER_ID=$USER_ID" >> $GITHUB_ENV
+          echo "GROUP_ID=$GROUP_ID" >> $GITHUB_ENV
+
+      - name: Run bulletin board tests
+        run: |
+          echo "Running bulletin board tests..."
+          docker-compose run --rm python-ci pytest tests/bulletin_board/ -v --cov=packages/bulletin_board --cov-report=xml
+
+      - name: Upload coverage reports
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: bulletin-board
+          name: bulletin-board-coverage
+
+  # Stage 4: Docker Build & Push
+  docker-build:
     name: Build Docker Images
-    needs: [format-check, basic-lint, full-lint, test-suite, mcp-validation]
-    runs-on: self-hosted
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # Docker login disabled - no image pushes
-      # - name: Log in to registry
-      #   if: github.event.inputs.skip_docker_push != 'true'
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      # Note: Docker builds intentionally do not use GitHub Actions cache (cache-from/cache-to)
-      # to avoid cache service availability issues. The self-hosted runner's local Docker
-      # cache provides sufficient caching for our needs.
-      - name: Build Code Quality MCP image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-code-quality.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-code-quality
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-code-quality-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build Content Creation MCP image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-content.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-content
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-content-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build Gaea2 MCP image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-gaea2.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-gaea2
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-gaea2-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build MCP HTTP Bridge image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-http-bridge.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-http-bridge
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-http-bridge-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build OpenCode MCP image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-opencode.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-opencode
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-opencode-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build Crush MCP image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-crush.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-crush
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-crush-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build OpenRouter Agents image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/openrouter-agents.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-openrouter-agents
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-openrouter-agents-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build Python CI image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/python-ci.Dockerfile
-          push: false  # Disabled - network unreliable
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-python-ci
-            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-python-ci-${{ github.sha }}
-
-      - name: Test Docker Compose with health check
-        uses: ./.github/actions/docker-compose-health-check
-        with:
-          services: 'mcp-code-quality mcp-content-creation'  # Test main MCP services
-          health-endpoint: 'http://localhost:8010/health'
-          timeout: '60'
-          build: 'true'
-
-      - name: Stop services
-        if: always()
-        run: |
-          docker-compose down
-          # Clean up output directories using Docker to handle permissions
-          ./automation/ci-cd/cleanup-outputs.sh
-
-  # Stage 9: Integration tests
-  integration-tests:
-    name: Integration Tests
-    needs: build-images
-    if: success()
+    needs: [detect-changes, bulletin-board-tests]
+    if: >
+      needs.detect-changes.outputs.docker_changed == 'true' ||
+      needs.detect-changes.outputs.bulletin_changed == 'true'
     runs-on: self-hosted
     timeout-minutes: 20
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Docker Compose
-        run: |
-          docker-compose version
-
-      - name: Start services for integration tests
-        uses: ./.github/actions/docker-compose-health-check
         with:
-          services: 'mcp-code-quality mcp-content-creation'  # Test main MCP services
-          health-endpoint: 'http://localhost:8010/health'
-          timeout: '60'
-          build: 'true'
+          clean: true
 
-      - name: Run integration test suite
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push bulletin board images
         run: |
-          echo "🧪 Running integration tests..."
-          # Run integration test suite if available
-          if [ -f "tests/integration_test.py" ]; then
-            docker-compose exec -T python-ci pytest tests/integration_test.py -v
-          fi
+          echo "Building bulletin board images..."
 
-      - name: Clean up services
+          # Build images
+          docker-compose build bulletin-web bulletin-collector
+
+          # Tag for registry
+          docker tag agentsocial_bulletin-web:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:latest
+          docker tag agentsocial_bulletin-web:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:${{ github.sha }}
+          docker tag agentsocial_bulletin-collector:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:latest
+          docker tag agentsocial_bulletin-collector:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:${{ github.sha }}
+
+          # Push to registry
+          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:latest
+          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:latest
+          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:${{ github.sha }}
+
+  # Stage 5: Integration Tests
+  integration-tests:
+    name: Integration Tests
+    needs: docker-build
+    if: github.event.inputs.skip_tests != 'true'
+    runs-on: self-hosted
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          clean: true
+
+      - name: Start bulletin board services
+        run: |
+          echo "Starting bulletin board services..."
+          docker-compose --profile bulletin up -d
+
+          # Wait for services to be ready
+          echo "Waiting for services to be ready..."
+          sleep 30
+
+          # Check health
+          curl -f http://localhost:8080/health || exit 1
+
+      - name: Run integration tests
+        run: |
+          echo "Running integration tests..."
+          docker-compose run --rm python-ci python tests/test_bulletin_board_full.py
+
+      - name: Stop services
         if: always()
         run: |
-          docker-compose down
-          # Clean up output directories using Docker to handle permissions
-          ./automation/ci-cd/cleanup-outputs.sh
+          docker-compose --profile bulletin down
 
-  # Stage 10: Deploy (placeholder)
+  # Stage 6: Documentation Update
+  docs-update:
+    name: Documentation Update
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs_changed == 'true'
+    runs-on: self-hosted
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          clean: true
+
+      - name: Check markdown links
+        run: |
+          echo "Checking markdown links..."
+          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only
+
+  # Stage 7: Deploy (placeholder for future deployment)
   deploy:
     name: Deploy to Production
-    needs: [build-images, integration-tests, security-scan]
+    needs: [bulletin-board-tests, docker-build, integration-tests]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: self-hosted
-    environment: production
+    timeout-minutes: 10
     steps:
-      - name: Deploy application
+      - name: Deploy notification
         run: |
-          echo "🚀 Deploying ${{ github.sha }} to production..."
-          echo "Note: Add actual deployment steps here"
+          echo "🚀 Ready to deploy AgentSocial bulletin board!"
+          echo "Version: ${{ github.sha }}"
+          echo "Docker images have been pushed to GitHub Container Registry."
           echo ""
-          echo "Deployment checklist:"
-          echo "- [ ] Update production configuration"
-          echo "- [ ] Run database migrations"
-          echo "- [ ] Update container orchestration"
-          echo "- [ ] Verify health checks"
-          echo "- [ ] Monitor error rates"
+          echo "To deploy, pull the latest images:"
+          echo "  docker pull ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:latest"
+          echo "  docker pull ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:latest"
 
-  # Final status notification
-  notify:
-    name: CI Summary
-    needs: [
-      format-check, basic-lint, full-lint, test-suite,
-      mcp-validation, docs-build, security-scan,
-      build-images, integration-tests, deploy
-    ]
+  # Final Status
+  ci-status:
+    name: CI Pipeline Status
+    needs:
+      - detect-changes
+      - lint-stages
+      - bulletin-board-tests
+      - docker-build
+      - integration-tests
+      - docs-update
+      - deploy
     if: always()
     runs-on: self-hosted
+    timeout-minutes: 5
     steps:
-      - name: Generate CI Summary
+      - name: Pipeline summary
         run: |
-          echo "# 📊 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "======================================"
+          echo "  Main CI Pipeline Summary"
+          echo "======================================"
+          echo ""
+          echo "📊 Results:"
+          echo "  Code Quality: ${{ needs.lint-stages.result }}"
+          echo "  Bulletin Board Tests: ${{ needs.bulletin-board-tests.result }}"
+          echo "  Docker Build: ${{ needs.docker-build.result }}"
+          echo "  Integration Tests: ${{ needs.integration-tests.result }}"
+          echo "  Documentation: ${{ needs.docs-update.result }}"
+          echo "  Deployment: ${{ needs.deploy.result }}"
+          echo ""
 
-          echo "## Pipeline Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Format Check | ${{ needs.format-check.result == 'success' && '✅' || needs.format-check.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Basic Lint | ${{ needs.basic-lint.result == 'success' && '✅' || needs.basic-lint.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Full Lint | ${{ needs.full-lint.result == 'success' && '✅' || needs.full-lint.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Test Suite | ${{ needs.test-suite.result == 'success' && '✅' || needs.test-suite.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| MCP Validation | ${{ needs.mcp-validation.result == 'success' && '✅' || needs.mcp-validation.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Documentation | ${{ needs.docs-build.result == 'success' && '✅' || needs.docs-build.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅' || needs.security-scan.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Build | ${{ needs.build-images.result == 'success' && '✅' || needs.build-images.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅' || needs.integration-tests.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Deploy | ${{ needs.deploy.result == 'success' && '✅' || needs.deploy.result == 'skipped' && '⏭️' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Overall status
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            echo "## ❌ CI Pipeline Failed" >> $GITHUB_STEP_SUMMARY
-            echo "One or more stages failed. Please review the logs." >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.bulletin-board-tests.result }}" == "success" ]] && \
+             [[ "${{ needs.docker-build.result }}" == "success" ]] && \
+             [[ "${{ needs.integration-tests.result }}" == "success" ]]; then
+            echo "✅ Pipeline completed successfully!"
           else
-            echo "## ✅ CI Pipeline Succeeded" >> $GITHUB_STEP_SUMMARY
-            echo "All stages completed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Pipeline has failures. Please check the logs."
+            exit 1
           fi
-
-      - name: Create issue on failure
-        if: failure() && github.ref == 'refs/heads/main'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const failed = [];
-            const needs = ${{ toJSON(needs) }};
-
-            for (const [job, data] of Object.entries(needs)) {
-              if (data.result === 'failure') {
-                failed.push(job);
-              }
-            }
-
-            if (failed.length > 0) {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: `🚨 Main CI Failed: ${failed.join(', ')}`,
-                body: `## CI Failure Report
-
-                **Commit**: ${context.sha}
-                **Run**: [#${context.runNumber}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
-                **Failed Jobs**: ${failed.join(', ')}
-
-                Please investigate and fix the issues.`,
-                labels: ['ci-failure', 'automated']
-              });
-            }

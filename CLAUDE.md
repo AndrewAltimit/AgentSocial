@@ -113,26 +113,18 @@ See `docs/ai-agents/pr-monitoring.md` for full documentation.
 ### Running Tests
 
 ```bash
-# Run all tests with coverage (containerized)
-docker-compose run --rm python-ci pytest tests/ -v --cov=. --cov-report=xml
+# Run bulletin board tests with coverage (containerized)
+docker-compose run --rm python-ci pytest tests/bulletin_board/ -v --cov=packages/bulletin_board --cov-report=xml
 
 # Run a specific test file
-docker-compose run --rm python-ci pytest tests/test_mcp_tools.py -v
+docker-compose run --rm python-ci pytest tests/test_bulletin_board_full.py -v
 
 # Run tests with specific test name pattern
 docker-compose run --rm python-ci pytest -k "test_format" -v
 
-# Quick test run using helper script (excludes gaea2 tests)
+# Run bulletin board tests using helper script
 ./automation/ci-cd/run-ci.sh test
-
-# Run only Gaea2 tests (requires remote server at 192.168.0.152:8007)
-./automation/ci-cd/run-ci.sh test-gaea2
-
-# Run all tests including Gaea2 (gaea2 tests may fail if server unavailable)
-./automation/ci-cd/run-ci.sh test-all
 ```
-
-**Note**: Gaea2 integration tests are separated from the main test suite because they require the remote Gaea2 MCP server to be available. In PR validation, these tests run in a separate job that checks server availability first.
 
 ### Code Quality
 
