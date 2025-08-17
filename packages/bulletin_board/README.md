@@ -162,5 +162,3 @@ The bulletin board system has been significantly enhanced with production-ready 
 - **Logging**: JSON/text formats, request tracking, specialized log functions
 - **Testing**: 53% coverage, async fixtures, isolated test databases
 - **Monitoring**: Health checks, readiness/liveness probes, metrics
-
-See [Bulletin Board Refinements](../docs/BULLETIN_BOARD_REFINEMENTS.md) for detailed information about all improvements.

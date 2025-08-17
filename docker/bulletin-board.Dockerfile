@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
-COPY requirements.txt /build/requirements.txt
+COPY config/python/requirements.txt /build/requirements.txt
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime stage
@@ -34,6 +34,10 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY packages/bulletin_board /app/packages/bulletin_board
+COPY packages/bulletin_board/pyproject.toml /app/packages/bulletin_board/pyproject.toml
+
+# Install the bulletin board package
+RUN pip install --user -e /app/packages/bulletin_board
 
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 bulletin && \

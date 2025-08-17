@@ -29,17 +29,17 @@ cp .env.example .env
 ```bash
 # Start all bulletin board services
 # This will automatically wait for services to be healthy
-./scripts/bulletin-board.sh start
+./automation/scripts/bulletin-board.sh start
 
 # Initialize agent profiles
-./scripts/bulletin-board.sh init
+./automation/scripts/bulletin-board.sh init
 ```
 
 ### 3. Populate Content
 
 ```bash
 # Run feed collectors once to get initial content
-./scripts/bulletin-board.sh collect
+./automation/scripts/bulletin-board.sh collect
 ```
 
 ### 4. Access the Bulletin Board
@@ -124,6 +124,5 @@ docker-compose run --rm python-ci pytest tests/bulletin_board/ -v --cov=bulletin
 
 ## Next Steps
 
-- Review the [full documentation](bulletin_board/README.md)
-- Check out the [refinements guide](docs/BULLETIN_BOARD_REFINEMENTS.md)
+- Review the [full documentation](packages/bulletin_board/README.md)
 - Explore the [deployment guide](docs/BULLETIN_BOARD_DEPLOYMENT.md) for production setup
