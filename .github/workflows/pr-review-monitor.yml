@@ -1,0 +1,180 @@
+name: PR Review Monitor Agent
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+  pull_request_review_comment:
+    types:
+      - created
+  schedule:
+    # Also run periodically to catch any missed reviews
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      force_reprocess:
+        description: 'Force reprocess PRs even if they have existing AI agent comments'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  pull-requests: write # Required to comment on PRs and push changes
+  contents: read       # For actions/checkout. Agent uses AI_AGENT_TOKEN with write perms.
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  monitor-pr-reviews:
+    name: Monitor PR Reviews
+    runs-on: self-hosted
+    # Only run if AI agents are enabled AND relevant event occurs
+    # Note: User authorization is handled by the SecurityManager in the Python agent
+    if: |
+      vars.ENABLE_AI_AGENTS == 'true' && (
+        github.event_name == 'schedule' ||
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'pull_request_review' &&
+         github.event.review.state == 'changes_requested') ||
+        github.event_name == 'pull_request_review_comment'
+      )
+
+    steps:
+      - name: Security Check - Log Event Details
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Actor: ${{ github.actor }}"
+          if [ "${{ github.event_name }}" = "pull_request_review" ] || [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            echo "PR Author: ${{ github.event.pull_request.user.login }}"
+            echo "PR Number: ${{ github.event.pull_request.number }}"
+            if [ "${{ github.event_name }}" = "pull_request_review" ]; then
+              echo "Review Author: ${{ github.event.review.user.login }}"
+            elif [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+              echo "Review Author: ${{ github.event.comment.user.login }}"
+            fi
+          fi
+
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.AI_AGENT_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          # Set git identity for the AI agent
+          git config --global user.name "AI Review Agent"
+          git config --global user.email "ai-review-agent@localhost"
+
+      - name: Set up Python environment
+        run: |
+          echo "[INFO] Checking Python environment..."
+          python3 --version
+
+          # Install the GitHub AI Agents package
+          echo "[INFO] Installing GitHub AI Agents package..."
+          pip3 install --user -e ./packages/github_ai_agents
+
+          # Install additional requirements if needed
+          echo "[INFO] Installing additional requirements..."
+          pip3 install --user -r docker/requirements/requirements-agents.txt
+
+      - name: Build Docker containers for OpenRouter agents
+        run: |
+          echo "[INFO] Building openrouter-agents container for OpenCode/Crush support..."
+          docker-compose --profile agents build openrouter-agents
+          echo "[INFO] Container build complete"
+
+      - name: Run PR review monitor on host
+        env:
+          # Use AI_AGENT_TOKEN which has write permissions for applying review suggestions
+          GITHUB_TOKEN: ${{ secrets.AI_AGENT_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ENABLE_AI_AGENTS: ${{ vars.ENABLE_AI_AGENTS }}
+          # OpenRouter API key for alternative AI agents
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # List of environment variables whose values should be masked in public comments
+          MASK_ENV_VARS: "GITHUB_TOKEN,AI_AGENT_TOKEN,OPENROUTER_API_KEY"
+          # Enable verbose logging for better debugging
+          PR_MONITOR_VERBOSE: "true"
+          # Set Python path to include the current directory
+          PYTHONPATH: ${{ github.workspace }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          echo "=== PR Review Monitor Starting ==="
+          echo "Repository: $GITHUB_REPOSITORY"
+          echo "Event: ${{ github.event_name }}"
+          echo "AI Agents Enabled: $ENABLE_AI_AGENTS"
+          echo "Verbose Logging: ENABLED"
+          echo "[INFO] Running directly on host machine to use Claude subscription authentication"
+          echo "================================="
+
+          # If triggered by a specific PR event, we can optimize by checking just that PR
+          if [ "${{ github.event_name }}" = "pull_request_review" ] || [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
+            echo "[INFO] Triggered by PR event on PR #${{ github.event.pull_request.number }}"
+            export TARGET_PR_NUMBER="${{ github.event.pull_request.number }}"
+            if [ "${{ github.event_name }}" = "pull_request_review" ]; then
+              echo "[INFO] Review state: ${{ github.event.review.state }}"
+              echo "[INFO] Review author: ${{ github.event.review.user.login }}"
+            fi
+          else
+            echo "[INFO] Triggered by: ${{ github.event_name }}"
+          fi
+
+          # Check for Claude credentials
+          if [ -f "$HOME/.claude.json" ]; then
+            echo "[INFO] Found .claude.json file for Claude authentication"
+          elif [ -d "$HOME/.claude" ]; then
+            echo "[INFO] Found .claude directory for Claude authentication"
+          else
+            echo "[WARNING] No Claude credentials found at ~/.claude.json or ~/.claude/"
+            echo "[WARNING] Claude CLI may not work without authentication"
+          fi
+
+          # Set up Node.js version using nvm
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # Load nvm
+          if command -v nvm &> /dev/null; then
+            echo "[INFO] Setting Node.js version with nvm..."
+            nvm use 22.16.0 || {
+              echo "[WARNING] Node.js 22.16.0 not found, trying to install..."
+              nvm install 22.16.0
+              nvm use 22.16.0
+            }
+            echo "[INFO] Node.js version: $(node --version)"
+          else
+            echo "[WARNING] nvm not found, Claude CLI may have issues"
+          fi
+
+          # Verify Claude CLI is available
+          if command -v claude &> /dev/null; then
+            echo "[INFO] Claude CLI found at: $(which claude)"
+            echo "[INFO] Claude version: $(claude --version 2>&1 || echo 'version check failed')"
+          else
+            echo "[ERROR] Claude CLI not found. Please ensure it's installed on the host."
+            exit 1
+          fi
+
+          # Run the PR review monitor from the new package
+          cd "${{ github.workspace }}"
+          python3 -m github_ai_agents.cli pr-monitor || {
+              exit_code=$?
+              echo "[ERROR] PR review monitor script failed with exit code: $exit_code"
+
+              exit $exit_code
+          }
+
+      - name: Log monitoring results
+        if: always()
+        run: |
+          echo "=== PR Review Monitor Summary ==="
+          echo "Completion time: $(date)"
+          echo "Workflow status: ${{ job.status }}"
+          if [ "${{ job.status }}" = "failure" ]; then
+            echo "[ERROR] Workflow failed - check logs above for details"
+          else
+            echo "[SUCCESS] Workflow completed successfully"
+          fi
+          echo "================================="

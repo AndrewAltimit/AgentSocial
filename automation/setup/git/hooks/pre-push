@@ -1,0 +1,92 @@
+#!/bin/sh
+# Git pre-push hook for PR monitoring reminders
+set -e
+#
+# This hook reminds developers to monitor their PR for feedback after pushing commits.
+# It detects if the current branch has an OPEN PR and provides monitoring instructions.
+#
+# Note: Only shows reminders for open PRs to avoid confusion with reused branch names.
+#
+# Installation:
+#   cp automation/setup/git/hooks/pre-push .git/hooks/pre-push
+#   chmod +x .git/hooks/pre-push
+#
+# Or combine with existing hooks:
+#   cat automation/setup/git/hooks/pre-push >> .git/hooks/pre-push
+
+# Check if this is a Git LFS pre-push hook that needs to chain to LFS
+if [ -f .git/hooks/pre-push.lfs ]; then
+    # Run Git LFS hook first
+    .git/hooks/pre-push.lfs "$@"
+    lfs_result=$?
+    if [ $lfs_result -ne 0 ]; then
+        exit $lfs_result
+    fi
+fi
+
+# Only proceed if gh CLI is available
+if ! command -v gh >/dev/null 2>&1; then
+    # gh not available, skip PR monitoring reminder
+    exit 0
+fi
+
+# Get the current branch name
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+# Skip if on main/master branch
+if [ "$current_branch" = "main" ] || [ "$current_branch" = "master" ]; then
+    exit 0
+fi
+
+# Try to find OPEN PR number for current branch
+# Use gh pr list to only get open PRs, then filter by head branch
+pr_info=$(gh pr list --head "$current_branch" --state open --json number,headRefName --limit 1 2>/dev/null || echo "")
+
+# If no open PR found, exit quietly
+if [ -z "$pr_info" ] || [ "$pr_info" = "[]" ]; then
+    exit 0
+fi
+
+# Extract PR number from JSON response using jq for robust parsing
+# Falls back to grep if jq is not available
+if command -v jq >/dev/null 2>&1; then
+    pr_number=$(echo "$pr_info" | jq -r '.[0].number // ""' 2>/dev/null || echo "")
+else
+    pr_number=$(echo "$pr_info" | grep -o '"number":[0-9]*' | grep -o '[0-9]*' || echo "")
+fi
+
+# Double-check we got a valid PR number
+if [ -z "$pr_number" ]; then
+    exit 0
+fi
+
+# Get the latest commit SHA being pushed
+latest_commit=$(git rev-parse HEAD)
+
+# Display monitoring reminder
+cat << EOF
+
+============================================================
+🔄 PR FEEDBACK MONITORING REMINDER
+============================================================
+
+You're pushing commits to PR #${pr_number} on branch '${current_branch}'.
+After push completes, consider monitoring for feedback:
+
+  📍 Monitor from this commit onwards:
+     python automation/monitoring/pr/pr_monitor_agent.py ${pr_number} --since-commit ${latest_commit}
+
+  🔄 Or monitor all new comments:
+     python automation/monitoring/pr/pr_monitor_agent.py ${pr_number}
+
+This will watch for:
+  • Admin comments and commands
+  • Gemini AI code review feedback
+  • CI/CD validation results
+
+💡 The monitor will return structured data when relevant comments are detected.
+============================================================
+EOF
+
+# Always exit successfully (this is just a reminder)
+exit 0

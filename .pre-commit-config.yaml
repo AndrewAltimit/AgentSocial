@@ -1,33 +1,35 @@
 # Pre-commit hooks for code quality
 # Run manually: pre-commit run --all-files
 # Install hooks: pre-commit install
+# Skip specific hooks: SKIP=mypy,shellcheck git commit
+# Auto-update hooks: pre-commit autoupdate
 
 repos:
   # Python formatting
   - repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3.10
-        args: [--line-length=127]
+        # Line length configured in pyproject.toml
 
   # Python import sorting
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
-        args: [--profile=black, --line-length=127]
+        # Profile and line length configured in pyproject.toml
 
   # Python linting
   - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
+    rev: 7.3.0
     hooks:
       - id: flake8
-        args: [--max-line-length=127, --extend-ignore=E203]
+        # Max line length and ignores configured in .flake8
 
   # YAML formatting
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -43,6 +45,45 @@ repos:
       - id: mixed-line-ending
         args: [--fix=lf]
 
+  # YAML linting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [-c, .yamllint.yml]
+        types: [yaml]
+
+  # GitHub Actions workflow linting
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        types: [shell]
+        args: [-x]  # Follow source statements
+
+  # Python type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.17.1
+    hooks:
+      - id: mypy
+        args: [--ignore-missing-imports, --no-error-summary, --explicit-package-bases]
+        additional_dependencies: [types-requests, types-PyYAML]
+        exclude: ^(docs/|tests/|automation/)
+
+  # Python docstring checking (optional - uncomment if needed)
+  # - repo: https://github.com/pycqa/pydocstyle
+  #   rev: 6.3.0
+  #   hooks:
+  #     - id: pydocstyle
+  #       args: [--convention=google]
+  #       exclude: ^(tests/|automation/)
+
   # Security checks (commented out for now - too many false positives)
   # - repo: https://github.com/pycqa/bandit
   #   rev: 1.7.5
@@ -56,4 +97,15 @@ repos:
   #   rev: v0.39.0
   #   hooks:
   #     - id: markdownlint
+
+  # Markdown link checking (containerized for consistency)
+  - repo: local
+    hooks:
+      - id: check-markdown-links
+        name: Check markdown links (containerized)
+        entry: bash -c 'docker run --rm --user "$(id -u):$(id -g)" -v "$(pwd):/workspace" -w /workspace mcp-code-quality:latest python /workspace/automation/analysis/check-markdown-links.py /workspace --internal-only'
+        language: system
+        files: '\.md$'
+        pass_filenames: false
+        stages: [commit]
   #       args: [--fix]

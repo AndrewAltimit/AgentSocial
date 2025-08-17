@@ -62,9 +62,11 @@ jobs:
           lfs: true
 
       - name: Run tests
+        env:
+          MCP_GAEA2_URL: http://192.168.0.152:8007
         run: |
           echo "🧪 Running test suite..."
-          ./scripts/run-ci.sh test --cov-report=html --timeout=300 --junitxml=test-results.xml
+          ./automation/ci-cd/run-ci.sh test --cov-report=html --timeout=300 --junitxml=test-results.xml
 
       - name: Upload test results
         if: always()
@@ -78,7 +80,7 @@ jobs:
           retention-days: 30
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: unittests
@@ -129,9 +131,9 @@ jobs:
           " >> $GITHUB_STEP_SUMMARY
           fi
 
-  # Stage 5: MCP server validation
+  # Stage 5: MCP servers validation
   mcp-validation:
-    name: MCP Server Validation
+    name: MCP Servers Validation
     needs: basic-lint
     runs-on: self-hosted
     timeout-minutes: 10
@@ -139,64 +141,115 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Test MCP server with Docker
+      - name: Test modular MCP servers with Docker
         run: |
-          echo "🤖 Testing MCP server functionality..."
+          echo "🤖 Testing modular MCP server functionality..."
 
           # Build the CI image if needed
           docker-compose build python-ci
 
-          # Test MCP server initialization
+          # Test Code Quality MCP server
           docker-compose run --rm python-ci bash -c "
-          pip install -r requirements.txt && python3 -c '
+          pip install -r config/python/requirements.txt && python3 -c '
           import sys
           sys.path.insert(0, \".\")
 
-          # Test import
+          # Test Code Quality server
           try:
-              from tools.mcp.mcp_server import app, MCPTools, TOOLS
-              print(\"✅ MCP server module imported successfully\")
+              from tools.mcp.code_quality.server import CodeQualityMCPServer
+              from tools.mcp.code_quality.tools import TOOLS as CODE_TOOLS
+              print(\"✅ Code Quality MCP server imported successfully\")
+              print(f\"  - {len(CODE_TOOLS)} tools available\")
+              for tool in CODE_TOOLS:
+                  print(f\"    - {tool}\")
           except ImportError as e:
-              print(f\"❌ Failed to import MCP server: {e}\")
+              print(f\"❌ Failed to import Code Quality server: {e}\")
               exit(1)
 
-          # Test basic functionality
+          # Test Content Creation server
           try:
-              # Check if app is initialized
-              assert app is not None
-              print(\"✅ FastAPI app initialized\")
+              from tools.mcp.content_creation.server import ContentCreationMCPServer
+              from tools.mcp.content_creation.tools import TOOLS as CONTENT_TOOLS
+              print(\"✅ Content Creation MCP server imported successfully\")
+              print(f\"  - {len(CONTENT_TOOLS)} tools available\")
+              for tool in CONTENT_TOOLS:
+                  print(f\"    - {tool}\")
+          except ImportError as e:
+              print(f\"❌ Failed to import Content Creation server: {e}\")
+              exit(1)
 
-              # Check if tools are available
-              print(f\"✅ Tools available: {len(TOOLS)}\")
+          # Test Gaea2 server (stubs only in container)
+          try:
+              from tools.mcp.gaea2.server import Gaea2MCPServer
+              from tools.mcp.gaea2.tools import TOOLS as GAEA2_TOOLS
+              print(\"✅ Gaea2 MCP server imported successfully\")
+              print(f\"  - {len(GAEA2_TOOLS)} tools available\")
+          except ImportError as e:
+              print(f\"❌ Failed to import Gaea2 server: {e}\")
+              exit(1)
 
-              # List available tools
-              for tool_name in TOOLS:
-                  print(f\"   - {tool_name}\")
-          except Exception as e:
-              print(f\"❌ MCP server initialization failed: {e}\")
+          # Test OpenCode server
+          try:
+              from tools.mcp.opencode.server import OpenCodeMCPServer
+              from tools.mcp.opencode.tools import TOOLS as OPENCODE_TOOLS
+              print(\"✅ OpenCode MCP server imported successfully\")
+              print(f\"  - {len(OPENCODE_TOOLS)} tools available\")
+              for tool in OPENCODE_TOOLS:
+                  print(f\"    - {tool}\")
+          except ImportError as e:
+              print(f\"❌ Failed to import OpenCode server: {e}\")
+              exit(1)
+
+          # Test Crush server
+          try:
+              from tools.mcp.crush.server import CrushMCPServer
+              from tools.mcp.crush.tools import TOOLS as CRUSH_TOOLS
+              print(\"✅ Crush MCP server imported successfully\")
+              print(f\"  - {len(CRUSH_TOOLS)} tools available\")
+              for tool in CRUSH_TOOLS:
+                  print(f\"    - {tool}\")
+          except ImportError as e:
+              print(f\"❌ Failed to import Crush server: {e}\")
               exit(1)
           '
           "
 
-      - name: Start MCP server for HTTP bridge test
+      - name: Start Code Quality MCP server
         if: always()
         uses: ./.github/actions/docker-compose-health-check
         with:
-          services: 'mcp-server'
-          health-endpoint: 'http://localhost:8005/health'
+          services: 'mcp-code-quality'
+          health-endpoint: 'http://localhost:8010/health'
           timeout: '30'
           build: 'true'
 
-      - name: Test MCP HTTP bridge
+      - name: Start Content Creation MCP server
+        if: always()
+        uses: ./.github/actions/docker-compose-health-check
+        with:
+          services: 'mcp-content-creation'
+          health-endpoint: 'http://localhost:8011/health'
+          timeout: '30'
+          build: 'true'
+
+      - name: Test MCP servers HTTP endpoints
         if: always()
         run: |
-          echo "🌐 Testing MCP HTTP bridge..."
-          # Test the bridge health
-          curl -s http://localhost:8005/health || echo "Health check failed"
+          echo "🌐 Testing MCP servers HTTP endpoints..."
+          # Test Code Quality server
+          curl -s http://localhost:8010/health || echo "Code Quality health check failed"
+          curl -s http://localhost:8010/mcp/tools || echo "Code Quality tools listing failed"
 
-      - name: Stop MCP server
+          # Test Content Creation server
+          curl -s http://localhost:8011/health || echo "Content Creation health check failed"
+          curl -s http://localhost:8011/mcp/tools || echo "Content Creation tools listing failed"
+
+      - name: Stop MCP servers
         if: always()
-        run: docker-compose down
+        run: |
+          docker-compose down
+          # Clean up output directories using Docker to handle permissions
+          ./automation/ci-cd/cleanup-outputs.sh
 
   # Stage 6: Documentation build
   docs-build:
@@ -215,7 +268,7 @@ jobs:
           # Check for required documentation files
           required_docs=(
             "README.md"
-            "requirements.txt"
+            "config/python/requirements.txt"
           )
 
           for doc in "${required_docs[@]}"; do
@@ -252,7 +305,7 @@ jobs:
       - name: Run security scans
         run: |
           echo "🔒 Running security scans..."
-          ./scripts/run-ci.sh security
+          ./automation/ci-cd/run-ci.sh security
 
           # Display summary
           if [ -f bandit-report.json ]; then
@@ -291,7 +344,7 @@ jobs:
           fi
 
           # Run pip-audit
-          docker-compose run --rm python-ci bash -c "pip install -r requirements.txt && pip-audit --desc || true"
+          docker-compose run --rm python-ci bash -c "pip install -r config/python/requirements.txt && pip-audit --desc || true"
 
       - name: Upload security reports
         if: always()
@@ -341,48 +394,107 @@ jobs:
       # Note: Docker builds intentionally do not use GitHub Actions cache (cache-from/cache-to)
       # to avoid cache service availability issues. The self-hosted runner's local Docker
       # cache provides sufficient caching for our needs.
-      - name: Build and push MCP image
+      - name: Build Code Quality MCP image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: docker/mcp.Dockerfile
+          file: docker/mcp-code-quality.Dockerfile
           push: false  # Disabled - network unreliable
           tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:main-mcp
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:main-mcp-${{ github.sha }}
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-code-quality
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-code-quality-${{ github.sha }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build and push MCP HTTP Bridge image
+      - name: Build Content Creation MCP image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/mcp-content.Dockerfile
+          push: false  # Disabled - network unreliable
+          tags: |
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-content
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-content-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build Gaea2 MCP image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/mcp-gaea2.Dockerfile
+          push: false  # Disabled - network unreliable
+          tags: |
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-gaea2
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-gaea2-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build MCP HTTP Bridge image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/mcp-http-bridge.Dockerfile
           push: false  # Disabled - network unreliable
           tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:main-mcp-http-bridge
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:main-mcp-http-bridge-${{ github.sha }}
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-http-bridge
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-http-bridge-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build and push Python CI image
+      - name: Build OpenCode MCP image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/mcp-opencode.Dockerfile
+          push: false  # Disabled - network unreliable
+          tags: |
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-opencode
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-opencode-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build Crush MCP image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/mcp-crush.Dockerfile
+          push: false  # Disabled - network unreliable
+          tags: |
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-crush
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-mcp-crush-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build OpenRouter Agents image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/openrouter-agents.Dockerfile
+          push: false  # Disabled - network unreliable
+          tags: |
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-openrouter-agents
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-openrouter-agents-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build Python CI image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: docker/python-ci.Dockerfile
           push: false  # Disabled - network unreliable
           tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:main-python-ci
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:main-python-ci-${{ github.sha }}
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-python-ci
+            ${{ env.REGISTRY }}/andrewaltimit/agentsocial:main-python-ci-${{ github.sha }}
 
       - name: Test Docker Compose with health check
         uses: ./.github/actions/docker-compose-health-check
         with:
-          services: ''  # all services
-          health-endpoint: 'http://localhost:8005/health'
+          services: 'mcp-code-quality mcp-content-creation'  # Test main MCP services
+          health-endpoint: 'http://localhost:8010/health'
           timeout: '60'
           build: 'true'
 
       - name: Stop services
         if: always()
-        run: docker-compose down
+        run: |
+          docker-compose down
+          # Clean up output directories using Docker to handle permissions
+          ./automation/ci-cd/cleanup-outputs.sh
 
   # Stage 9: Integration tests
   integration-tests:
@@ -402,8 +514,8 @@ jobs:
       - name: Start services for integration tests
         uses: ./.github/actions/docker-compose-health-check
         with:
-          services: ''  # all services
-          health-endpoint: 'http://localhost:8005/health'
+          services: 'mcp-code-quality mcp-content-creation'  # Test main MCP services
+          health-endpoint: 'http://localhost:8010/health'
           timeout: '60'
           build: 'true'
 
@@ -412,12 +524,15 @@ jobs:
           echo "🧪 Running integration tests..."
           # Run integration test suite if available
           if [ -f "tests/integration_test.py" ]; then
-            docker-compose exec -T mcp-server pytest tests/integration_test.py -v
+            docker-compose exec -T python-ci pytest tests/integration_test.py -v
           fi
 
       - name: Clean up services
         if: always()
-        run: docker-compose down
+        run: |
+          docker-compose down
+          # Clean up output directories using Docker to handle permissions
+          ./automation/ci-cd/cleanup-outputs.sh
 
   # Stage 10: Deploy (placeholder)
   deploy:

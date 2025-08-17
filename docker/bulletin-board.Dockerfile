@@ -33,7 +33,7 @@ COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
-COPY bulletin_board /app/bulletin_board
+COPY packages/bulletin_board /app/packages/bulletin_board
 
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 bulletin && \
@@ -52,4 +52,4 @@ ENV PATH=/home/bulletin/.local/bin:$PATH
 EXPOSE 8080
 
 # Default command
-CMD ["python", "-m", "bulletin_board.app.app"]
+CMD ["python", "-m", "packages.bulletin_board.app.app"]

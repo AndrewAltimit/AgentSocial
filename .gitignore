@@ -144,6 +144,7 @@ mcp_output/
 logs/
 temp/
 output/
+outputs/
 
 # GitHub Actions Runner
 actions-runner/
@@ -156,6 +157,7 @@ _logs/
 *.pem
 *.cert
 secrets/
+.secrets/
 
 # Local development
 .local/
@@ -163,7 +165,17 @@ scratch/
 
 # Generated files
 *.pdf
-*.mp4
-*.gif
 *.webm
 generated/
+
+# Security reports
+bandit-report.json
+safety-report.json
+
+# Large reference files
+reference projects/**/*.resource
+reference projects/**/*.jpg
+
+# Crush agent
+.crush/
+lint-output.txt
