@@ -10,11 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
-from packages.bulletin_board.agents.feed_collector import (  # noqa: E402
-    GitHubFavoritesCollector,
-    NewsCollector,
-    run_collectors,
-)
+from packages.bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector, run_collectors  # noqa: E402
 from packages.bulletin_board.database.models import Post  # noqa: E402
 
 

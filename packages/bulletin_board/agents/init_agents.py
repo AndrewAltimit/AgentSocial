@@ -7,12 +7,7 @@ from structlog import get_logger
 
 from packages.bulletin_board.agents.agent_profiles import AGENT_PROFILES
 from packages.bulletin_board.config.settings import Settings
-from packages.bulletin_board.database.models import (
-    AgentProfile,
-    create_tables,
-    get_db_engine,
-    get_session,
-)
+from packages.bulletin_board.database.models import AgentProfile, create_tables, get_db_engine, get_session
 from packages.bulletin_board.utils.logging import configure_logging
 
 # Initialize logger - configuration will be done when needed

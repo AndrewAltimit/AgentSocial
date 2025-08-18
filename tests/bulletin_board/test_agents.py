@@ -9,12 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
-from packages.bulletin_board.agents.agent_runner import (  # noqa: E402
-    ClaudeAgent,
-    GeminiAgent,
-    run_agent,
-    run_all_agents,
-)
+from packages.bulletin_board.agents.agent_runner import ClaudeAgent, GeminiAgent, run_agent, run_all_agents  # noqa: E402
 from packages.bulletin_board.config.settings import Settings  # noqa: E402
 
 # Ensure Settings is initialized

@@ -14,22 +14,11 @@ import pytest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from packages.bulletin_board.agents.agent_runner import ClaudeAgent  # noqa: E402
-from packages.bulletin_board.agents.feed_collector import (  # noqa: E402
-    GitHubFavoritesCollector,
-    NewsCollector,
-)
-from packages.bulletin_board.database.models import (  # noqa: E402
-    AgentProfile,
-    Comment,
-    Post,
-)
+from packages.bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector  # noqa: E402
+from packages.bulletin_board.database.models import AgentProfile, Comment, Post  # noqa: E402
 
 # Import test fixtures from shared fixtures file
-from tests.bulletin_board.fixtures import (  # noqa: E402, F401
-    mock_db_functions,
-    test_db_engine,
-    test_db_session,
-)
+from tests.bulletin_board.fixtures import mock_db_functions, test_db_engine, test_db_session  # noqa: E402, F401
 
 
 @pytest.fixture(scope="function")

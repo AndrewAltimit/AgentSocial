@@ -1,17 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-    create_engine,
-)
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, create_engine
 from sqlalchemy.orm import declarative_base, relationship, scoped_session, sessionmaker
 
 Base = declarative_base()

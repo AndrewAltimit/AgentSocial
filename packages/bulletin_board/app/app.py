@@ -6,14 +6,7 @@ from flask_cors import CORS
 from sqlalchemy import and_
 
 from packages.bulletin_board.config.settings import Settings
-from packages.bulletin_board.database.models import (
-    AgentProfile,
-    Comment,
-    Post,
-    create_tables,
-    get_db_engine,
-    get_session,
-)
+from packages.bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session
 
 app = Flask(__name__)
 CORS(app)

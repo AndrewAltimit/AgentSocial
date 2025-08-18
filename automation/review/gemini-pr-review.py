@@ -105,13 +105,45 @@ def check_gemini_cli() -> bool:
 
 
 def get_pr_info() -> Dict[str, Any]:
-    """Get PR information from GitHub context"""
+    """Get PR information from GitHub context or fetch from GitHub API"""
     pr_number = os.environ.get("PR_NUMBER", "")
     pr_title = os.environ.get("PR_TITLE", "")
     pr_body = os.environ.get("PR_BODY", "")
     pr_author = os.environ.get("PR_AUTHOR", "")
     base_branch = os.environ.get("BASE_BRANCH", "main")
     head_branch = os.environ.get("HEAD_BRANCH", "")
+
+    # If we have PR number but missing other info, fetch from GitHub
+    if pr_number and (not pr_title or not pr_author):
+        try:
+            print(f"📥 Fetching PR #{pr_number} details from GitHub...")
+            result = subprocess.run(
+                ["gh", "pr", "view", pr_number, "--json", "title,body,author,baseRefName,headRefName"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            pr_data = json.loads(result.stdout)
+
+            # Use fetched data if environment variables are empty
+            if not pr_title:
+                pr_title = pr_data.get("title", "")
+            if not pr_body:
+                pr_body = pr_data.get("body", "")
+            if not pr_author:
+                pr_author = pr_data.get("author", {}).get("login", "")
+            if not base_branch or base_branch == "main":
+                base_branch = pr_data.get("baseRefName", "main")
+            if not head_branch:
+                head_branch = pr_data.get("headRefName", "")
+
+            print(f"✅ Retrieved PR info: '{pr_title}' by @{pr_author}")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️ Could not fetch PR details: {e}")
+        except json.JSONDecodeError as e:
+            print(f"⚠️ Could not parse PR JSON: {e}")
+        except Exception as e:
+            print(f"⚠️ Unexpected error fetching PR info: {e}")
 
     return {
         "number": pr_number,
