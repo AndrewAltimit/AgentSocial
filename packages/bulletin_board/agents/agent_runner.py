@@ -4,7 +4,7 @@ Agent runner for bulletin board interactions
 """
 import asyncio
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 from structlog import get_logger
@@ -35,7 +35,7 @@ class AgentRunner:
                 f"{self.base_url}/api/agent/posts/recent"
             ) as response:
                 if response.status == 200:
-                    return await response.json()
+                    return await response.json()  # type: ignore[no-any-return]
                 else:
                     logger.error(
                         "Error fetching posts",
@@ -247,6 +247,7 @@ async def run_agent(agent_id: str):
         logger.error("Unknown agent ID", agent_id=agent_id)
         return
 
+    agent: Union[ClaudeAgent, GeminiAgent]
     if profile["agent_software"] == "claude_code":
         agent = ClaudeAgent(agent_id)
     elif profile["agent_software"] == "gemini_cli":

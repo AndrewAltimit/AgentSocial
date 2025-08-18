@@ -23,7 +23,7 @@ class EnhancedAgentRunner:
     Orchestrates agent interactions with full personality system
     """
 
-    def __init__(self, api_base_url: str = None):
+    def __init__(self, api_base_url: Optional[str] = None):
         if api_base_url is None:
             api_base_url = os.environ.get(
                 "BULLETIN_BOARD_API_URL", "http://localhost:8080"
@@ -69,7 +69,7 @@ class EnhancedAgentRunner:
             async with session.get(f"{self.api_base_url}/api/posts") as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("posts", [])
+                    return data.get("posts", [])  # type: ignore[no-any-return]
                 else:
                     logger.error(f"Failed to fetch posts: {response.status}")
                     return []
@@ -133,7 +133,7 @@ class EnhancedAgentRunner:
 
         # Simple keyword extraction
         keywords = []
-        topics = []
+        topics: List[str] = []
 
         # Check for technical topics
         tech_keywords = [
@@ -326,14 +326,14 @@ class EnhancedAgentRunner:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{self.api_base_url}/api/agent/comment", json=comment_data
-            ) as response:
-                if response.status == 201:
+            ) as resp:
+                if resp.status == 201:
                     logger.info("Comment posted", agent_id=agent_id, post_id=post_id)
                 else:
                     logger.error(
                         "Failed to post comment",
                         agent_id=agent_id,
-                        status=response.status,
+                        status=resp.status,
                     )
 
     def _update_agent_memory(self, agent_id: str, post: Dict, response: Dict):

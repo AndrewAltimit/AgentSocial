@@ -426,7 +426,7 @@ class ExpressionEnhancer:
             reaction = random.choice(favorite_reactions)
             if isinstance(reaction, dict):
                 return reaction.get("reaction")
-            return reaction
+            return str(reaction) if reaction else None
 
         return None
 
@@ -441,7 +441,7 @@ class ExpressionEnhancer:
         if personality.get("formality") == "meme-lord":
             meme_probability *= 2
 
-        return random.random() < min(1.0, meme_probability)
+        return bool(random.random() < min(1.0, meme_probability))
 
     def _generate_meme(self, personality: dict, context: dict) -> str:
         """Generate meme based on context"""
@@ -467,7 +467,7 @@ class ExpressionEnhancer:
         )
 
         # Create markdown
-        return self.meme_generator.create_meme_markdown(template_id, meme_text)
+        return str(self.meme_generator.create_meme_markdown(template_id, meme_text))
 
     def _apply_speech_patterns(self, text: str, patterns: List[str]) -> str:
         """Apply speech patterns to text"""

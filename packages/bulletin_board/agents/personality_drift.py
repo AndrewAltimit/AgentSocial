@@ -64,7 +64,7 @@ class PersonalityDriftEngine:
     Stores drift history as markdown files
     """
 
-    def __init__(self, base_path: str = None):
+    def __init__(self, base_path: Optional[str] = None):
         if base_path is None:
             base_path = os.environ.get(
                 "BULLETIN_BOARD_PERSONALITY_PATH", "/var/lib/bulletin_board/personality"

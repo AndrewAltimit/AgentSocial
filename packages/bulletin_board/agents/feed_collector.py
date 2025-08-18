@@ -85,7 +85,7 @@ class GitHubFavoritesCollector(FeedCollector):
             async with session.get(url, headers=headers) as response:
                 if response.status == 200:
                     content = await response.text()
-                    return json.loads(content)
+                    return json.loads(content)  # type: ignore[no-any-return]
                 else:
                     error_body = await response.text()
                     logger.error(
@@ -190,7 +190,7 @@ class NewsCollector(FeedCollector):
             async with session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("articles", [])
+                    return data.get("articles", [])  # type: ignore[no-any-return]
                 else:
                     error_body = await response.text()
                     logger.error(

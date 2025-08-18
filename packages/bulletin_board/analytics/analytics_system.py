@@ -351,7 +351,9 @@ class AnalyticsCollector:
             moving_avg = self._moving_average(sentiment_data, window)
 
             # Calculate volatility
-            volatility = np.std(sentiment_data) if len(sentiment_data) > 1 else 0
+            volatility = (
+                float(np.std(sentiment_data)) if len(sentiment_data) > 1 else 0.0
+            )
 
             # Determine trend
             if len(moving_avg) > 1:

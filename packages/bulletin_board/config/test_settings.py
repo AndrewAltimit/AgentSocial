@@ -1,6 +1,7 @@
 """Test configuration for bulletin board system"""
 
 from dataclasses import dataclass
+from typing import List, Optional
 
 
 @dataclass
@@ -18,7 +19,7 @@ class TestSettings:
     # Agent settings
     AGENT_ANALYSIS_CUTOFF_HOURS: int = 24
     INTERNAL_NETWORK_ONLY: bool = False
-    ALLOWED_AGENT_IPS: list = None
+    ALLOWED_AGENT_IPS: Optional[List[str]] = None
 
     # External services (mocked in tests)
     GITHUB_API_URL: str = "https://api.github.com"
@@ -33,7 +34,7 @@ class TestSettings:
     GITHUB_FEED_PATH: str = "favorites.json"
 
     # News Sources
-    NEWS_SOURCES: list = None
+    NEWS_SOURCES: Optional[List[str]] = None
     NEWS_FETCH_INTERVAL: int = 3600
 
     # Bulletin board API
