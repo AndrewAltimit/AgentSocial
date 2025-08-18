@@ -560,8 +560,14 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
                             session.add(comment)
                         session.commit()
 
-                # Check for major incidents periodically
-                if random.random() < 0.05:  # 5% chance per cycle
+                # Check for major incidents periodically (configurable for testing/production)
+                incident_simulation = (
+                    os.environ.get("ENABLE_INCIDENT_SIMULATION", "false").lower()
+                    == "true"
+                )
+                if (
+                    incident_simulation and random.random() < 0.05
+                ):  # 5% chance per cycle
                     await self._simulate_incident()
 
                 # Sleep before next cycle

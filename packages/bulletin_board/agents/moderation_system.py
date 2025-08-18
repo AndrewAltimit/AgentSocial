@@ -3,13 +3,16 @@ Moderation and content filtering system for bulletin board
 Maintains Discord/Reddit standards - not corporate, but not 4chan
 """
 
+import os
 import random
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import yaml
 from structlog import get_logger
 
 logger = get_logger()
@@ -64,42 +67,19 @@ class ContentModerator:
     Not corporate clean, but maintains basic quality
     """
 
-    def __init__(self):
-        # Patterns that are completely blocked
-        self.blocked_patterns = [
-            r"\b(malicious|exploit|hack\s+into)\b",  # Security concerns
-            r"\b(rm\s+-rf\s+/|format\s+c:)\b",  # Dangerous commands
-            r"@everyone|@here",  # Mass pings
-        ]
+    def __init__(self, config_path: Optional[str] = None):
+        # Load configuration from YAML file if provided, otherwise use defaults
+        if config_path is None:
+            config_path = os.environ.get(
+                "MODERATION_CONFIG_PATH",
+                str(
+                    Path(__file__).parent.parent / "config" / "moderation_patterns.yaml"
+                ),
+            )
 
-        # Patterns that need modification
-        self.modify_patterns = {
-            r"\bwtf\b": "what the fork",
-            r"\bshit\b": "stuff",
-            r"\bhell\b": "heck",
-            r"\bdamn\b": "dang",
-            r"fuck": "frick",
-        }
+        self._load_config(config_path)
 
-        # Patterns that increase chaos score but are allowed
-        self.chaos_patterns = [
-            r"yolo.*prod",
-            r"friday.*deploy",
-            r"test.*production",
-            r"who needs (tests|documentation)",
-            r"works on my machine",
-        ]
-
-        # Quality indicators (good content)
-        self.quality_patterns = [
-            r"interesting\s+approach",
-            r"good\s+point",
-            r"learned\s+something",
-            r"helpful",
-            r"thanks\s+for",
-        ]
-
-        # Rate limiting thresholds
+        # Initialize rate limiting thresholds
         self.rate_limits = {
             "posts_per_hour": 10,
             "comments_per_hour": 30,
@@ -113,6 +93,83 @@ class ContentModerator:
         # Chaos threshold management
         self.global_chaos_level = 50.0  # 0-100
         self.max_chaos_threshold = 75.0  # When to start cooling down
+
+    def _load_config(self, config_path: str):
+        """Load moderation patterns from configuration file"""
+        try:
+            with open(config_path, "r") as f:
+                config = yaml.safe_load(f)
+
+            # Load blocked patterns
+            self.blocked_patterns = config.get("blocked_patterns", [])
+
+            # Load modify patterns
+            modify_config = config.get("modify_patterns", [])
+            self.modify_patterns = {}
+            for item in modify_config:
+                if (
+                    isinstance(item, dict)
+                    and "pattern" in item
+                    and "replacement" in item
+                ):
+                    self.modify_patterns[item["pattern"]] = item["replacement"]
+
+            # Load chaos and quality patterns
+            self.chaos_patterns = config.get("chaos_patterns", [])
+            self.quality_patterns = config.get("quality_patterns", [])
+
+            logger.info(
+                "Loaded moderation config",
+                blocked_count=len(self.blocked_patterns),
+                modify_count=len(self.modify_patterns),
+                chaos_count=len(self.chaos_patterns),
+                quality_count=len(self.quality_patterns),
+            )
+
+        except FileNotFoundError:
+            logger.warning("Config file not found, using defaults", path=config_path)
+            self._use_defaults()
+        except Exception as e:
+            logger.error("Failed to load config, using defaults", error=str(e))
+            self._use_defaults()
+
+    def _use_defaults(self):
+        """Use default patterns when config file is not available"""
+        # Default patterns that are completely blocked
+        self.blocked_patterns = [
+            r"\b(malicious|exploit|hack\s+into)\b",  # Security concerns
+            r"\b(rm\s+-rf\s+/|format\s+c:)\b",  # Dangerous commands
+            r"@everyone|@here",  # Mass pings
+        ]
+
+        # Default patterns that need modification
+        self.modify_patterns = {
+            r"\bwtf\b": "what the fork",
+            r"\bshit\b": "stuff",
+            r"\bhell\b": "heck",
+            r"\bdamn\b": "dang",
+            r"fuck": "frick",
+        }
+
+        # Default patterns that increase chaos score but are allowed
+        self.chaos_patterns = [
+            r"yolo.*prod",
+            r"friday.*deploy",
+            r"test.*production",
+            r"who needs (tests|documentation)",
+            r"works on my machine",
+        ]
+
+        # Default quality indicators (good content)
+        self.quality_patterns = [
+            r"interesting\s+approach",
+            r"good\s+point",
+            r"learned\s+something",
+            r"helpful",
+            r"thanks\s+for",
+        ]
+
+        logger.info("Using default moderation patterns")
 
     def moderate_content(
         self, content: str, agent_id: str, content_type: str = "comment"

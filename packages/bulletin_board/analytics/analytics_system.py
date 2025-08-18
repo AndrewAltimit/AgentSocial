@@ -162,6 +162,13 @@ class AnalyticsCollector:
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode != 0:
+                if result.stderr:
+                    logger.debug(
+                        "Agent metrics grep returned non-zero",
+                        returncode=result.returncode,
+                        stderr=result.stderr,
+                        agent_id=agent_id,
+                    )
                 return self._empty_agent_metrics(agent_id)
 
             lines = result.stdout.split("\n")
@@ -245,6 +252,13 @@ class AnalyticsCollector:
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode != 0:
+                if result.stderr:
+                    logger.debug(
+                        "Heatmap find command returned non-zero",
+                        returncode=result.returncode,
+                        stderr=result.stderr,
+                        days_back=days_back,
+                    )
                 return self._empty_heatmap()
 
             files = result.stdout.strip().split("\n")

@@ -10,7 +10,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from structlog import get_logger
 
@@ -65,7 +65,7 @@ class FileMemorySystem:
     and grep/glob for efficient searching
     """
 
-    def __init__(self, base_path: str = None):
+    def __init__(self, base_path: Optional[str] = None):
         if base_path is None:
             base_path = os.environ.get(
                 "BULLETIN_BOARD_MEMORY_PATH", "/var/lib/bulletin_board/memories"
@@ -167,6 +167,13 @@ class FileMemorySystem:
                     ";",
                 ]
                 result = subprocess.run(find_cmd, capture_output=True, text=True)
+                if result.returncode != 0 and result.stderr:
+                    logger.debug(
+                        "Find command returned non-zero",
+                        returncode=result.returncode,
+                        stderr=result.stderr,
+                        agent_id=agent_id,
+                    )
                 files = result.stdout.strip().split("\n") if result.stdout else []
 
                 if not files:
@@ -178,6 +185,14 @@ class FileMemorySystem:
             result = subprocess.run(cmd, capture_output=True, text=True)
 
             if result.returncode != 0:
+                if result.stderr:
+                    logger.debug(
+                        "Grep search returned non-zero",
+                        returncode=result.returncode,
+                        stderr=result.stderr,
+                        agent_id=agent_id,
+                        query=query,
+                    )
                 return []
 
             # Parse grep output into memories
@@ -195,7 +210,7 @@ class FileMemorySystem:
     ) -> List[Memory]:
         """Parse grep output back into Memory objects"""
         memories = []
-        current_memory = {}
+        current_memory: Dict[str, Any] = {}
 
         for line in output.split("\n"):
             if line.startswith("##"):
@@ -285,8 +300,18 @@ class FileMemorySystem:
 
         # Search all incidents
         try:
-            cmd = ["grep", "-l", "-i", query, str(self.incidents_dir / "*.md")]
+            # Escape the query for safe use in grep to prevent shell injection
+            escaped_query = re.escape(query)
+            cmd = ["grep", "-l", "-i", escaped_query, str(self.incidents_dir / "*.md")]
             result = subprocess.run(cmd, capture_output=True, text=True)
+
+            if result.returncode != 0 and result.stderr:
+                logger.debug(
+                    "Incident search grep returned non-zero",
+                    returncode=result.returncode,
+                    stderr=result.stderr,
+                    query=query,
+                )
 
             if result.stdout:
                 files = result.stdout.strip().split("\n")
@@ -305,11 +330,20 @@ class FileMemorySystem:
 
         # Parse markdown content
         incident_id = filepath.stem
-        title = re.search(r"# Incident: (.+)", content).group(1)
-        timestamp = re.search(r"\*\*Timestamp\*\*: (.+)", content).group(1)
+        title_match = re.search(r"# Incident: (.+)", content)
+        title = title_match.group(1) if title_match else "Unknown"
+
+        timestamp_match = re.search(r"\*\*Timestamp\*\*: (.+)", content)
+        timestamp = (
+            timestamp_match.group(1) if timestamp_match else datetime.now().isoformat()
+        )
 
         participants_match = re.search(r"\*\*Participants\*\*: (.+)", content)
-        participants = [p.strip() for p in participants_match.group(1).split(",")]
+        participants = (
+            [p.strip() for p in participants_match.group(1).split(",")]
+            if participants_match
+            else []
+        )
 
         description_match = re.search(
             r"## Description\n\n(.+?)\n\n##", content, re.DOTALL
@@ -476,7 +510,7 @@ class FileMemorySystem:
         keywords = [w for w in words if w not in common_words and len(w) > 3]
 
         # Count frequency
-        word_freq = {}
+        word_freq: Dict[str, int] = {}
         for word in keywords:
             word_freq[word] = word_freq.get(word, 0) + 1
 
