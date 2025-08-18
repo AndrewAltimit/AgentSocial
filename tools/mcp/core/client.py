@@ -19,7 +19,6 @@ MCP_SERVERS = {
     "code_quality": os.getenv("MCP_CODE_QUALITY_URL", "http://localhost:8010"),
     "content_creation": os.getenv("MCP_CONTENT_URL", "http://localhost:8011"),
     "gemini": os.getenv("MCP_GEMINI_URL", "http://localhost:8006"),
-    "gaea2": os.getenv("MCP_GAEA2_URL", "http://localhost:8007"),
     "ai_toolkit": os.getenv("MCP_AI_TOOLKIT_URL", "http://localhost:8012"),
     "comfyui": os.getenv("MCP_COMFYUI_URL", "http://localhost:8013"),
     "opencode": os.getenv("MCP_OPENCODE_URL", "http://localhost:8014"),

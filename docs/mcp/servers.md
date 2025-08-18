@@ -16,9 +16,8 @@ The MCP functionality is split across modular servers:
 7. **ElevenLabs Speech MCP Server** - Containerized text-to-speech synthesis
 
 **HTTP Bridge Mode (Remote servers):**
-8. **Gaea2 MCP Server** (Port 8007) - Bridge to remote terrain generation
-9. **AI Toolkit MCP Server** (Port 8012) - Bridge to remote AI Toolkit for LoRA training
-10. **ComfyUI MCP Server** (Port 8013) - Bridge to remote ComfyUI for image generation
+8. **AI Toolkit MCP Server** (Port 8012) - Bridge to remote AI Toolkit for LoRA training
+9. **ComfyUI MCP Server** (Port 8013) - Bridge to remote ComfyUI for image generation
 
 This modular architecture ensures better separation of concerns, easier maintenance, and the ability to scale individual services independently.
 
@@ -122,50 +121,6 @@ docker-compose run --rm python-ci python -m tools.mcp.gemini.server
 
 See `tools/mcp/gemini/docs/README.md` for detailed documentation.
 
-## Gaea2 MCP Server (Port 8007)
-
-The Gaea2 server provides comprehensive terrain generation capabilities.
-
-### Starting the Server
-
-```bash
-# Start via Docker Compose (recommended for container-first approach)
-docker-compose up -d mcp-gaea2
-
-# Or run locally for development
-python -m tools.mcp.gaea2.server
-
-# For remote server deployment (e.g., on Windows with Gaea2 installed)
-# Set GAEA2_REMOTE_URL environment variable to point to the remote server
-export GAEA2_REMOTE_URL=http://remote-server:8007
-
-# View logs
-docker-compose logs -f mcp-gaea2
-
-# Test health
-curl http://localhost:8007/health
-```
-
-### Available Tools
-
-#### Terrain Generation Tools
-- **create_gaea2_project** - Create custom terrain projects with automatic validation
-- **create_gaea2_from_template** - Use professional workflow templates
-- **validate_and_fix_workflow** - Comprehensive validation and automatic repair
-- **analyze_workflow_patterns** - Pattern-based analysis using real project knowledge
-- **optimize_gaea2_properties** - Optimize for performance or quality
-- **suggest_gaea2_nodes** - Get intelligent node suggestions
-- **repair_gaea2_project** - Repair damaged project files
-
-#### CLI Automation (when running on Windows with Gaea2)
-- **run_gaea2_project** - Execute terrain generation via CLI
-- **analyze_execution_history** - Learn from previous runs
-
-### Configuration
-
-- For containerized deployment: Works out of the box
-- For Windows deployment with CLI features: Set `GAEA2_PATH` environment variable
-- See `tools/mcp/gaea2/docs/README.md` for complete documentation
 
 ## AI Toolkit MCP Server (Port 8012)
 
@@ -424,7 +379,6 @@ python automation/testing/test_all_servers.py --quick
 # Test individual servers
 python tools/mcp/code_quality/scripts/test_server.py
 python tools/mcp/content_creation/scripts/test_server.py
-python tools/mcp/gaea2/scripts/test_server.py
 python tools/mcp/gemini/scripts/test_server.py
 ```
 
@@ -446,10 +400,6 @@ The modular servers are configured in `.mcp.json`:
     "gemini": {
       "type": "http",
       "url": "http://localhost:8006/messages"
-    },
-    "gaea2": {
-      "type": "http",
-      "url": "${GAEA2_REMOTE_URL:-http://localhost:8007}/messages"
     },
     "ai-toolkit": {
       "type": "http",
@@ -496,10 +446,10 @@ Use the MCPClient from `tools.mcp.core` to interact with MCP servers:
 from tools.mcp.core import MCPClient
 
 # Target a specific server by name
-client = MCPClient(server_name="gaea2")
+client = MCPClient(server_name="ai_toolkit")
 
 # Or use a server URL directly
-client = MCPClient(base_url="http://localhost:8007")
+client = MCPClient(base_url="http://localhost:8012")
 
 # Execute tools
 result = client.execute_tool("tool_name", {"arg": "value"})
@@ -530,10 +480,6 @@ docker-compose down mcp-code-quality
 1. **"Cannot run in container" error** - Run on host system
 2. **Gemini CLI not found** - Install with `npm install -g @google/gemini-cli`
 
-### Gaea2 Windows CLI Features
-
-1. **Set GAEA2_PATH** environment variable to Gaea.Swarm.exe location
-2. **Ensure Windows host** for CLI automation features
 
 ## Development Notes
 

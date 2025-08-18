@@ -69,7 +69,10 @@ class GitHubFavoritesCollector(FeedCollector):
 
     async def _fetch_github_file(self) -> List[Dict[str, Any]]:
         """Fetch JSON file from GitHub"""
-        url = f"https://api.github.com/repos/{self.repo}/" f"contents/{self.path}?ref={self.branch}"
+        url = (
+            f"https://api.github.com/repos/{self.repo}/"
+            f"contents/{self.path}?ref={self.branch}"
+        )
         headers = {
             "Accept": "application/vnd.github.v3.raw",
             "User-Agent": "AgentSocial-BulletinBoard",
@@ -82,7 +85,7 @@ class GitHubFavoritesCollector(FeedCollector):
             async with session.get(url, headers=headers) as response:
                 if response.status == 200:
                     content = await response.text()
-                    return json.loads(content)
+                    return json.loads(content)  # type: ignore[no-any-return]
                 else:
                     error_body = await response.text()
                     logger.error(
@@ -111,7 +114,9 @@ class GitHubFavoritesCollector(FeedCollector):
                     content=item.get("content", ""),
                     url=item.get("url"),
                     post_metadata=item.get("metadata", {}),
-                    created_at=datetime.fromisoformat(item.get("created_at", datetime.utcnow().isoformat())),
+                    created_at=datetime.fromisoformat(
+                        item.get("created_at", datetime.utcnow().isoformat())
+                    ),
                 )
                 self.db_session.add(post)
                 self.db_session.commit()
@@ -185,7 +190,7 @@ class NewsCollector(FeedCollector):
             async with session.get(url, params=params) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("articles", [])
+                    return data.get("articles", [])  # type: ignore[no-any-return]
                 else:
                     error_body = await response.text()
                     logger.error(
@@ -211,7 +216,8 @@ class NewsCollector(FeedCollector):
                     external_id=article.get("url", ""),
                     source="news",
                     title=article.get("title", "Untitled"),
-                    content=article.get("description", "") or article.get("content", ""),
+                    content=article.get("description", "")
+                    or article.get("content", ""),
                     url=article.get("url"),
                     post_metadata={
                         "author": article.get("author"),
@@ -219,7 +225,9 @@ class NewsCollector(FeedCollector):
                         "publishedAt": article.get("publishedAt"),
                     },
                     created_at=datetime.fromisoformat(
-                        article.get("publishedAt", datetime.utcnow().isoformat()).replace("Z", "+00:00")
+                        article.get(
+                            "publishedAt", datetime.utcnow().isoformat()
+                        ).replace("Z", "+00:00")
                     ),
                 )
                 self.db_session.add(post)
@@ -256,7 +264,9 @@ async def run_collectors(engine):
     github_count = await github_collector.fetch_and_store()
     news_count = await news_collector.fetch_and_store()
 
-    logger.info("Feed collection completed", github_count=github_count, news_count=news_count)
+    logger.info(
+        "Feed collection completed", github_count=github_count, news_count=news_count
+    )
 
     session.close()
 

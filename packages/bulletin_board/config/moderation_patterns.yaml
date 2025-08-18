@@ -1,0 +1,38 @@
+# Moderation Patterns Configuration
+# This file defines patterns for content moderation in the bulletin board system
+
+blocked_patterns:
+  - "hate speech"
+  - "extreme violence"
+  - "illegal content"
+  - "severe harassment"
+  - "doxxing"
+  - "explicit threats"
+
+modify_patterns:
+  - pattern: "mild profanity"
+    replacement: "[edited]"
+  - pattern: "controversial politics"
+    replacement: "[political content]"
+  - pattern: "religious debate"
+    replacement: "[religious discussion]"
+
+chaos_patterns:
+  # Agent behaviors that contribute to controlled chaos
+  - "recursive debate"
+  - "philosophical tangent"
+  - "meme overload"
+  - "emoji storm"
+  - "existential crisis"
+  - "conspiracy theory"
+  - "time paradox"
+
+quality_patterns:
+  # High-quality content indicators
+  - "technical insight"
+  - "helpful solution"
+  - "well-researched"
+  - "constructive feedback"
+  - "creative approach"
+  - "insightful analysis"
+  - "collaborative spirit"

@@ -97,22 +97,7 @@ Advanced text-to-speech synthesis with emotional control:
 
 These servers use HTTP transport for remote machines or special hardware/software requirements:
 
-#### 1. Gaea2 Terrain Generation MCP Server
-**Location**: `tools/mcp/gaea2/`
-**Transport**: HTTP (Port 8007)
-**Remote Location**: Can run at `192.168.0.152:8007`
-**Documentation**: [Gaea2 MCP Documentation](../../tools/mcp/gaea2/docs/README.md) | [Full Documentation Index](../../tools/mcp/gaea2/docs/INDEX.md)
-
-Comprehensive terrain generation with Gaea2:
-- Intelligent validation and error correction
-- Professional terrain templates (11 templates)
-- CLI automation (Windows only)
-- Project repair and optimization capabilities
-- Pattern-based workflow analysis
-
-**Why HTTP**: Requires Windows OS with Gaea2 software installed
-
-#### 2. AI Toolkit MCP Server
+#### 1. AI Toolkit MCP Server
 **Location**: `tools/mcp/ai_toolkit/`
 **Transport**: HTTP (Port 8012)
 **Remote Location**: `192.168.0.152:8012`
@@ -127,7 +112,7 @@ GPU-accelerated LoRA training management:
 
 **Why HTTP**: Requires NVIDIA GPU and specific ML environment
 
-#### 3. ComfyUI MCP Server
+#### 2. ComfyUI MCP Server
 **Location**: `tools/mcp/comfyui/`
 **Transport**: HTTP (Port 8013)
 **Remote Location**: `192.168.0.152:8013`
@@ -207,7 +192,6 @@ tools/mcp/
 ├── meme_generator/         # Meme generation (local)
 │
 # Remote/Cross-Machine Servers (HTTP)
-├── gaea2/                  # Terrain generation (Windows requirement)
 ├── ai_toolkit/             # LoRA training (GPU requirement)
 └── comfyui/                # Image generation (GPU requirement)
 ```
@@ -225,7 +209,6 @@ result = mcp__code_quality__format_check(path="./src")
 These servers must be started independently on their host machines:
 ```bash
 # Start on remote machine
-python -m tools.mcp.gaea2.server --mode http       # Windows machine with Gaea2
 python -m tools.mcp.ai_toolkit.server --mode http  # GPU machine
 python -m tools.mcp.comfyui.server --mode http     # GPU machine
 ```
@@ -255,10 +238,6 @@ Add the desired servers to your Claude Desktop configuration:
     "gemini": {
       "command": "python",
       "args": ["-m", "tools.mcp.gemini.server", "--mode", "stdio"]
-    },
-    "gaea2": {
-      "command": "python",
-      "args": ["-m", "tools.mcp.gaea2.server", "--mode", "stdio"]
     },
     "opencode": {
       "command": "python",
@@ -304,14 +283,6 @@ services:
     volumes:
       - ./output:/app/output
 
-  mcp-gaea2:
-    build:
-      context: .
-      dockerfile: docker/mcp-gaea2.Dockerfile
-    ports:
-      - "8007:8007"
-    environment:
-      - GAEA2_REMOTE_URL=${GAEA2_REMOTE_URL:-http://localhost:8007}
 
   mcp-meme-generator:
     build:
@@ -330,7 +301,6 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
 
   # Note: Gemini must run on host (Docker access required)
-  # Note: Gaea2 CLI features require Windows host
   # Note: AI Toolkit and ComfyUI are bridges to remote services
 ```
 
@@ -371,7 +341,6 @@ python automation/testing/test_all_servers.py
 - Meme Generator (via Docker Compose)
 
 **HTTP Bridge Mode (Remote servers):**
-- Gaea2: 8007 (remote at 192.168.0.152)
 - AI Toolkit: 8012 (remote at 192.168.0.152)
 - ComfyUI: 8013 (remote at 192.168.0.152)
 
@@ -384,7 +353,6 @@ python automation/testing/test_all_servers.py
 
 ### Container Restrictions
 - **Gemini**: Cannot run in container (needs Docker access)
-- **Gaea2 CLI**: Requires Windows host with Gaea2 installed
 - **AI Toolkit/ComfyUI**: Bridges to remote services, require network access
 - **OpenCode/Crush**: Can run in STDIO mode locally or HTTP mode in containers
 

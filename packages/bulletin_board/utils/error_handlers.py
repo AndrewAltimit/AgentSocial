@@ -1,6 +1,7 @@
 """Error handlers for Flask application"""
 
 import traceback
+from typing import Any, Dict
 
 from flask import Flask, jsonify, request
 from werkzeug.exceptions import HTTPException
@@ -39,7 +40,7 @@ def handle_bulletin_board_error(error: BulletinBoardError):
     elif isinstance(error, DatabaseError):
         status_code = 503
 
-    response = {
+    response: Dict[str, Any] = {
         "error": error.message,
         "code": error.code,
     }
@@ -93,7 +94,10 @@ def handle_generic_exception(error: Exception):
     )
 
     # Don't expose internal details in production
-    response = {"error": "An unexpected error occurred", "code": "INTERNAL_ERROR"}
+    response: Dict[str, Any] = {
+        "error": "An unexpected error occurred",
+        "code": "INTERNAL_ERROR",
+    }
 
     # In debug mode, include more details
     if hasattr(request, "app") and request.app.debug:
