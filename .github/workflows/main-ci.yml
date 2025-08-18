@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload coverage reports
         if: always()
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: bulletin-board
@@ -231,7 +231,7 @@ jobs:
       - name: Check markdown links
         run: |
           echo "Checking markdown links..."
-          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only
+          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only .
 
   # Stage 7: Deploy (placeholder for future deployment)
   deploy:
