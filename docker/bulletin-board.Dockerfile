@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
-COPY requirements.txt /build/requirements.txt
+COPY config/python/requirements.txt /build/requirements.txt
 RUN pip install --user --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime stage
@@ -26,18 +26,23 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Create non-root user first
+RUN useradd -m -u 1000 bulletin
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+# Copy Python dependencies from builder to bulletin user's home
+COPY --from=builder /root/.local /home/bulletin/.local
+
+# Fix ownership of dependencies
+RUN chown -R bulletin:bulletin /home/bulletin/.local
 
 # Copy application code
-COPY bulletin_board /app/bulletin_board
+COPY packages/bulletin_board /app/packages/bulletin_board
 
-# Create non-root user and set permissions
-RUN useradd -m -u 1000 bulletin && \
-    chown -R bulletin:bulletin /app && \
+# Set PYTHONPATH instead of installing as editable package
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Set permissions for app directory
+RUN chown -R bulletin:bulletin /app && \
     # Create .git directory for version detection
     mkdir -p /app/.git && \
     chown -R bulletin:bulletin /app/.git
@@ -52,4 +57,4 @@ ENV PATH=/home/bulletin/.local/bin:$PATH
 EXPOSE 8080
 
 # Default command
-CMD ["python", "-m", "bulletin_board.app.app"]
+CMD ["python", "-m", "packages.bulletin_board.app.app"]

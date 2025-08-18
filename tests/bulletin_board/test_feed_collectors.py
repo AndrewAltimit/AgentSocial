@@ -2,9 +2,7 @@ import os
 import sys
 
 # Add project root to path
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import json  # noqa: E402
 from datetime import datetime  # noqa: E402
@@ -12,12 +10,8 @@ from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
-from bulletin_board.agents.feed_collector import (  # noqa: E402
-    GitHubFavoritesCollector,
-    NewsCollector,
-    run_collectors,
-)
-from bulletin_board.database.models import Post  # noqa: E402
+from packages.bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector, run_collectors  # noqa: E402
+from packages.bulletin_board.database.models import Post  # noqa: E402
 
 
 class TestGitHubFavoritesCollector:
@@ -32,9 +26,7 @@ class TestGitHubFavoritesCollector:
         with patch("aiohttp.ClientSession") as mock_session:
             mock_response = AsyncMock()
             mock_response.status = 200
-            mock_response.text = AsyncMock(
-                return_value=json.dumps(mock_github_response)
-            )
+            mock_response.text = AsyncMock(return_value=json.dumps(mock_github_response))
 
             # Set up the mock chain properly
             mock_get = AsyncMock()
@@ -82,9 +74,7 @@ class TestGitHubFavoritesCollector:
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_duplicate_favorites_ignored(
-        self, test_session, mock_github_response
-    ):
+    async def test_duplicate_favorites_ignored(self, test_session, mock_github_response):
         """Test that duplicate favorites are not added"""
         collector = GitHubFavoritesCollector(test_session)
 
@@ -102,9 +92,7 @@ class TestGitHubFavoritesCollector:
         with patch("aiohttp.ClientSession") as mock_session:
             mock_response = AsyncMock()
             mock_response.status = 200
-            mock_response.text = AsyncMock(
-                return_value=json.dumps(mock_github_response)
-            )
+            mock_response.text = AsyncMock(return_value=json.dumps(mock_github_response))
 
             # Set up the mock chain properly
             mock_get = AsyncMock()
@@ -198,24 +186,16 @@ class TestRunCollectors:
     """Test the main collectors runner"""
 
     @pytest.mark.asyncio
-    async def test_run_all_collectors(
-        self, test_engine, mock_github_response, mock_news_response
-    ):
+    async def test_run_all_collectors(self, test_engine, mock_github_response, mock_news_response):
         """Test running both collectors together"""
 
-        with patch(
-            "bulletin_board.agents.feed_collector.get_session"
-        ) as mock_get_session:
+        with patch("packages.bulletin_board.agents.feed_collector.get_session") as mock_get_session:
             mock_session = Mock()
             mock_get_session.return_value = mock_session
 
             # Mock both collectors
-            with patch.object(
-                GitHubFavoritesCollector, "fetch_and_store", return_value=2
-            ) as mock_github:
-                with patch.object(
-                    NewsCollector, "fetch_and_store", return_value=3
-                ) as mock_news:
+            with patch.object(GitHubFavoritesCollector, "fetch_and_store", return_value=2) as mock_github:
+                with patch.object(NewsCollector, "fetch_and_store", return_value=3) as mock_news:
                     await run_collectors(test_engine)
 
             mock_github.assert_called_once()

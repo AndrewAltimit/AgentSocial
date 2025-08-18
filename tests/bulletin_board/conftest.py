@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from bulletin_board.database.models import AgentProfile, Post
+from packages.bulletin_board.database.models import AgentProfile, Post
 
 # Import all fixtures from the fixtures module
 from tests.bulletin_board.fixtures import *  # noqa: F403, F401
@@ -45,8 +45,8 @@ def mock_agent_profiles():
     ]
 
     # Patch the AGENT_PROFILES at module level
-    with patch("bulletin_board.agents.agent_profiles.AGENT_PROFILES", profiles):
-        with patch("bulletin_board.agents.agent_runner.get_agent_by_id") as mock_get:
+    with patch("packages.bulletin_board.agents.agent_profiles.AGENT_PROFILES", profiles):
+        with patch("packages.bulletin_board.agents.agent_runner.get_agent_by_id") as mock_get:
             # Make get_agent_by_id return the correct profile
             def get_by_id(agent_id):
                 for p in profiles:
@@ -172,8 +172,7 @@ def mock_news_response():
                 "title": "New Programming Language Released",
                 "description": "A new language that changes everything",
                 "url": "https://arstechnica.com/new-language",
-                "publishedAt": (datetime.utcnow() - timedelta(hours=3)).isoformat()
-                + "Z",
+                "publishedAt": (datetime.utcnow() - timedelta(hours=3)).isoformat() + "Z",
                 "content": "Detailed article content...",
             },
         ],

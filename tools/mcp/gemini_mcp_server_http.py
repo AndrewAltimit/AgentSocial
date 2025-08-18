@@ -23,9 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 def check_container_and_exit():
     """Check if running in a container and exit immediately if true."""
     if os.path.exists("/.dockerenv") or os.environ.get("CONTAINER_ENV"):
-        print(
-            "ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr
-        )
+        print("ERROR: Gemini MCP Server cannot run inside a container!", file=sys.stderr)
         print(
             "The Gemini CLI requires Docker access and must run on the host system.",
             file=sys.stderr,
@@ -72,12 +70,10 @@ async def root():
     return {
         "name": "Gemini MCP Server (HTTP)",
         "version": "1.0.0",
-        "description": "HTTP-based MCP server for Gemini CLI integration "
-        "(testing/development)",
+        "description": "HTTP-based MCP server for Gemini CLI integration " "(testing/development)",
         "status": "running",
         "note": "This server must run on the host system, not in a container",
-        "recommendation": "For production, use the stdio version "
-        "without --port argument",
+        "recommendation": "For production, use the stdio version " "without --port argument",
     }
 
 
@@ -117,8 +113,7 @@ async def consult_gemini(request: ConsultGeminiRequest):
     except subprocess.CalledProcessError as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Gemini CLI command failed: "
-            f"{e.stderr if hasattr(e, 'stderr') else str(e)}",
+            detail=f"Gemini CLI command failed: " f"{e.stderr if hasattr(e, 'stderr') else str(e)}",
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -151,8 +146,7 @@ async def list_tools():
         "tools": [
             {
                 "name": "consult_gemini",
-                "description": "Consult Gemini AI for assistance "
-                "(requires host execution)",
+                "description": "Consult Gemini AI for assistance " "(requires host execution)",
                 "input_schema": ConsultGeminiRequest.schema(),
             },
             {

@@ -13,23 +13,12 @@ import pytest
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bulletin_board.agents.agent_runner import ClaudeAgent  # noqa: E402
-from bulletin_board.agents.feed_collector import (  # noqa: E402
-    GitHubFavoritesCollector,
-    NewsCollector,
-)
-from bulletin_board.database.models import (  # noqa: E402
-    AgentProfile,
-    Comment,
-    Post,
-)
+from packages.bulletin_board.agents.agent_runner import ClaudeAgent  # noqa: E402
+from packages.bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector  # noqa: E402
+from packages.bulletin_board.database.models import AgentProfile, Comment, Post  # noqa: E402
 
 # Import test fixtures from shared fixtures file
-from tests.bulletin_board.fixtures import (  # noqa: E402, F401
-    mock_db_functions,
-    test_db_engine,
-    test_db_session,
-)
+from tests.bulletin_board.fixtures import mock_db_functions, test_db_engine, test_db_session  # noqa: E402, F401
 
 
 @pytest.fixture(scope="function")
@@ -173,7 +162,7 @@ async def test_agent_commenting(session):
 
     # Mock agent behavior
     with patch(
-        "bulletin_board.agents.agent_runner.get_agent_by_id",
+        "packages.bulletin_board.agents.agent_runner.get_agent_by_id",
         return_value=mock_agent_profile,
     ):
         claude_agent = ClaudeAgent("test_claude")
@@ -286,7 +275,7 @@ def test_web_interface(test_db, mock_db_functions):  # noqa: F811
     post1_id = post1.id
 
     # Import app and configure for testing
-    from bulletin_board.app.app import app
+    from packages.bulletin_board.app.app import app
 
     app.config["TESTING"] = True
     with app.test_client() as client:

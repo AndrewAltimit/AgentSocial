@@ -3,17 +3,12 @@ name: Pull Request Validation
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
     branches: [main, develop]
   workflow_dispatch:
     inputs:
       skip_tests:
         description: 'Skip tests (for draft PRs)'
-        required: false
-        type: boolean
-        default: false
-      force_docker_validation:
-        description: 'Force container validation'
         required: false
         type: boolean
         default: false
@@ -28,10 +23,6 @@ concurrency:
   group: pr-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   # Stage 1: Quick validation and change detection
   detect-changes:
@@ -42,7 +33,7 @@ jobs:
       python_changed: ${{ steps.changes.outputs.python_changed }}
       yaml_changed: ${{ steps.changes.outputs.yaml_changed }}
       docker_changed: ${{ steps.changes.outputs.docker_changed }}
-      mcp_changed: ${{ steps.changes.outputs.mcp_changed }}
+      bulletin_changed: ${{ steps.changes.outputs.bulletin_changed }}
       docs_changed: ${{ steps.changes.outputs.docs_changed }}
       files_changed: ${{ steps.changes.outputs.files_changed }}
     steps:
@@ -76,7 +67,7 @@ jobs:
           python_count=$(grep -E '\.(py)$' changed_files.txt | wc -l || echo "0")
           yaml_count=$(grep -E '\.(ya?ml|json)$' changed_files.txt | wc -l || echo "0")
           docker_count=$(grep -E '(Dockerfile|docker-compose\.yml|docker-compose\.yaml|\.dockerignore)' changed_files.txt | wc -l || echo "0")
-          mcp_count=$(grep -E '(mcp|MCP|tools/)' changed_files.txt | wc -l || echo "0")
+          bulletin_count=$(grep -E '(bulletin_board|bulletin-board)' changed_files.txt | wc -l || echo "0")
           docs_count=$(grep -E '\.(md|rst|txt)$' changed_files.txt | wc -l || echo "0")
           total_files=$(cat changed_files.txt | wc -l)
 
@@ -84,7 +75,7 @@ jobs:
           echo "python_changed=$([[ $python_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "yaml_changed=$([[ $yaml_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "docker_changed=$([[ $docker_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          echo "mcp_changed=$([[ $mcp_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "bulletin_changed=$([[ $bulletin_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "docs_changed=$([[ $docs_count -gt 0 ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "files_changed=$total_files" >> $GITHUB_OUTPUT
 
@@ -92,7 +83,7 @@ jobs:
           echo "  Python files: $python_count"
           echo "  YAML/JSON files: $yaml_count"
           echo "  Docker files: $docker_count"
-          echo "  MCP files: $mcp_count"
+          echo "  Bulletin Board files: $bulletin_count"
           echo "  Documentation: $docs_count"
           echo "  Total files: $total_files"
 
@@ -100,20 +91,12 @@ jobs:
   gemini-review:
     name: Gemini AI Code Review
     needs: detect-changes
-    if: github.event_name == 'pull_request'
+    if: >
+      github.event.pull_request.draft != true &&
+      needs.detect-changes.outputs.files_changed != '0'
     runs-on: self-hosted
     timeout-minutes: 10
-    env:
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      PR_TITLE: ${{ github.event.pull_request.title }}
-      PR_BODY: ${{ github.event.pull_request.body }}
-      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-      BASE_BRANCH: ${{ github.base_ref }}
-      HEAD_BRANCH: ${{ github.head_ref }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      # No pre-checkout cleanup needed - actions/checkout with clean: true handles this
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -121,501 +104,237 @@ jobs:
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
-          lfs: true
-
-      # Python cache cleanup not needed with proper user permissions
-
-      - name: Copy changed files list
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only origin/${{ github.base_ref }}...HEAD > changed_files.txt
-          fi
-
-      # Skip Python setup on self-hosted runner - use system Python
-
-      - name: Setup Node.js with nvm
-        shell: bash
-        run: |
-          # Source nvm if available
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-          # Use Node.js 22.16.0
-          nvm use 22.16.0
-          echo "Node.js version: $(node --version)"
-
-          # Verify Gemini CLI is available
-          which gemini || echo "Gemini CLI not found in PATH"
-
-      - name: Prepare Gemini review context
-        run: |
-          echo "📋 Preparing review context..."
-          # Ensure PROJECT_CONTEXT.md is available
-          if [ ! -f "PROJECT_CONTEXT.md" ]; then
-            echo "Warning: PROJECT_CONTEXT.md not found - Gemini will use fallback context"
-          else
-            echo "Found PROJECT_CONTEXT.md - Gemini will have full project context"
-          fi
-
-      - name: Start MCP server for Gemini history clear
-        continue-on-error: true
-        uses: ./.github/actions/docker-compose-health-check
-        with:
-          services: 'mcp-server'
-          health-endpoint: 'http://localhost:8005/health'
-          timeout: '30'
-          build: 'true'
 
       - name: Clear Gemini conversation history
-        continue-on-error: true
+        if: github.event.action == 'opened' || github.event.action == 'ready_for_review'
         run: |
-          echo "🧹 Clearing Gemini conversation history..."
-          # Call the clear history endpoint via MCP server
-          curl -X POST http://localhost:8005/tools/execute \
-            -H "Content-Type: application/json" \
-            -d '{"tool": "clear_gemini_history", "arguments": {}}' \
-            || echo "Warning: Could not clear Gemini history"
+          echo "Clearing Gemini conversation history for fresh review..."
+          # Clear history to ensure each PR gets fresh review
+          rm -f /tmp/gemini_conversation_*.json || true
 
-          # Stop the server after clearing history
-          docker-compose down
-
-      - name: Run Gemini review
-        continue-on-error: true  # Don't fail the PR if Gemini review fails
-        shell: bash
+      - name: Run Gemini Review
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          # Source nvm and use correct Node version
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm use 22.16.0
+          echo "Running Gemini AI code review for PR #$PR_NUMBER..."
+          python3 automation/review/gemini-pr-review.py \
+            --pr-number "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --focus "bulletin_board"
 
-          # Run the Gemini review script
-          python3 scripts/gemini-pr-review.py
-
-      - name: Upload review artifact
-        if: always()
-        uses: actions/upload-artifact@v4
+  # Stage 3: Code Quality Checks
+  lint-stages:
+    name: Code Quality - ${{ matrix.stage }}
+    needs: detect-changes
+    if: needs.detect-changes.outputs.python_changed == 'true' || needs.detect-changes.outputs.yaml_changed == 'true'
+    runs-on: self-hosted
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        stage:
+          - format
+          - basic
+          - full
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          name: gemini-review-${{ github.run_id }}
-          path: gemini-review.md
-          retention-days: 7
-          if-no-files-found: ignore
+          clean: true
 
-  # Stage 3a: Format check stage
-  format-check:
-    name: Python Format Check
-    needs: [detect-changes, gemini-review]
-    if: |
-      needs.detect-changes.outputs.python_changed == 'true' ||
-      needs.detect-changes.outputs.mcp_changed == 'true' ||
-      !github.event.pull_request.draft
-    uses: ./.github/workflows/lint-stages.yml
-    with:
-      stage: format
-      upload_artifacts: true
-    secrets: inherit
+      - name: Run ${{ matrix.stage }} linting
+        run: |
+          echo "Running ${{ matrix.stage }} linting checks..."
+          ./automation/ci-cd/run-lint-stage.sh ${{ matrix.stage }}
 
-  # Stage 3b: Basic lint stage
-  basic-lint:
-    name: Python Basic Lint
-    needs: [detect-changes, gemini-review, format-check]
-    if: |
-      needs.detect-changes.outputs.python_changed == 'true' ||
-      needs.detect-changes.outputs.mcp_changed == 'true' ||
-      !github.event.pull_request.draft
-    uses: ./.github/workflows/lint-stages.yml
-    with:
-      stage: basic
-      upload_artifacts: true
-    secrets: inherit
-
-  # Stage 3c: Full lint stage (includes security & type checking)
-  full-lint:
-    name: Python Full Lint
-    needs: [detect-changes, gemini-review, format-check, basic-lint]
-    if: |
-      needs.detect-changes.outputs.python_changed == 'true' ||
-      needs.detect-changes.outputs.mcp_changed == 'true' ||
-      !github.event.pull_request.draft
-    uses: ./.github/workflows/lint-stages.yml
-    with:
-      stage: full
-      upload_artifacts: true
-    secrets: inherit
-
-  # Stage 4: YAML/JSON validation
-  config-validation:
-    name: Config File Validation
-    needs: [detect-changes, gemini-review]
+  # Stage 4: YAML/JSON Validation
+  yaml-json-validation:
+    name: YAML/JSON Validation
+    needs: detect-changes
     if: needs.detect-changes.outputs.yaml_changed == 'true'
     runs-on: self-hosted
     timeout-minutes: 5
     steps:
-      # No pre-checkout cleanup needed - actions/checkout with clean: true handles this
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
 
-      - name: Validate YAML and JSON files
+      - name: Validate YAML files
         run: |
-          echo "🔍 Validating configuration files..."
-          ./scripts/run-ci.sh yaml-lint
-          ./scripts/run-ci.sh json-lint
+          echo "Validating YAML files..."
+          docker-compose run --rm python-ci yamllint .
 
-  # Stage 4b: Workflow file validation (always run)
-  workflow-validation:
-    name: Workflow File Validation
-    needs: [detect-changes, gemini-review]
-    if: always() && !cancelled()
-    runs-on: self-hosted
-    timeout-minutes: 5
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
-
-      - name: Validate workflow files
+      - name: Validate JSON files
         run: |
-          echo "🔍 Validating GitHub Actions workflow files..."
+          echo "Validating JSON files..."
+          docker-compose run --rm python-ci bash -c "find . -name '*.json' -not -path './.git/*' -not -path './.mypy_cache/*' -not -path './packages/github_ai_agents/.mypy_cache/*' -print0 | xargs -0 -r -n1 python -m json.tool > /dev/null"
 
-          # Build the CI image if needed
-          docker-compose build python-ci
-
-          # Validate all workflow files
-          docker-compose run --rm python-ci bash -c '
-            echo "Checking workflow files in .github/workflows/..."
-            workflow_errors=0
-
-            for file in .github/workflows/*.yml .github/workflows/*.yaml; do
-              if [ -f "$file" ]; then
-                echo "Validating: $file"
-
-                # Run yamllint with specific config for workflows
-                if yamllint -d "{extends: default, rules: {line-length: {max: 200}, document-start: disable}}" "$file"; then
-                  :
-                else
-                  echo "❌ YAML lint failed for $file"
-                  workflow_errors=$((workflow_errors + 1))
-                fi
-
-                # Validate YAML can be parsed
-                if python3 -c "import yaml; yaml.safe_load(open(\"$file\")); print(\"✅ Valid YAML structure: $file\")"; then
-                  :
-                else
-                  echo "❌ YAML parse failed for $file"
-                  workflow_errors=$((workflow_errors + 1))
-                fi
-              fi
-            done
-
-            if [ $workflow_errors -gt 0 ]; then
-              echo "❌ Found $workflow_errors workflow file error(s)"
-              exit 1
-            else
-              echo "✅ All workflow files are valid!"
-            fi
-          '
-
-  # Stage 4c: Comprehensive YAML linting (always run)
-  yaml-lint:
-    name: YAML Lint All Files
-    needs: [detect-changes, gemini-review]
-    if: always() && !cancelled()
-    runs-on: self-hosted
-    timeout-minutes: 5
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
-
-      - name: Run YAML lint on all files
-        run: |
-          echo "🔍 Running comprehensive YAML linting..."
-          ./scripts/run-ci.sh yaml-lint
-
-  # Stage 5: Test execution
-  test-suite:
-    name: Test Suite
-    needs: [detect-changes, gemini-review, format-check, basic-lint, full-lint]
-    if: |
+  # Stage 5: Bulletin Board Tests
+  bulletin-board-tests:
+    name: Bulletin Board Tests
+    needs: [detect-changes, lint-stages]
+    if: >
       (needs.detect-changes.outputs.python_changed == 'true' ||
-       needs.detect-changes.outputs.mcp_changed == 'true') &&
-      !github.event.inputs.skip_tests
+       needs.detect-changes.outputs.bulletin_changed == 'true') &&
+      github.event.inputs.skip_tests != 'true'
     runs-on: self-hosted
     timeout-minutes: 15
     steps:
-      # No pre-checkout cleanup needed - actions/checkout with clean: true handles this
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
 
-      - name: Run tests
+      - name: Set up test environment
         run: |
-          echo "🧪 Running test suite..."
-          ./scripts/run-ci.sh test
+          echo "Setting up test environment..."
+          export USER_ID=$(id -u)
+          export GROUP_ID=$(id -g)
+          echo "USER_ID=$USER_ID" >> $GITHUB_ENV
+          echo "GROUP_ID=$GROUP_ID" >> $GITHUB_ENV
 
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+      - name: Run bulletin board tests
+        run: |
+          echo "Running bulletin board tests..."
+          docker-compose run --rm python-ci pytest tests/bulletin_board/ -v --cov=packages/bulletin_board --cov-report=xml
+
+      - name: Run bulletin board validation
+        run: |
+          echo "Running bulletin board validation..."
+          docker-compose run --rm python-ci python tests/test_bulletin_board_full.py
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          file: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
+          name: bulletin-board-test-results
+          path: |
+            coverage.xml
+            .coverage
+            pytest.xml
+          retention-days: 7
 
-  # Stage 6: MCP Server validation
-  mcp-validation:
-    name: MCP Server Validation
-    needs: [detect-changes, gemini-review]
-    if: |
-      needs.detect-changes.outputs.mcp_changed == 'true' ||
-      !github.event.pull_request.draft
+  # Stage 6: Docker Build Test (Bulletin Board only)
+  docker-build-test:
+    name: Docker Build Test - Bulletin Board
+    needs: detect-changes
+    if: >
+      needs.detect-changes.outputs.docker_changed == 'true' ||
+      needs.detect-changes.outputs.bulletin_changed == 'true'
+    runs-on: self-hosted
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          clean: true
+
+      - name: Build bulletin board Docker image
+        run: |
+          echo "Building bulletin board Docker image..."
+          docker-compose build --no-cache bulletin-web bulletin-db bulletin-collector
+
+      - name: Test bulletin board services
+        run: |
+          echo "Testing bulletin board services..."
+          docker-compose --profile bulletin up -d
+          sleep 10
+          docker-compose --profile bulletin ps
+          curl -f http://localhost:8080/health || exit 1
+          docker-compose --profile bulletin down
+
+  # Stage 7: Documentation Check
+  docs-check:
+    name: Documentation Check
+    needs: detect-changes
+    if: needs.detect-changes.outputs.docs_changed == 'true'
     runs-on: self-hosted
     timeout-minutes: 10
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      # No pre-checkout cleanup needed - actions/checkout with clean: true handles this
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
 
-      # No need to install Python or dependencies - Docker handles it
-
-      - name: Start MCP server with health check
-        uses: ./.github/actions/docker-compose-health-check
-        with:
-          services: 'mcp-server'
-          health-endpoint: 'http://localhost:8005/health'
-          timeout: '60'
-          build: 'true'
-
-      - name: Test MCP server functionality
+      - name: Check markdown links
         run: |
-          echo "🤖 Testing MCP server integration..."
-          # Build python-ci if needed
-          docker-compose build python-ci
-          # Install requirements and run test
-          docker-compose run --rm python-ci bash -c "pip install -r requirements.txt && python scripts/test-mcp-server.py http://mcp-server:8000"
+          echo "Checking markdown links..."
+          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only .
 
-      - name: View MCP server logs
-        if: failure()
-        run: |
-          echo "📋 MCP server logs:"
-          docker-compose logs mcp-server
-
-      - name: Stop MCP server
-        if: always()
-        run: |
-          docker-compose down
-
-  # Stage 7: Docker image validation
-  docker-validation:
-    name: Docker Image Validation
-    needs: [detect-changes, gemini-review, format-check, basic-lint, full-lint]
-    if: |
-      needs.detect-changes.outputs.docker_changed == 'true' ||
-      needs.detect-changes.outputs.python_changed == 'true' ||
-      github.event.inputs.force_docker_validation ||
-      !github.event.pull_request.draft
-    runs-on: self-hosted
-    timeout-minutes: 20
-    steps:
-      # No pre-checkout cleanup needed - actions/checkout with clean: true handles this
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          lfs: true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=pr
-            type=sha,prefix=pr-${{ github.event.pull_request.number }}-
-
-      # Note: Docker builds intentionally do not use GitHub Actions cache (cache-from/cache-to)
-      # to avoid cache service availability issues. The self-hosted runner's local Docker
-      # cache provides sufficient caching for our needs.
-      - name: Build MCP image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp.Dockerfile
-          push: false
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:pr-${{ github.event.pull_request.number }}-mcp
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:pr-${{ github.event.pull_request.number }}-mcp-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build MCP HTTP Bridge image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/mcp-http-bridge.Dockerfile
-          push: false
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:pr-${{ github.event.pull_request.number }}-mcp-http-bridge
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:pr-${{ github.event.pull_request.number }}-mcp-http-bridge-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build Python CI image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/python-ci.Dockerfile
-          push: false
-          tags: |
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:pr-${{ github.event.pull_request.number }}-python-ci
-            ${{ env.REGISTRY }}/andrewaltimit/template-repo:pr-${{ github.event.pull_request.number }}-python-ci-${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Test Docker Compose with health check
-        uses: ./.github/actions/docker-compose-health-check
-        with:
-          services: ''  # all services
-          health-endpoint: 'http://localhost:8005/health'
-          timeout: '60'
-          build: 'true'
-
-      - name: Stop services
-        if: always()
-        run: docker-compose down
-
-  # Final status and summary
-  pr-status:
-    name: PR Status Summary
-    needs: [detect-changes, gemini-review, format-check, basic-lint, full-lint, config-validation, workflow-validation, yaml-lint, test-suite, mcp-validation, docker-validation]
+  # Final Status Check
+  pr-validation-status:
+    name: PR Validation Status
+    needs:
+      - detect-changes
+      - gemini-review
+      - lint-stages
+      - yaml-json-validation
+      - bulletin-board-tests
+      - docker-build-test
+      - docs-check
     if: always()
     runs-on: self-hosted
+    timeout-minutes: 5
     steps:
-      - name: Generate status summary
+      - name: Check overall status
         run: |
-          echo "## PR Validation Summary"
-          echo ""
-          echo "**Files changed:** ${{ needs.detect-changes.outputs.files_changed }}"
-          echo "**Python files:** ${{ needs.detect-changes.outputs.python_changed }}"
-          echo "**Config files:** ${{ needs.detect-changes.outputs.yaml_changed }}"
-          echo "**Docker files:** ${{ needs.detect-changes.outputs.docker_changed }}"
-          echo "**MCP files:** ${{ needs.detect-changes.outputs.mcp_changed }}"
-          echo ""
-          echo "**Validation Results:**"
-          echo "- Change Detection: ${{ needs.detect-changes.result }}"
-          echo "- Gemini AI Review: ${{ needs.gemini-review.result }}"
-          echo "- Format Check: ${{ needs.format-check.result }}"
-          echo "- Basic Lint: ${{ needs.basic-lint.result }}"
-          echo "- Full Lint: ${{ needs.full-lint.result }}"
-          echo "- Config Validation: ${{ needs.config-validation.result }}"
-          echo "- Workflow Validation: ${{ needs.workflow-validation.result }}"
-          echo "- YAML Lint: ${{ needs.yaml-lint.result }}"
-          echo "- Test Suite: ${{ needs.test-suite.result }}"
-          echo "- MCP Validation: ${{ needs.mcp-validation.result }}"
-          echo "- Docker Validation: ${{ needs.docker-validation.result }}"
+          echo "PR Validation Summary:"
+          echo "======================"
 
-          # Check for failures
-          if [[ "${{ needs.detect-changes.result }}" == "failure" ||
-                "${{ needs.format-check.result }}" == "failure" ||
-                "${{ needs.basic-lint.result }}" == "failure" ||
-                "${{ needs.full-lint.result }}" == "failure" ||
-                "${{ needs.config-validation.result }}" == "failure" ||
-                "${{ needs.workflow-validation.result }}" == "failure" ||
-                "${{ needs.yaml-lint.result }}" == "failure" ||
-                "${{ needs.test-suite.result }}" == "failure" ||
-                "${{ needs.mcp-validation.result }}" == "failure" ||
-                "${{ needs.docker-validation.result }}" == "failure" ]]; then
-            echo ""
-            echo "❌ PR validation failed - please review the failed checks"
-            exit 1
+          # Check if any required jobs failed
+          failed_jobs=""
+
+          if [[ "${{ needs.gemini-review.result }}" == "failure" ]]; then
+            failed_jobs="${failed_jobs}gemini-review "
           fi
 
-          echo ""
-          echo "✅ PR validation completed successfully!"
+          if [[ "${{ needs.lint-stages.result }}" == "failure" ]]; then
+            failed_jobs="${failed_jobs}lint-stages "
+          fi
 
-      - name: Post PR comment
-        if: github.event_name == 'pull_request'
+          if [[ "${{ needs.bulletin-board-tests.result }}" == "failure" ]]; then
+            failed_jobs="${failed_jobs}bulletin-board-tests "
+          fi
+
+          if [[ "${{ needs.docker-build-test.result }}" == "failure" ]]; then
+            failed_jobs="${failed_jobs}docker-build-test "
+          fi
+
+          if [[ -n "$failed_jobs" ]]; then
+            echo "❌ Failed jobs: $failed_jobs"
+            echo "Please fix the issues and push new commits."
+            exit 1
+          else
+            echo "✅ All validation checks passed!"
+            echo "PR is ready for review."
+          fi
+
+      - name: Post summary comment
+        if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
-        continue-on-error: true
         with:
           script: |
-            const results = {
-              'change-detection': '${{ needs.detect-changes.result }}',
-              'gemini-review': '${{ needs.gemini-review.result }}',
-              'format-check': '${{ needs.format-check.result }}',
-              'basic-lint': '${{ needs.basic-lint.result }}',
-              'full-lint': '${{ needs.full-lint.result }}',
-              'config-validation': '${{ needs.config-validation.result }}',
-              'workflow-validation': '${{ needs.workflow-validation.result }}',
-              'yaml-lint': '${{ needs.yaml-lint.result }}',
-              'test-suite': '${{ needs.test-suite.result }}',
-              'mcp-validation': '${{ needs.mcp-validation.result }}',
-              'docker-validation': '${{ needs.docker-validation.result }}'
-            };
+            const summary = `## 📊 PR Validation Results
 
-            const filesChanged = '${{ needs.detect-changes.outputs.files_changed }}';
-            const isDraft = context.payload.pull_request.draft;
+            | Check | Status |
+            |-------|--------|
+            | 🤖 Gemini Review | ${{ needs.gemini-review.result == 'success' && '✅ Passed' || needs.gemini-review.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |
+            | 🎨 Code Quality | ${{ needs.lint-stages.result == 'success' && '✅ Passed' || needs.lint-stages.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |
+            | 📋 YAML/JSON | ${{ needs.yaml-json-validation.result == 'success' && '✅ Passed' || needs.yaml-json-validation.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |
+            | 🧪 Bulletin Board Tests | ${{ needs.bulletin-board-tests.result == 'success' && '✅ Passed' || needs.bulletin-board-tests.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |
+            | 🐳 Docker Build | ${{ needs.docker-build-test.result == 'success' && '✅ Passed' || needs.docker-build-test.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |
+            | 📚 Documentation | ${{ needs.docs-check.result == 'success' && '✅ Passed' || needs.docs-check.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |
 
-            let comment = '## 🔍 PR Validation Results\n\n';
-            comment += `**Files changed:** ${filesChanged}\n\n`;
-            comment += '| Check | Status |\n|-------|--------|\n';
+            **Changed Files:** ${{ needs.detect-changes.outputs.files_changed }}
+            `;
 
-            Object.entries(results).forEach(([check, status]) => {
-              let icon = status === 'success' ? '✅' :
-                        status === 'failure' ? '❌' :
-                        status === 'skipped' ? '⏭️' : '🔄';
-
-              let displayName = check.charAt(0).toUpperCase() + check.slice(1).replace('-', ' ');
-              comment += `| ${displayName} | ${icon} |\n`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: summary
             });
-
-            if (isDraft) {
-              comment += '\n> 💡 **Draft PR** - Some validations may be skipped.\n';
-            }
-
-            comment += '\n🤖 *Generated by automated PR validation*';
-
-            try {
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            } catch (error) {
-              console.log('Could not post comment:', error.message);
-            }

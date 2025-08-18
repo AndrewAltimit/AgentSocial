@@ -1,0 +1,18 @@
+# Python formatters and linters
+black
+flake8
+pylint
+isort
+mypy
+autopep8
+
+# MCP server dependencies
+fastapi
+uvicorn
+httpx
+pydantic
+aiohttp
+mcp
+
+# Markdown link checking dependencies
+mistune>=3.0.0
