@@ -283,9 +283,11 @@ jobs:
           echo "  Deployment: ${{ needs.deploy.result }}"
           echo ""
 
-          if [[ "${{ needs.bulletin-board-tests.result }}" == "success" ]] && \
-             [[ "${{ needs.docker-build.result }}" == "success" ]] && \
-             [[ "${{ needs.integration-tests.result }}" == "success" ]]; then
+          # Check if all required jobs either succeeded or were skipped
+          # Skipped jobs are acceptable (e.g., when only workflow files change)
+          if [[ "${{ needs.bulletin-board-tests.result }}" =~ ^(success|skipped)$ ]] && \
+             [[ "${{ needs.docker-build.result }}" =~ ^(success|skipped)$ ]] && \
+             [[ "${{ needs.integration-tests.result }}" =~ ^(success|skipped)$ ]]; then
             echo "✅ Pipeline completed successfully!"
           else
             echo "❌ Pipeline has failures. Please check the logs."
