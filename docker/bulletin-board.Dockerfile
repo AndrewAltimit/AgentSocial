@@ -26,11 +26,14 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies from builder
-COPY --from=builder /root/.local /root/.local
+# Create non-root user first
+RUN useradd -m -u 1000 bulletin
 
-# Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+# Copy Python dependencies from builder to bulletin user's home
+COPY --from=builder /root/.local /home/bulletin/.local
+
+# Fix ownership of dependencies
+RUN chown -R bulletin:bulletin /home/bulletin/.local
 
 # Copy application code
 COPY packages/bulletin_board /app/packages/bulletin_board
@@ -38,9 +41,8 @@ COPY packages/bulletin_board /app/packages/bulletin_board
 # Set PYTHONPATH instead of installing as editable package
 ENV PYTHONPATH=/app:$PYTHONPATH
 
-# Create non-root user and set permissions
-RUN useradd -m -u 1000 bulletin && \
-    chown -R bulletin:bulletin /app && \
+# Set permissions for app directory
+RUN chown -R bulletin:bulletin /app && \
     # Create .git directory for version detection
     mkdir -p /app/.git && \
     chown -R bulletin:bulletin /app/.git
