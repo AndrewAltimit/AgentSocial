@@ -75,9 +75,7 @@ class EnhancedAgentRunner:
         context = self._build_context(post)
 
         # Check if agent should respond
-        should_respond, probability = self.personality_manager.should_agent_respond(
-            agent_id, context
-        )
+        should_respond, probability = self.personality_manager.should_agent_respond(agent_id, context)
 
         if not should_respond:
             return
@@ -91,9 +89,7 @@ class EnhancedAgentRunner:
 
         if response:
             # Apply moderation
-            moderation_result = self.content_moderator.moderate_content(
-                response["content"], agent_id, "comment"
-            )
+            moderation_result = self.content_moderator.moderate_content(response["content"], agent_id, "comment")
 
             if moderation_result.action == ModerationAction.REJECT:
                 logger.warning(
@@ -182,9 +178,7 @@ class EnhancedAgentRunner:
 
         # Also check via API
         async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{self.api_base_url}/api/posts/{post_id}"
-            ) as response:
+            async with session.get(f"{self.api_base_url}/api/posts/{post_id}") as response:
                 if response.status == 200:
                     data = await response.json()
                     comments = data.get("comments", [])
@@ -194,18 +188,14 @@ class EnhancedAgentRunner:
 
         return False
 
-    async def _generate_response(
-        self, agent_id: str, personality, post: Dict, context: Dict
-    ) -> Optional[Dict]:
+    async def _generate_response(self, agent_id: str, personality, post: Dict, context: Dict) -> Optional[Dict]:
         """Generate agent response with personality"""
 
         # Base response generation (simplified - in production would use LLM)
         base_response = self._generate_base_response(personality, post, context)
 
         # Apply personality speech patterns
-        enhanced_text = self.personality_manager.apply_speech_patterns(
-            agent_id, base_response
-        )
+        enhanced_text = self.personality_manager.apply_speech_patterns(agent_id, base_response)
 
         # Select reaction
         reaction = self.personality_manager.select_reaction(agent_id, context)
@@ -213,27 +203,21 @@ class EnhancedAgentRunner:
         # Maybe generate meme
         meme_text = None
         if self.personality_manager.should_generate_meme(agent_id, context):
-            meme_template = self.personality_manager.select_meme_template(
-                agent_id, context
-            )
+            meme_template = self.personality_manager.select_meme_template(agent_id, context)
             if meme_template:
                 meme_text = self._generate_meme_text(meme_template, context)
 
         # Apply expression enhancement
-        final_text, reaction_url, meme_markdown = (
-            self.expression_enhancer.enhance_comment(
-                enhanced_text,
-                {
-                    "favorite_reactions": personality.expression.favorite_reactions,
-                    "meme_preferences": personality.expression.meme_preferences,
-                    "speech_patterns": personality.expression.speech_patterns,
-                    "formality": personality.personality.formality,
-                    "meme_probability": getattr(
-                        personality.behavior, "meme_generation_probability", 0.3
-                    ),
-                },
-                context,
-            )
+        final_text, reaction_url, meme_markdown = self.expression_enhancer.enhance_comment(
+            enhanced_text,
+            {
+                "favorite_reactions": personality.expression.favorite_reactions,
+                "meme_preferences": personality.expression.meme_preferences,
+                "speech_patterns": personality.expression.speech_patterns,
+                "formality": personality.personality.formality,
+                "meme_probability": getattr(personality.behavior, "meme_generation_probability", 0.3),
+            },
+            context,
         )
 
         response = {
@@ -281,9 +265,7 @@ class EnhancedAgentRunner:
         }
 
         archetype = personality.personality.archetype
-        responses = responses_by_archetype.get(
-            archetype, responses_by_archetype["analytical"]
-        )
+        responses = responses_by_archetype.get(archetype, responses_by_archetype["analytical"])
 
         return random.choice(responses)
 
@@ -295,7 +277,9 @@ class EnhancedAgentRunner:
         elif template == "drake_meme":
             return "*[Drake Meme]* Nah: Proper error handling | Yeah: console.log everywhere"
         else:
-            return f"*[{template} meme about {context.get('keywords', ['coding'])[0] if context.get('keywords') else 'coding'}]*"
+            return (
+                f"*[{template} meme about {context.get('keywords', ['coding'])[0] if context.get('keywords') else 'coding'}]*"
+            )
 
     async def _post_comment(self, agent_id: str, post_id: int, response: Dict):
         """Post comment to the API"""
@@ -309,9 +293,7 @@ class EnhancedAgentRunner:
         }
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f"{self.api_base_url}/api/agent/comment", json=comment_data
-            ) as response:
+            async with session.post(f"{self.api_base_url}/api/agent/comment", json=comment_data) as response:
                 if response.status == 201:
                     logger.info("Comment posted", agent_id=agent_id, post_id=post_id)
                 else:

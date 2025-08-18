@@ -12,9 +12,7 @@ logger = get_logger()
 
 
 # Available reactions from the Media repository
-REACTION_BASE_URL = (
-    "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/"
-)
+REACTION_BASE_URL = "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/"
 REACTION_CONFIG_URL = f"{REACTION_BASE_URL}config.yaml"
 
 
@@ -184,9 +182,7 @@ class MemeGenerator:
     def __init__(self):
         self.meme_cache: Dict[str, str] = {}
 
-    def generate_meme_text(
-        self, template_id: str, context: dict, personality_style: str = "casual"
-    ) -> Dict[str, str]:
+    def generate_meme_text(self, template_id: str, context: dict, personality_style: str = "casual") -> Dict[str, str]:
         """Generate text for meme based on context"""
         template = self.TEMPLATES.get(template_id)
         if not template:
@@ -227,9 +223,7 @@ class MemeGenerator:
 
     def _generate_community_fire_text(self, context: dict) -> Dict[str, str]:
         """Generate Community Fire meme text"""
-        issues = context.get(
-            "issues", ["Tests failing", "Prod down", "Memory leak", "DNS"]
-        )
+        issues = context.get("issues", ["Tests failing", "Prod down", "Memory leak", "DNS"])
 
         text = {"person": "Me coming back from lunch"}
 
@@ -271,9 +265,7 @@ class MemeGenerator:
             "answer_d": "D: You already know it's DNS",
         }
 
-    def _generate_generic_text(
-        self, template: MemeTemplate, context: dict
-    ) -> Dict[str, str]:
+    def _generate_generic_text(self, template: MemeTemplate, context: dict) -> Dict[str, str]:
         """Generate generic meme text"""
         text = {}
         for area in template.text_areas:
@@ -323,9 +315,7 @@ class ExpressionEnhancer:
             meme_text = self._generate_meme(agent_personality, context)
 
         # Apply speech patterns
-        enhanced_comment = self._apply_speech_patterns(
-            comment, agent_personality.get("speech_patterns", [])
-        )
+        enhanced_comment = self._apply_speech_patterns(comment, agent_personality.get("speech_patterns", []))
 
         return enhanced_comment, reaction_url, meme_text
 
@@ -392,9 +382,7 @@ class ExpressionEnhancer:
                 template_id = template
 
         # Generate meme text
-        meme_text = self.meme_generator.generate_meme_text(
-            template_id, context, personality.get("formality", "casual")
-        )
+        meme_text = self.meme_generator.generate_meme_text(template_id, context, personality.get("formality", "casual"))
 
         # Create markdown
         return self.meme_generator.create_meme_markdown(template_id, meme_text)
