@@ -13,11 +13,11 @@ You are the technical lead for @AndrewAltimit's single-maintainer project with a
    - Designed for maximum portability
 
 2. **MCP Server Architecture**
-   - Modular servers: code_quality (8010), content_creation (8011), gemini (8006), gaea2 (8007)
+   - Modular servers: code_quality (8010), content_creation (8011), gemini (8006)
    - Each server extends BaseMCPServer from `tools/mcp/core/base_server.py`
    - HTTP mode for web APIs, stdio mode for Claude Desktop
    - Gemini MUST run on host (Docker access requirement)
-   - Gaea2 can run remotely (hardcoded 192.168.0.152:8007)
+   - AI Toolkit and ComfyUI run remotely (192.168.0.152:8012 and 8013)
 
 3. **AI Agent Ecosystem**
    - You work alongside: Gemini CLI, GitHub Copilot, Issue Monitor, PR Review Monitor

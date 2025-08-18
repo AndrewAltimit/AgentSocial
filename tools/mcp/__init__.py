@@ -4,7 +4,6 @@ This package contains specialized MCP servers:
 - code_quality: Code formatting and linting tools
 - content_creation: Manim animations and LaTeX compilation
 - gemini: AI integration (must run on host)
-- gaea2: Terrain generation tools
 
 Note: Each server should be imported directly from its module to avoid
 cross-dependencies between servers with different requirements.

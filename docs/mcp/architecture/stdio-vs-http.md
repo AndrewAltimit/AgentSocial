@@ -169,9 +169,9 @@ For servers running on remote machines:
 ```json
 {
   "mcpServers": {
-    "gaea2": {
+    "ai_toolkit": {
       "type": "http",
-      "url": "http://192.168.0.152:8007/messages"
+      "url": "http://192.168.0.152:8012/messages"
     }
   }
 }

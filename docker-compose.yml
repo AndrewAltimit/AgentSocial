@@ -117,75 +117,6 @@ services:
     profiles:
       - services
 
-  # Blender MCP Server
-  mcp-blender:
-    build:
-      context: .
-      dockerfile: docker/blender-mcp.Dockerfile
-    container_name: mcp-blender
-    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
-    ports:
-      - "8017:8017"
-    volumes:
-      - ./outputs/blender/projects:/app/projects
-      - ./outputs/blender/assets:/app/assets
-      - ./outputs/blender/renders:/app/outputs
-      - ./outputs/blender/templates:/app/templates
-    environment:
-      - PYTHONUNBUFFERED=1
-    networks:
-      - mcp-network
-    # GPU support (optional - uncomment if GPU available)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-    #     # Optional resource limits to prevent excessive consumption
-    #     limits:
-    #       cpus: '4.0'
-    #       memory: 8G
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8017/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    profiles:
-      - services
-      - gpu
-
-  # Gaea2 MCP Server (Windows host required for full functionality)
-  mcp-gaea2:
-    build:
-      context: .
-      dockerfile: docker/mcp-gaea2.Dockerfile
-    container_name: mcp-gaea2
-    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
-    ports:
-      - "8007:8007"
-    volumes:
-      - ./:/app:ro
-      - ./outputs/mcp-gaea2:/output/gaea2  # Bind mount to local outputs directory
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PORT=8007
-      - GAEA2_TEST_MODE=0
-    networks:
-      - mcp-network
-    command: ["python", "-m", "tools.mcp.gaea2.server", "--mode", "http", "--output-dir", "/output/gaea2", "--no-enforce-file-validation"]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    profiles:
-      - services
 
   # AI Toolkit (Web UI and MCP Server)
   mcp-ai-toolkit:
@@ -603,12 +534,10 @@ services:
     depends_on:
       - mcp-code-quality
       - mcp-content-creation
-      - mcp-gaea2
       - mcp-ai-toolkit
       - mcp-comfyui
       - mcp-crush
       - mcp-opencode
-      - mcp-blender
       - mcp-elevenlabs-speech
     profiles:
       - all

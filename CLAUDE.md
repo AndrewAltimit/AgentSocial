@@ -42,9 +42,10 @@ The AI agents implement a comprehensive multi-layer security model with command-
 
 ### Remote Infrastructure
 
-**IMPORTANT**: The Gaea2 MCP server can run on a dedicated remote machine at `192.168.0.152:8007`:
-- Gaea2 requires Windows with the Gaea2 software installed
-- Health checks gracefully handle when the server is unavailable
+AI Toolkit and ComfyUI MCP servers run on a dedicated remote machine at `192.168.0.152`:
+- AI Toolkit on port 8012 for LoRA training
+- ComfyUI on port 8013 for image generation
+- Health checks gracefully handle when servers are unavailable
 - Do NOT change remote addresses to localhost in PR reviews
 
 ## Commands
@@ -155,12 +156,10 @@ docker-compose run --rm python-ci mypy . --ignore-missing-imports
 # Start servers in Docker (recommended for consistency)
 docker-compose up -d mcp-code-quality        # Port 8010 - Code formatting/linting
 docker-compose up -d mcp-content-creation    # Port 8011 - Manim & LaTeX
-docker-compose up -d mcp-gaea2               # Port 8007 - Terrain generation
 
 # For local development (when actively developing server code)
 python -m tools.mcp.code_quality.server      # Port 8010
 python -m tools.mcp.content_creation.server  # Port 8011
-python -m tools.mcp.gaea2.server             # Port 8007
 python -m tools.mcp.opencode.server          # Port 8014 - AI code generation (HTTP mode)
 python -m tools.mcp.crush.server             # Port 8015 - Fast code generation (HTTP mode)
 
@@ -187,7 +186,6 @@ docker-compose logs -f mcp-code-quality
 python tools/mcp/code_quality/scripts/test_server.py
 python tools/mcp/content_creation/scripts/test_server.py
 python tools/mcp/gemini/scripts/test_server.py
-python tools/mcp/gaea2/scripts/test_server.py
 # AI Toolkit and ComfyUI tests require remote servers to be running
 python tools/mcp/ai_toolkit/scripts/test_server.py  # Tests connection to 192.168.0.152:8012
 python tools/mcp/comfyui/scripts/test_server.py     # Tests connection to 192.168.0.152:8013
@@ -251,7 +249,6 @@ docker-compose up -d
 # View logs
 docker-compose logs -f mcp-code-quality
 docker-compose logs -f mcp-content-creation
-docker-compose logs -f mcp-gaea2
 docker-compose logs -f python-ci
 
 # Stop services
@@ -260,7 +257,6 @@ docker-compose down
 # Rebuild after changes
 docker-compose build mcp-code-quality
 docker-compose build mcp-content-creation
-docker-compose build mcp-gaea2
 docker-compose build python-ci
 ```
 
@@ -317,27 +313,14 @@ The project uses a modular collection of Model Context Protocol (MCP) servers, e
      - `toggle_gemini_auto_consult` - Control auto-consultation
    - See `tools/mcp/gemini/docs/README.md` for documentation
 
-4. **Gaea2 MCP Server** (`tools/mcp/gaea2/`): HTTP port 8007 (remote Windows machine)
-   - **Terrain Generation**:
-     - `create_gaea2_project` - Create custom terrain projects
-     - `create_gaea2_from_template` - Use professional templates
-     - `validate_and_fix_workflow` - Comprehensive validation and repair
-     - `analyze_workflow_patterns` - Pattern-based workflow analysis
-     - `optimize_gaea2_properties` - Performance/quality optimization
-     - `suggest_gaea2_nodes` - Intelligent node suggestions
-     - `repair_gaea2_project` - Fix damaged project files
-     - `run_gaea2_project` - CLI automation (Windows only)
-   - Can run locally or on remote server (192.168.0.152:8007)
-   - See `tools/mcp/gaea2/docs/README.md` for complete documentation
-
-5. **AI Toolkit MCP Server** (`tools/mcp/ai_toolkit/`): HTTP port 8012 (remote GPU machine)
+4. **AI Toolkit MCP Server** (`tools/mcp/ai_toolkit/`): HTTP port 8012 (remote GPU machine)
    - **LoRA Training Management**:
      - Training configurations, dataset uploads, job monitoring
      - Model export and download capabilities
    - Bridge to remote AI Toolkit instance at `192.168.0.152:8012`
    - See `tools/mcp/ai_toolkit/docs/README.md` for documentation
 
-6. **ComfyUI MCP Server** (`tools/mcp/comfyui/`): HTTP port 8013 (remote GPU machine)
+5. **ComfyUI MCP Server** (`tools/mcp/comfyui/`): HTTP port 8013 (remote GPU machine)
    - **AI Image Generation**:
      - Image generation with workflows
      - LoRA model management and transfer
@@ -345,7 +328,7 @@ The project uses a modular collection of Model Context Protocol (MCP) servers, e
    - Bridge to remote ComfyUI instance at `192.168.0.152:8013`
    - See `tools/mcp/comfyui/docs/README.md` for documentation
 
-7. **OpenCode MCP Server** (`tools/mcp/opencode/`): STDIO (local) or HTTP port 8014
+6. **OpenCode MCP Server** (`tools/mcp/opencode/`): STDIO (local) or HTTP port 8014
    - **AI-Powered Code Generation**:
      - `consult_opencode` - Generate, refactor, review, or explain code
      - `clear_opencode_history` - Clear conversation history
@@ -355,7 +338,7 @@ The project uses a modular collection of Model Context Protocol (MCP) servers, e
    - Runs locally via stdio for better integration
    - See `tools/mcp/opencode/docs/README.md` for documentation
 
-8. **Crush MCP Server** (`tools/mcp/crush/`): STDIO (local) or HTTP port 8015
+7. **Crush MCP Server** (`tools/mcp/crush/`): STDIO (local) or HTTP port 8015
    - **Fast Code Generation**:
      - `consult_crush` - Quick code generation and conversion
      - `clear_crush_history` - Clear conversation history
@@ -365,12 +348,12 @@ The project uses a modular collection of Model Context Protocol (MCP) servers, e
    - Runs locally via stdio for better integration
    - See `tools/mcp/crush/docs/README.md` for documentation
 
-9. **Shared Core Components** (`tools/mcp/core/`):
+8. **Shared Core Components** (`tools/mcp/core/`):
    - `BaseMCPServer` - Base class for all MCP servers
    - `HTTPBridge` - Bridge for remote MCP servers
    - Common utilities and helpers
 
-10. **Containerized CI/CD**:
+9. **Containerized CI/CD**:
    - **Python CI Container** (`docker/python-ci.Dockerfile`): All Python tools
    - **Helper Scripts**: Centralized CI operations
    - **Individual MCP Containers**: Each server can run in its own optimized container
@@ -587,10 +570,6 @@ For detailed information on specific topics, refer to these documentation files:
 - `docs/integrations/creative-tools/lora-transfer.md` - LoRA model transfer between services
 - `docs/integrations/ai-services/gemini-setup.md` - Gemini CLI setup and configuration
 
-### Gaea2 Terrain Generation
-- `tools/mcp/gaea2/docs/INDEX.md` - Complete Gaea2 documentation index
-- `tools/mcp/gaea2/docs/README.md` - Main Gaea2 MCP documentation
-- `tools/mcp/gaea2/docs/GAEA2_QUICK_REFERENCE.md` - Quick reference guide
 
 ## AI Toolkit & ComfyUI Integration
 
@@ -601,17 +580,3 @@ The AI Toolkit and ComfyUI MCP servers provide bridges to remote instances for L
 - **FLUX Workflows**: Different from SD workflows (cfg=1.0, special nodes)
 
 **For comprehensive integration guide, see** `docs/integrations/creative-tools/ai-toolkit-comfyui.md`
-
-## Gaea2 MCP Integration
-
-The Gaea2 MCP server provides comprehensive terrain generation capabilities:
-
-- **Intelligent Validation**: Automatic error correction and optimization
-- **Professional Templates**: Ready-to-use terrain workflows
-- **Windows Requirement**: Must run on Windows with Gaea2 installed
-
-**For complete Gaea2 documentation:**
-- `tools/mcp/gaea2/docs/INDEX.md` - Documentation index
-- `tools/mcp/gaea2/docs/README.md` - Main documentation
-- `tools/mcp/gaea2/docs/GAEA2_API_REFERENCE.md` - API reference
-- `tools/mcp/gaea2/docs/GAEA2_EXAMPLES.md` - Usage examples

@@ -30,7 +30,7 @@ runs:
       run: |
         echo "📁 Creating output directories with proper permissions..."
         # Create directories that will be bind-mounted to avoid permission issues
-        mkdir -p outputs/mcp-content outputs/mcp-gaea2
+        mkdir -p outputs/mcp-content
         # Ensure they're writable by the current user
         chmod -R 755 outputs/
         echo "✅ Output directories created"
