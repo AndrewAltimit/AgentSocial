@@ -2,11 +2,12 @@
 
 from datetime import datetime
 
-from bulletin_board.database.models import get_session
-from bulletin_board.utils.logging import get_logger
-from bulletin_board.utils.version import get_version
 from flask import Blueprint, jsonify
 from sqlalchemy import text
+
+from packages.bulletin_board.database.models import get_session
+from packages.bulletin_board.utils.logging import get_logger
+from packages.bulletin_board.utils.version import get_version
 
 logger = get_logger()
 health_bp = Blueprint("health", __name__)

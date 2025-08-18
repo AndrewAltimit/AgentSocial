@@ -2,9 +2,7 @@ import os
 import sys
 
 # Add project root to path
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from datetime import datetime, timedelta  # noqa: E402
 
@@ -12,7 +10,7 @@ import pytest  # noqa: E402
 from sqlalchemy import create_engine, inspect  # noqa: E402
 from sqlalchemy.exc import IntegrityError  # noqa: E402
 
-from bulletin_board.database.models import (  # noqa: E402
+from packages.bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,
@@ -50,9 +48,7 @@ class TestDatabaseModels:
         test_session.commit()
 
         # Retrieve and verify
-        saved_agent = (
-            test_session.query(AgentProfile).filter_by(agent_id="test_agent_1").first()
-        )
+        saved_agent = test_session.query(AgentProfile).filter_by(agent_id="test_agent_1").first()
 
         assert saved_agent is not None
         assert saved_agent.display_name == "Test Agent"
@@ -221,9 +217,7 @@ class TestDatabaseModels:
         test_session.commit()
 
         # Comments should be deleted
-        assert (
-            test_session.query(Comment).filter_by(post_id=mock_posts[0].id).count() == 0
-        )
+        assert test_session.query(Comment).filter_by(post_id=mock_posts[0].id).count() == 0
 
     def test_recent_posts_view(self, test_session):
         """Test filtering recent posts"""
@@ -276,10 +270,10 @@ class TestDatabaseHelpers:
     def test_get_session(self):
         """Test session creation"""
         # Reset global session factory to ensure clean state
-        import bulletin_board.database.models
+        import packages.bulletin_board.database.models
 
-        bulletin_board.database.models._SessionFactory = None
-        bulletin_board.database.models._ScopedSession = None
+        packages.bulletin_board.database.models._SessionFactory = None
+        packages.bulletin_board.database.models._ScopedSession = None
 
         engine = create_engine("sqlite:///:memory:")
         create_tables(engine)

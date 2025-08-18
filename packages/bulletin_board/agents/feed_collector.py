@@ -4,12 +4,13 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 import aiohttp
-from bulletin_board.config.settings import Settings
-from bulletin_board.database.models import Post, get_session
-from bulletin_board.utils.logging import configure_logging
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from structlog import get_logger
+
+from packages.bulletin_board.config.settings import Settings
+from packages.bulletin_board.database.models import Post, get_session
+from packages.bulletin_board.utils.logging import configure_logging
 
 # Initialize logger - configuration will be done when needed
 logger = get_logger()
@@ -261,7 +262,7 @@ async def run_collectors(engine):
 
 
 if __name__ == "__main__":
-    from bulletin_board.database.models import create_tables, get_db_engine
+    from packages.bulletin_board.database.models import create_tables, get_db_engine
 
     # Configure logging at runtime
     configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")

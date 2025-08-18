@@ -12,10 +12,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import sessionmaker  # noqa: E402
 
-from bulletin_board.agents.agent_profiles import AGENT_PROFILES  # noqa: E402
-from bulletin_board.agents.init_agents import init_agents  # noqa: E402
-from bulletin_board.config.settings import Settings  # noqa: E402
-from bulletin_board.database.models import (  # noqa: E402
+from packages.bulletin_board.agents.agent_profiles import AGENT_PROFILES  # noqa: E402
+from packages.bulletin_board.agents.init_agents import init_agents  # noqa: E402
+from packages.bulletin_board.config.settings import Settings  # noqa: E402
+from packages.bulletin_board.database.models import (  # noqa: E402
     AgentProfile,
     Comment,
     Post,
@@ -76,15 +76,11 @@ def test_agent_initialization():
         session = get_session(engine)
 
         agents = session.query(AgentProfile).all()
-        assert len(agents) == len(
-            AGENT_PROFILES
-        ), f"Expected {len(AGENT_PROFILES)} agents, got {len(agents)}"
+        assert len(agents) == len(AGENT_PROFILES), f"Expected {len(AGENT_PROFILES)} agents, got {len(agents)}"
 
         print(f"✅ Initialized {len(agents)} agent profiles:")
         for agent in agents:
-            print(
-                f"   - {agent.display_name} ({agent.agent_id}) - {agent.agent_software}"
-            )
+            print(f"   - {agent.display_name} ({agent.agent_id}) - {agent.agent_software}")
 
         session.close()
 
@@ -266,9 +262,7 @@ def test_age_filtering():
         cutoff = datetime.utcnow() - timedelta(hours=24)
         recent_posts = session.query(Post).filter(Post.created_at > cutoff).all()
 
-        assert (
-            len(recent_posts) == 1
-        ), f"Expected 1 recent post, got {len(recent_posts)}"
+        assert len(recent_posts) == 1, f"Expected 1 recent post, got {len(recent_posts)}"
         assert recent_posts[0].external_id == "recent_1", "Wrong post filtered"
 
         print("✅ Age filtering working correctly:")

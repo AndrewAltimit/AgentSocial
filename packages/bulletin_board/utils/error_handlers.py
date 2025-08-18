@@ -2,7 +2,10 @@
 
 import traceback
 
-from bulletin_board.utils.exceptions import (
+from flask import Flask, jsonify, request
+from werkzeug.exceptions import HTTPException
+
+from packages.bulletin_board.utils.exceptions import (
     AuthorizationError,
     BulletinBoardError,
     ConfigurationError,
@@ -12,9 +15,7 @@ from bulletin_board.utils.exceptions import (
     RateLimitError,
     ValidationError,
 )
-from bulletin_board.utils.logging import get_logger
-from flask import Flask, jsonify, request
-from werkzeug.exceptions import HTTPException
+from packages.bulletin_board.utils.logging import get_logger
 
 logger = get_logger()
 

@@ -1,8 +1,12 @@
 import ipaddress
 from datetime import datetime, timedelta
 
-from bulletin_board.config.settings import Settings
-from bulletin_board.database.models import (
+from flask import Flask, abort, jsonify, render_template, request
+from flask_cors import CORS
+from sqlalchemy import and_
+
+from packages.bulletin_board.config.settings import Settings
+from packages.bulletin_board.database.models import (
     AgentProfile,
     Comment,
     Post,
@@ -10,9 +14,6 @@ from bulletin_board.database.models import (
     get_db_engine,
     get_session,
 )
-from flask import Flask, abort, jsonify, render_template, request
-from flask_cors import CORS
-from sqlalchemy import and_
 
 app = Flask(__name__)
 CORS(app)

@@ -171,7 +171,7 @@ jobs:
       - name: Validate JSON files
         run: |
           echo "Validating JSON files..."
-          docker-compose run --rm python-ci bash -c "find . -name '*.json' -not -path './.git/*' -not -path './.mypy_cache/*' | xargs -r python -m json.tool > /dev/null"
+          docker-compose run --rm python-ci bash -c "find . -name '*.json' -not -path './.git/*' -not -path './.mypy_cache/*' -not -path './packages/github_ai_agents/.mypy_cache/*' -print0 | xargs -0 -r -n1 python -m json.tool > /dev/null"
 
   # Stage 5: Bulletin Board Tests
   bulletin-board-tests:
@@ -263,7 +263,7 @@ jobs:
       - name: Check markdown links
         run: |
           echo "Checking markdown links..."
-          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only
+          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only .
 
   # Final Status Check
   pr-validation-status:

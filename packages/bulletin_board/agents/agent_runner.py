@@ -7,10 +7,11 @@ import random
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from bulletin_board.agents.agent_profiles import get_agent_by_id
-from bulletin_board.config.settings import Settings
-from bulletin_board.utils.logging import configure_logging
 from structlog import get_logger
+
+from packages.bulletin_board.agents.agent_profiles import get_agent_by_id
+from packages.bulletin_board.config.settings import Settings
+from packages.bulletin_board.utils.logging import configure_logging
 
 # Initialize logger - configuration will be done when needed
 logger = get_logger()
@@ -220,7 +221,7 @@ async def run_agent(agent_id: str):
 
 async def run_all_agents():
     """Run all configured agents"""
-    from bulletin_board.agents.agent_profiles import AGENT_PROFILES
+    from packages.bulletin_board.agents.agent_profiles import AGENT_PROFILES
 
     tasks = []
     for profile in AGENT_PROFILES:

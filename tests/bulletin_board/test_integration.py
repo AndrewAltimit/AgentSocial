@@ -2,9 +2,7 @@ import os
 import sys
 
 # Add project root to path
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 import json  # noqa: E402
 from datetime import datetime, timedelta  # noqa: E402
@@ -12,10 +10,10 @@ from unittest.mock import AsyncMock, Mock, patch  # noqa: E402
 
 import pytest  # noqa: E402
 
-from bulletin_board.agents.agent_runner import run_all_agents  # noqa: E402
-from bulletin_board.agents.feed_collector import run_collectors  # noqa: E402
-from bulletin_board.agents.init_agents import init_agents  # noqa: E402
-from bulletin_board.database.models import get_session  # noqa: E402
+from packages.bulletin_board.agents.agent_runner import run_all_agents  # noqa: E402
+from packages.bulletin_board.agents.feed_collector import run_collectors  # noqa: E402
+from packages.bulletin_board.agents.init_agents import init_agents  # noqa: E402
+from packages.bulletin_board.database.models import get_session  # noqa: E402
 
 
 class TestBulletinBoardIntegration:
@@ -42,27 +40,22 @@ class TestBulletinBoardIntegration:
 
         with patch.dict(os.environ, env_vars):
             # Also patch the Settings class
-            with patch("bulletin_board.config.settings.Settings.DATABASE_URL", temp_db):
+            with patch("packages.bulletin_board.config.settings.Settings.DATABASE_URL", temp_db):
                 with patch(
-                    "bulletin_board.config.settings.Settings.GITHUB_TOKEN",
+                    "packages.bulletin_board.config.settings.Settings.GITHUB_TOKEN",
                     "mock_github_token",
                 ):
                     with patch(
-                        "bulletin_board.config.settings.Settings.NEWS_API_KEY",
+                        "packages.bulletin_board.config.settings.Settings.NEWS_API_KEY",
                         "mock_news_api_key",
                     ):
                         with patch(
-                            (
-                                "bulletin_board.config.settings.Settings."
-                                "INTERNAL_NETWORK_ONLY"
-                            ),
+                            ("packages.bulletin_board.config.settings.Settings." "INTERNAL_NETWORK_ONLY"),
                             False,
                         ):
                             yield env_vars
 
-    def test_database_initialization(
-        self, mock_environment, mock_db_functions, test_db_engine
-    ):
+    def test_database_initialization(self, mock_environment, mock_db_functions, test_db_engine):
         """Test database schema creation and agent initialization"""
         # Mock agent profiles to have predictable test data
         test_profiles = [
@@ -103,14 +96,12 @@ class TestBulletinBoardIntegration:
             },
         ]
 
-        with patch(
-            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
-        ):
+        with patch("packages.bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles):
             init_agents()
 
         # Verify agents were created
         session = get_session(test_db_engine)
-        from bulletin_board.database.models import AgentProfile
+        from packages.bulletin_board.database.models import AgentProfile
 
         agents = session.query(AgentProfile).all()
         session.close()
@@ -121,9 +112,7 @@ class TestBulletinBoardIntegration:
         assert "security_analyst_gemini" in agent_ids
 
     @pytest.mark.asyncio
-    async def test_feed_collection_cycle(
-        self, mock_environment, mock_db_functions, test_db_engine
-    ):
+    async def test_feed_collection_cycle(self, mock_environment, mock_db_functions, test_db_engine):
         """Test complete feed collection cycle"""
         engine = test_db_engine
 
@@ -189,7 +178,7 @@ class TestBulletinBoardIntegration:
 
         # Verify posts were created
         session = get_session(test_db_engine)
-        from bulletin_board.database.models import Post
+        from packages.bulletin_board.database.models import Post
 
         posts = session.query(Post).all()
         session.close()
@@ -200,9 +189,7 @@ class TestBulletinBoardIntegration:
         assert "Test News" in titles
 
     @pytest.mark.asyncio
-    async def test_agent_commenting_cycle(
-        self, mock_environment, mock_db_functions, test_db_engine
-    ):
+    async def test_agent_commenting_cycle(self, mock_environment, mock_db_functions, test_db_engine):
         """Test agents commenting on posts"""
         # Mock agent profiles
         test_profiles = [
@@ -222,14 +209,12 @@ class TestBulletinBoardIntegration:
             },
         ]
 
-        with patch(
-            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
-        ):
+        with patch("packages.bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles):
             init_agents()
 
         # Create test posts
         session = get_session(test_db_engine)
-        from bulletin_board.database.models import Post
+        from packages.bulletin_board.database.models import Post
 
         post1 = Post(
             external_id="test_1",
@@ -306,7 +291,7 @@ class TestBulletinBoardIntegration:
 
         # Verify some comments were created
         session = get_session(test_db_engine)
-        from bulletin_board.database.models import Comment
+        from packages.bulletin_board.database.models import Comment
 
         comments = session.query(Comment).all()
         session.close()
@@ -315,9 +300,7 @@ class TestBulletinBoardIntegration:
         # The exact number depends on the agent logic
         assert len(comments) >= 0  # At least no errors
 
-    def test_web_interface_integration(
-        self, mock_environment, mock_db_functions, test_db_engine
-    ):
+    def test_web_interface_integration(self, mock_environment, mock_db_functions, test_db_engine):
         """Test web interface with full stack"""
         # Mock agent profiles
         test_profiles = [
@@ -330,14 +313,12 @@ class TestBulletinBoardIntegration:
             }
         ]
 
-        with patch(
-            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
-        ):
+        with patch("packages.bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles):
             init_agents()
 
         # Create test data
         session = get_session(test_db_engine)
-        from bulletin_board.database.models import Comment, Post
+        from packages.bulletin_board.database.models import Comment, Post
 
         post = Post(
             external_id="web_test",
@@ -362,9 +343,9 @@ class TestBulletinBoardIntegration:
         session.close()
 
         # Test web endpoints
-        from bulletin_board.app.app import app
+        from packages.bulletin_board.app.app import app
 
-        with patch("bulletin_board.app.app.engine", test_db_engine):
+        with patch("packages.bulletin_board.app.app.engine", test_db_engine):
             app.config["TESTING"] = True
             with app.test_client() as client:
                 # Get posts
@@ -372,9 +353,7 @@ class TestBulletinBoardIntegration:
                 assert response.status_code == 200
                 data = json.loads(response.data)
                 # Find our test post among all posts
-                test_post = next(
-                    (p for p in data if p["title"] == "Web Test Post"), None
-                )
+                test_post = next((p for p in data if p["title"] == "Web Test Post"), None)
                 assert test_post is not None
                 assert test_post["comment_count"] == 1
 
@@ -411,24 +390,22 @@ class TestEndToEndScenarios:
         with patch.dict(os.environ, env_vars):
             # Also patch Settings to use test values
             with patch(
-                "bulletin_board.config.settings.Settings.DATABASE_URL",
+                "packages.bulletin_board.config.settings.Settings.DATABASE_URL",
                 "sqlite:///:memory:",
             ):
                 with patch(
-                    "bulletin_board.config.settings.Settings.INTERNAL_NETWORK_ONLY",
+                    "packages.bulletin_board.config.settings.Settings.INTERNAL_NETWORK_ONLY",
                     False,
                 ):
                     yield env_vars
 
     @pytest.mark.asyncio
-    async def test_full_bulletin_board_cycle(
-        self, mock_environment, mock_db_functions, test_db_engine
-    ):
+    async def test_full_bulletin_board_cycle(self, mock_environment, mock_db_functions, test_db_engine):
         """Test complete cycle: collect feeds -> agents comment -> web display"""
         # Reset Flask app engine to ensure clean state
-        import bulletin_board.app.app
+        import packages.bulletin_board.app.app
 
-        bulletin_board.app.app.engine = None
+        packages.bulletin_board.app.app.engine = None
 
         # Mock agent profiles
         test_profiles = [
@@ -448,14 +425,12 @@ class TestEndToEndScenarios:
             },
         ]
 
-        with patch(
-            "bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles
-        ):
+        with patch("packages.bulletin_board.agents.agent_profiles.AGENT_PROFILES", test_profiles):
             init_agents()
 
         # Step 1: Simulate feed collection
         session = get_session(test_db_engine)
-        from bulletin_board.database.models import Post
+        from packages.bulletin_board.database.models import Post
 
         post = Post(
             external_id="e2e_test",
@@ -472,10 +447,10 @@ class TestEndToEndScenarios:
         session.close()
 
         # Step 2: Simulate agent commenting
-        from bulletin_board.app.app import app
+        from packages.bulletin_board.app.app import app
 
         # Ensure app uses test database
-        with patch("bulletin_board.app.app.engine", test_db_engine):
+        with patch("packages.bulletin_board.app.app.engine", test_db_engine):
             app.config["TESTING"] = True
             with app.test_client() as client:
                 # Agent posts comment
@@ -503,7 +478,7 @@ class TestEndToEndScenarios:
                 assert response.status_code == 201
 
         # Step 3: Verify web display
-        with patch("bulletin_board.app.app.engine", test_db_engine):
+        with patch("packages.bulletin_board.app.app.engine", test_db_engine):
             with app.test_client() as client:
                 response = client.get(f"/api/posts/{post_id}")
                 assert response.status_code == 200

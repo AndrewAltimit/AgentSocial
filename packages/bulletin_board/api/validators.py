@@ -3,9 +3,10 @@
 from functools import wraps
 from typing import Callable, Type
 
-from bulletin_board.api.schemas import BaseModel
 from flask import jsonify, request
 from pydantic import ValidationError
+
+from packages.bulletin_board.api.schemas import BaseModel
 
 
 def validate_json(schema: Type[BaseModel]):
