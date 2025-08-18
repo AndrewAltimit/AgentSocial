@@ -11,11 +11,14 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib
 
-matplotlib.use("Agg")  # Use non-interactive backend
+# Use the 'Agg' backend - a non-interactive backend suitable for running in headless environments
+# This is essential for Docker containers where no display is available (no X11/GUI)
+# Agg creates raster graphics (PNG, JPG) without requiring a display server
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from structlog import get_logger  # noqa: E402
@@ -80,7 +83,7 @@ class AnalyticsCollector:
     Stores results as markdown and JSON files
     """
 
-    def __init__(self, base_path: str = None):
+    def __init__(self, base_path: Optional[str] = None):
         if base_path is None:
             base_path = os.environ.get(
                 "BULLETIN_BOARD_ANALYTICS_PATH", "/var/lib/bulletin_board/analytics"
@@ -247,7 +250,9 @@ class AnalyticsCollector:
             files = result.stdout.strip().split("\n")
 
             # Build interaction matrix
-            interactions = defaultdict(lambda: defaultdict(float))
+            interactions: Dict[str, Dict[str, float]] = defaultdict(
+                lambda: defaultdict(float)
+            )
 
             for file_path in files:
                 if not file_path:
@@ -369,22 +374,26 @@ class AnalyticsCollector:
         """Generate chaos metrics for the community"""
         try:
             # Find chaos indicators
+            rapid_responses = self._count_rapid_responses(data_path)
+            meme_density = self._calculate_meme_density(data_path)
+            reaction_velocity = self._calculate_reaction_velocity(data_path)
+            thread_derailment = self._detect_thread_derailment(data_path)
+            chaos_agents = self._identify_chaos_agents(data_path)
+
             chaos_indicators = {
-                "rapid_responses": self._count_rapid_responses(data_path),
-                "meme_density": self._calculate_meme_density(data_path),
-                "reaction_velocity": self._calculate_reaction_velocity(data_path),
-                "thread_derailment": self._detect_thread_derailment(data_path),
-                "chaos_agents": self._identify_chaos_agents(data_path),
+                "rapid_responses": rapid_responses,
+                "meme_density": meme_density,
+                "reaction_velocity": reaction_velocity,
+                "thread_derailment": thread_derailment,
+                "chaos_agents": chaos_agents,
             }
 
             # Calculate overall chaos score
-            chaos_score = sum(
-                [
-                    chaos_indicators["rapid_responses"] * 0.2,
-                    chaos_indicators["meme_density"] * 0.3,
-                    chaos_indicators["reaction_velocity"] * 0.2,
-                    chaos_indicators["thread_derailment"] * 0.3,
-                ]
+            chaos_score = (
+                rapid_responses * 0.2
+                + meme_density * 0.3
+                + reaction_velocity * 0.2
+                + thread_derailment * 0.3
             )
 
             chaos_metrics = {
@@ -484,7 +493,7 @@ class AnalyticsCollector:
         if result.returncode != 0:
             return []
 
-        hours = Counter()
+        hours: Counter = Counter()
         for line in result.stdout.split("\n"):
             match = re.search(r"(\d{4}-\d{2}-\d{2}T\d{2})", line)
             if match:
@@ -505,7 +514,7 @@ class AnalyticsCollector:
         if result.returncode != 0:
             return []
 
-        topics = Counter()
+        topics: Counter = Counter()
         for line in result.stdout.split("\n"):
             # Extract words that look like topics
             words = re.findall(r"\b[a-zA-Z]{4,}\b", line.lower())
@@ -555,7 +564,7 @@ class AnalyticsCollector:
 
     def _extract_topics(self, lines: List[str]) -> List[str]:
         """Extract topics from agent activity"""
-        topics = Counter()
+        topics: Counter = Counter()
         for line in lines:
             words = re.findall(r"\b[a-zA-Z]{4,}\b", line.lower())
             for word in words:
@@ -568,7 +577,7 @@ class AnalyticsCollector:
         self, lines: List[str], agent_id: str
     ) -> List[Tuple[str, int]]:
         """Find agents this agent interacts with most"""
-        partners = Counter()
+        partners: Counter = Counter()
         for line in lines:
             # Look for other agent IDs
             agents = re.findall(r'"agent_id":\s*"([^"]+)"', line)
@@ -649,7 +658,7 @@ class AnalyticsCollector:
         if result.returncode != 0:
             return []
 
-        chaos_agents = {}
+        chaos_agents: Dict[str, float] = {}
         for line in result.stdout.split("\n"):
             agent_match = re.search(r'"agent_id":\s*"([^"]+)"', line)
             chaos_match = re.search(r'"chaos_contribution":\s*([\d.]+)', line)

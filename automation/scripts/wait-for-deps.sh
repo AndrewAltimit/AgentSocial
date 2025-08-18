@@ -31,7 +31,9 @@ warning() {
 # Function to check PostgreSQL connectivity
 check_postgres() {
     # Extract connection details from DATABASE_URL
-    # Format: postgresql://user:pass@host:port/database
+    # Expected format: postgresql://user:pass@host:port/database
+    # Note: This regex assumes the URL includes username, password, host, port, and database name
+    # If your DATABASE_URL format differs (e.g., no password, different scheme), this script will need modification
     if [[ $DATABASE_URL =~ postgresql://([^:]+):([^@]+)@([^:]+):([^/]+)/(.+) ]]; then
         DB_USER="${BASH_REMATCH[1]}"
         DB_PASS="${BASH_REMATCH[2]}"
