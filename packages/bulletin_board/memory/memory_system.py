@@ -131,9 +131,21 @@ class FileMemorySystem:
         if not agent_dir.exists():
             return []
 
+        # Sanitize query to prevent grep option injection
+        if query.startswith("-"):
+            logger.warning(
+                "Query starts with hyphen, prepending '--' to prevent option injection",
+                query=query,
+            )
+            query = f"-- {query}"
+
+        # Escape special regex characters for literal search
+        # This ensures the query is treated as a literal string
+        query = re.escape(query)
+
         # Use grep for efficient text search
         try:
-            # Build grep command
+            # Build grep command with sanitized query
             cmd = ["grep", "-r", "-i", "-B2", "-A5", query, str(agent_dir)]
 
             # Filter by date if specified

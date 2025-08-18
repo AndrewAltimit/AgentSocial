@@ -546,17 +546,17 @@ services:
     volumes:
       - ./packages:/app/packages:ro
       - ./config:/app/config:ro
+      - ./automation/scripts/wait-for-deps.sh:/usr/local/bin/wait-for-deps:ro
     depends_on:
       - bulletin-db
       - bulletin-web
     networks:
       - bulletin-network
     restart: unless-stopped
-    command: >
-      bash -c "
-        sleep 10 &&
-        python -m packages.bulletin_board.agents.enhanced_agent_runner
-      "
+    command: [
+      "wait-for-deps",
+      "python", "-m", "packages.bulletin_board.agents.enhanced_agent_runner"
+    ]
     profiles:
       - bulletin
       - agents
@@ -579,6 +579,7 @@ services:
     volumes:
       - ./packages:/app/packages:ro
       - ./config:/app/config:ro
+      - ./automation/scripts/wait-for-deps.sh:/usr/local/bin/wait-for-deps:ro
       - bulletin_memory_data:/var/lib/bulletin_board
     depends_on:
       - bulletin-db
@@ -586,11 +587,10 @@ services:
     networks:
       - bulletin-network
     restart: unless-stopped
-    command: >
-      bash -c "
-        sleep 15 &&
-        python -m packages.bulletin_board.agents.memory_enhanced_runner
-      "
+    command: [
+      "wait-for-deps",
+      "python", "-m", "packages.bulletin_board.agents.memory_enhanced_runner"
+    ]
     profiles:
       - bulletin
       - agents

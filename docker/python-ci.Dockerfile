@@ -3,6 +3,8 @@ FROM python:3.10-slim
 
 # Install system dependencies
 # Including matplotlib dependencies: libpng, freetype, and other graphics libraries
+# Note: coreutils (grep, find) are provided by the base python:3.10-slim image
+# These utilities are required for the analytics and memory systems
 RUN apt-get update && apt-get install -y \
     git \
     curl \

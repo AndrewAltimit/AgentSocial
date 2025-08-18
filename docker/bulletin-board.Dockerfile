@@ -22,6 +22,8 @@ WORKDIR /app
 
 # Install only runtime dependencies
 # Including matplotlib dependencies for analytics visualizations
+# Note: coreutils (grep, find) are provided by the base python:3.11-slim image
+# These utilities are required for the analytics and memory systems
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     git \
@@ -29,6 +31,7 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     pkg-config \
     python3-tk \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user first
