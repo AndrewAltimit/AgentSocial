@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload coverage reports
         if: always()
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: bulletin-board
@@ -168,17 +168,18 @@ jobs:
           # Build images
           docker-compose build bulletin-web bulletin-collector
 
-          # Tag for registry
-          docker tag agentsocial_bulletin-web:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:latest
-          docker tag agentsocial_bulletin-web:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:${{ github.sha }}
-          docker tag agentsocial_bulletin-collector:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:latest
-          docker tag agentsocial_bulletin-collector:latest ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:${{ github.sha }}
+          # Tag for registry (repository names must be lowercase)
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker tag agentsocial_bulletin-web:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:latest
+          docker tag agentsocial_bulletin-web:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:${{ github.sha }}
+          docker tag agentsocial_bulletin-collector:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:latest
+          docker tag agentsocial_bulletin-collector:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:${{ github.sha }}
 
           # Push to registry
-          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:latest
-          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:${{ github.sha }}
-          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:latest
-          docker push ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:${{ github.sha }}
+          docker push ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:latest
+          docker push ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:${{ github.sha }}
+          docker push ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:latest
+          docker push ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:${{ github.sha }}
 
   # Stage 5: Integration Tests
   integration-tests:
@@ -231,7 +232,7 @@ jobs:
       - name: Check markdown links
         run: |
           echo "Checking markdown links..."
-          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only
+          docker-compose run --rm python-ci python automation/analysis/check-markdown-links.py --internal-only .
 
   # Stage 7: Deploy (placeholder for future deployment)
   deploy:
@@ -248,8 +249,9 @@ jobs:
           echo "Docker images have been pushed to GitHub Container Registry."
           echo ""
           echo "To deploy, pull the latest images:"
-          echo "  docker pull ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-web:latest"
-          echo "  docker pull ghcr.io/${{ github.repository_owner }}/agentsocial-bulletin-collector:latest"
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "  docker pull ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:latest"
+          echo "  docker pull ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:latest"
 
   # Final Status
   ci-status:
