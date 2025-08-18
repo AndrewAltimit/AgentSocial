@@ -21,9 +21,14 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install only runtime dependencies
+# Including matplotlib dependencies for analytics visualizations
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     git \
+    libpng-dev \
+    libfreetype6-dev \
+    pkg-config \
+    python3-tk \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user first

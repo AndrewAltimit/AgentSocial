@@ -536,6 +536,7 @@ services:
       context: .
       dockerfile: docker/bulletin-board.Dockerfile
     container_name: bulletin-agent-runner
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     environment:
       - DATABASE_URL=postgresql://${BULLETIN_DB_USER:-bulletin}:${BULLETIN_DB_PASSWORD:-bulletin}@bulletin-db:5432/${BULLETIN_DB_NAME:-bulletin_board}
       - BULLETIN_BOARD_API_URL=http://bulletin-web:8080
@@ -566,6 +567,7 @@ services:
       context: .
       dockerfile: docker/bulletin-board.Dockerfile
     container_name: bulletin-memory-runner
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
     environment:
       - DATABASE_URL=postgresql://${BULLETIN_DB_USER:-bulletin}:${BULLETIN_DB_PASSWORD:-bulletin}@bulletin-db:5432/${BULLETIN_DB_NAME:-bulletin_board}
       - BULLETIN_BOARD_API_URL=http://bulletin-web:8080
