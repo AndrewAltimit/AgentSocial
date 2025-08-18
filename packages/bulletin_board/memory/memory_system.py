@@ -10,7 +10,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from structlog import get_logger
 
@@ -65,7 +65,11 @@ class FileMemorySystem:
     and grep/glob for efficient searching
     """
 
-    def __init__(self, base_path: str = "/var/lib/bulletin_board/memories"):
+    def __init__(self, base_path: str = None):
+        if base_path is None:
+            base_path = os.environ.get(
+                "BULLETIN_BOARD_MEMORY_PATH", "/var/lib/bulletin_board/memories"
+            )
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
@@ -75,7 +79,12 @@ class FileMemorySystem:
         self.relationships_dir = self.base_path / "relationships"
         self.analytics_dir = self.base_path / "analytics"
 
-        for dir_path in [self.agents_dir, self.incidents_dir, self.relationships_dir, self.analytics_dir]:
+        for dir_path in [
+            self.agents_dir,
+            self.incidents_dir,
+            self.relationships_dir,
+            self.analytics_dir,
+        ]:
             dir_path.mkdir(exist_ok=True)
 
     def store_memory(self, agent_id: str, memory: Memory):
@@ -97,16 +106,25 @@ class FileMemorySystem:
             f.write(f"{memory.content}\n")
 
             if memory.references:
-                f.write(f"\n**References**:\n")
+                f.write("\n**References**:\n")
                 for ref in memory.references:
                     f.write(f"- {ref}\n")
 
             f.write("\n---\n")
 
-        logger.debug("Stored memory", agent_id=agent_id, memory_type=memory.memory_type, date=date)
+        logger.debug(
+            "Stored memory",
+            agent_id=agent_id,
+            memory_type=memory.memory_type,
+            date=date,
+        )
 
     def search_memories(
-        self, agent_id: str, query: str, memory_type: Optional[str] = None, days_back: int = 30
+        self,
+        agent_id: str,
+        query: str,
+        memory_type: Optional[str] = None,
+        days_back: int = 30,
     ) -> List[Memory]:
         """Search agent memories using grep"""
         agent_dir = self.agents_dir / agent_id
@@ -120,7 +138,7 @@ class FileMemorySystem:
 
             # Filter by date if specified
             if days_back < 365:
-                cutoff_date = datetime.now() - timedelta(days=days_back)
+                # cutoff_date = datetime.now() - timedelta(days=days_back)
                 # Use find to filter files by date
                 find_cmd = [
                     "find",
@@ -155,10 +173,14 @@ class FileMemorySystem:
             return memories
 
         except Exception as e:
-            logger.error("Memory search failed", agent_id=agent_id, query=query, error=str(e))
+            logger.error(
+                "Memory search failed", agent_id=agent_id, query=query, error=str(e)
+            )
             return []
 
-    def _parse_grep_output(self, output: str, memory_type: Optional[str]) -> List[Memory]:
+    def _parse_grep_output(
+        self, output: str, memory_type: Optional[str]
+    ) -> List[Memory]:
         """Parse grep output back into Memory objects"""
         memories = []
         current_memory = {}
@@ -221,7 +243,7 @@ class FileMemorySystem:
             f.write(f"**Participants**: {', '.join(incident.participants)}\n\n")
             f.write(f"## Description\n\n{incident.description}\n\n")
             f.write(f"## Outcome\n\n{incident.outcome}\n\n")
-            f.write(f"## Lessons Learned\n\n")
+            f.write("## Lessons Learned\n\n")
             for lesson in incident.lessons_learned:
                 f.write(f"- {lesson}\n")
             f.write(f"\n**Reference Count**: {incident.reference_count}\n")
@@ -277,16 +299,24 @@ class FileMemorySystem:
         participants_match = re.search(r"\*\*Participants\*\*: (.+)", content)
         participants = [p.strip() for p in participants_match.group(1).split(",")]
 
-        description_match = re.search(r"## Description\n\n(.+?)\n\n##", content, re.DOTALL)
+        description_match = re.search(
+            r"## Description\n\n(.+?)\n\n##", content, re.DOTALL
+        )
         description = description_match.group(1) if description_match else ""
 
         outcome_match = re.search(r"## Outcome\n\n(.+?)\n\n##", content, re.DOTALL)
         outcome = outcome_match.group(1) if outcome_match else ""
 
-        lessons_match = re.search(r"## Lessons Learned\n\n(.+?)\n\n\*\*", content, re.DOTALL)
+        lessons_match = re.search(
+            r"## Lessons Learned\n\n(.+?)\n\n\*\*", content, re.DOTALL
+        )
         lessons = []
         if lessons_match:
-            lessons = [l.strip("- ") for l in lessons_match.group(1).split("\n") if l.strip()]
+            lessons = [
+                line.strip("- ")
+                for line in lessons_match.group(1).split("\n")
+                if line.strip()
+            ]
 
         ref_count_match = re.search(r"\*\*Reference Count\*\*: (\d+)", content)
         ref_count = int(ref_count_match.group(1)) if ref_count_match else 0
@@ -341,7 +371,11 @@ class FileMemorySystem:
             relationship.negative_interactions += 1
 
         # Calculate new affinity
-        current_affinity = relationship.affinity_history[-1][1] if relationship.affinity_history else 0.0
+        current_affinity = (
+            relationship.affinity_history[-1][1]
+            if relationship.affinity_history
+            else 0.0
+        )
         # Affinity changes slowly over time
         affinity_change = interaction_sentiment * 0.1
         new_affinity = max(-1.0, min(1.0, current_affinity + affinity_change))
@@ -365,9 +399,16 @@ class FileMemorySystem:
         with open(rel_file, "w") as f:
             json.dump(asdict(relationship), f, indent=2)
 
-        logger.debug("Updated relationship", agent_id=agent_id, other_agent_id=other_agent_id, new_affinity=new_affinity)
+        logger.debug(
+            "Updated relationship",
+            agent_id=agent_id,
+            other_agent_id=other_agent_id,
+            new_affinity=new_affinity,
+        )
 
-    def get_relationship(self, agent_id: str, other_agent_id: str) -> Optional[RelationshipMemory]:
+    def get_relationship(
+        self, agent_id: str, other_agent_id: str
+    ) -> Optional[RelationshipMemory]:
         """Get relationship data between two agents"""
         rel_id = "_".join(sorted([agent_id, other_agent_id]))
         rel_file = self.relationships_dir / f"{rel_id}.json"
@@ -380,7 +421,9 @@ class FileMemorySystem:
 
         return RelationshipMemory(**rel_data)
 
-    def find_similar_situations(self, agent_id: str, current_context: str, limit: int = 5) -> List[Memory]:
+    def find_similar_situations(
+        self, agent_id: str, current_context: str, limit: int = 5
+    ) -> List[Memory]:
         """Find similar past situations using grep with multiple search terms"""
         # Extract key terms from context
         key_terms = self._extract_key_terms(current_context)
@@ -403,7 +446,11 @@ class FileMemorySystem:
                     unique_memories[key] = memory
 
         # Sort by importance and recency
-        sorted_memories = sorted(unique_memories.values(), key=lambda m: (m.importance, m.timestamp), reverse=True)
+        sorted_memories = sorted(
+            unique_memories.values(),
+            key=lambda m: (m.importance, m.timestamp),
+            reverse=True,
+        )
 
         return sorted_memories[:limit]
 
@@ -437,7 +484,11 @@ class FileMemorySystem:
                         file_date = datetime.strptime(memory_file.stem, "%Y-%m-%d")
                         if file_date < cutoff_date:
                             memory_file.unlink()
-                            logger.info("Cleaned old memory file", agent_id=agent_dir.name, file=memory_file.name)
+                            logger.info(
+                                "Cleaned old memory file",
+                                agent_id=agent_dir.name,
+                                file=memory_file.name,
+                            )
                     except ValueError:
                         # Skip files that don't match date format
                         continue

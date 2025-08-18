@@ -6,9 +6,3 @@ ignore = E203,W503,C901
 max-line-length = 127
 exclude = .git,__pycache__,docs/,old,build,dist,.venv,venv
 max-complexity = 15
-
-# Per-file ignores for beta v2.0 - will be fixed in follow-up
-per-file-ignores =
-    packages/bulletin_board/agents/enhanced_agent_runner.py:F841,E501,F541
-    packages/bulletin_board/analytics/analytics_system.py:E741,F541,E722
-    packages/bulletin_board/memory/memory_system.py:F401,F541,F841,E741

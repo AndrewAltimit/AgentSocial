@@ -177,8 +177,13 @@ class PersonalityManager:
 
         # Parse expression preferences
         expression_config = config.get("expression", {})
-        favorite_reactions = [ReactionPreference(**r) for r in expression_config.get("favorite_reactions", [])]
-        meme_preferences = [MemePreference(**m) for m in expression_config.get("meme_preferences", [])]
+        favorite_reactions = [
+            ReactionPreference(**r)
+            for r in expression_config.get("favorite_reactions", [])
+        ]
+        meme_preferences = [
+            MemePreference(**m) for m in expression_config.get("meme_preferences", [])
+        ]
         expression = ExpressionPreferences(
             favorite_reactions=favorite_reactions,
             meme_preferences=meme_preferences,
@@ -211,7 +216,9 @@ class PersonalityManager:
         # Parse memory
         memory_config = config.get("memory", {})
         inside_jokes = [InsideJoke(**j) for j in memory_config.get("inside_jokes", [])]
-        strong_opinions = [StrongOpinion(**o) for o in memory_config.get("strong_opinions", [])]
+        strong_opinions = [
+            StrongOpinion(**o) for o in memory_config.get("strong_opinions", [])
+        ]
         memory = MemoryConfig(
             interaction_memory=memory_config.get("interaction_memory", True),
             memory_depth=memory_config.get("memory_depth", 50),
@@ -259,9 +266,13 @@ class PersonalityManager:
         )
 
         # Adjust based on time
-        time_modifier = self._calculate_time_modifier(personality.behavior.peak_hours, context.get("current_hour", 12))
+        time_modifier = self._calculate_time_modifier(
+            personality.behavior.peak_hours, context.get("current_hour", 12)
+        )
 
-        final_probability = base_probability * interest_modifier * relationship_modifier * time_modifier
+        final_probability = (
+            base_probability * interest_modifier * relationship_modifier * time_modifier
+        )
         final_probability = min(1.0, max(0.0, final_probability))
 
         should_respond = random.random() < final_probability
@@ -276,7 +287,9 @@ class PersonalityManager:
 
         return should_respond, final_probability
 
-    def _calculate_interest_modifier(self, interests: InterestProfile, topics: List[str], keywords: List[str]) -> float:
+    def _calculate_interest_modifier(
+        self, interests: InterestProfile, topics: List[str], keywords: List[str]
+    ) -> float:
         """Calculate interest-based response modifier"""
         modifier = 1.0
 
@@ -296,14 +309,18 @@ class PersonalityManager:
 
         return modifier
 
-    def _calculate_relationship_modifier(self, relationships: RelationshipMap, author_agent_id: Optional[str]) -> float:
+    def _calculate_relationship_modifier(
+        self, relationships: RelationshipMap, author_agent_id: Optional[str]
+    ) -> float:
         """Calculate relationship-based response modifier"""
         if not author_agent_id:
             return 1.0
 
         return relationships.response_modifiers.get(author_agent_id, 1.0)
 
-    def _calculate_time_modifier(self, peak_hours: List[int], current_hour: int) -> float:
+    def _calculate_time_modifier(
+        self, peak_hours: List[int], current_hour: int
+    ) -> float:
         """Calculate time-based response modifier"""
         if current_hour in peak_hours:
             return 1.3
@@ -321,7 +338,9 @@ class PersonalityManager:
         # Filter reactions by context
         context_tags = context.get("emotion_tags", [])
         appropriate_reactions = [
-            r for r in personality.expression.favorite_reactions if any(tag in r.contexts for tag in context_tags)
+            r
+            for r in personality.expression.favorite_reactions
+            if any(tag in r.contexts for tag in context_tags)
         ]
 
         if not appropriate_reactions:
@@ -393,7 +412,9 @@ class PersonalityManager:
 
         context_tags = context.get("tags", [])
         appropriate_memes = [
-            m for m in personality.expression.meme_preferences if any(tag in m.contexts for tag in context_tags)
+            m
+            for m in personality.expression.meme_preferences
+            if any(tag in m.contexts for tag in context_tags)
         ]
 
         if not appropriate_memes:

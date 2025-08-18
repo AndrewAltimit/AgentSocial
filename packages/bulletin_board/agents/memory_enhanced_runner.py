@@ -8,24 +8,21 @@ Memory-enhanced agent runner that integrates all beta features:
 """
 
 import asyncio
+import os
 import random
 import re
-import sys
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import structlog
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-
-from packages.bulletin_board.agents.enhanced_agent_runner import EnhancedAgentRunner  # noqa: E402
-from packages.bulletin_board.agents.personality_drift import PersonalityDriftEngine  # noqa: E402
-from packages.bulletin_board.analytics.analytics_system import AnalyticsCollector  # noqa: E402
-from packages.bulletin_board.database.models import AgentProfile, Comment, Post  # noqa: E402
-from packages.bulletin_board.memory.memory_system import FileMemorySystem, IncidentMemory, Memory  # noqa: E402
+from ..agents.enhanced_agent_runner import EnhancedAgentRunner
+from ..agents.personality_drift import PersonalityDriftEngine
+from ..analytics.analytics_system import AnalyticsCollector
+from ..database.models import AgentProfile, Comment, Post
+from ..memory.memory_system import FileMemorySystem, IncidentMemory, Memory
 
 logger = structlog.get_logger()
 
@@ -35,8 +32,15 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
     Extended agent runner with memory persistence and analytics
     """
 
-    def __init__(self):
+    def __init__(self, database_url: str = None):
         super().__init__()
+
+        # Initialize database engine
+        if database_url is None:
+            database_url = os.environ.get(
+                "DATABASE_URL", "postgresql://agent:password@localhost/agentsocial"
+            )
+        self.engine = create_engine(database_url)
 
         # Initialize new systems
         self.memory_system = FileMemorySystem()
@@ -49,7 +53,9 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
         self.last_analytics_run = datetime.now()
         self.last_drift_update = datetime.now()
 
-    async def process_post(self, post: Post, agents: List[AgentProfile]) -> List[Comment]:
+    async def process_post(
+        self, post: Post, agents: List[AgentProfile]
+    ) -> List[Comment]:
         """Process post with memory and drift integration"""
         comments = []
 
@@ -58,11 +64,15 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
             context = self._build_memory_context(agent.agent_id, post)
 
             # Check if agent should respond based on personality and memories
-            should_respond, confidence = self._should_respond_with_memory(agent, post, context)
+            should_respond, confidence = self._should_respond_with_memory(
+                agent, post, context
+            )
 
             if should_respond:
                 # Generate response with memory context
-                comment = await self._generate_memory_aware_response(agent, post, context, confidence)
+                comment = await self._generate_memory_aware_response(
+                    agent, post, context, confidence
+                )
 
                 if comment:
                     comments.append(comment)
@@ -92,10 +102,14 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
     def _build_memory_context(self, agent_id: str, post: Post) -> Dict[str, Any]:
         """Build context from agent memories"""
         # Search for similar past situations
-        similar_memories = self.memory_system.find_similar_situations(agent_id, post.content, limit=3)
+        similar_memories = self.memory_system.find_similar_situations(
+            agent_id, post.content, limit=3
+        )
 
         # Get recent memories for continuity
-        recent_memories = self.memory_system.search_memories(agent_id, "", days_back=7)[:5]
+        recent_memories = self.memory_system.search_memories(agent_id, "", days_back=7)[
+            :5
+        ]
 
         # Look for relevant incidents
         incident = None
@@ -123,7 +137,9 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
             "current_mood": self._get_agent_mood(agent_id),
         }
 
-    def _should_respond_with_memory(self, agent: AgentProfile, post: Post, context: Dict[str, Any]) -> tuple[bool, float]:
+    def _should_respond_with_memory(
+        self, agent: AgentProfile, post: Post, context: Dict[str, Any]
+    ) -> tuple[bool, float]:
         """Determine if agent should respond based on personality and memories"""
         # Base personality check
         should_respond, confidence = self.personality_manager.should_agent_respond(
@@ -155,7 +171,11 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
         return confidence > 0.5, min(1.0, confidence)
 
     async def _generate_memory_aware_response(
-        self, agent: AgentProfile, post: Post, context: Dict[str, Any], confidence: float
+        self,
+        agent: AgentProfile,
+        post: Post,
+        context: Dict[str, Any],
+        confidence: float,
     ) -> Optional[Comment]:
         """Generate response incorporating memories"""
         # Build enhanced prompt with memory context
@@ -232,7 +252,12 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
         # Store memory
         self.memory_system.store_memory(agent_id, memory)
 
-        logger.debug("Stored interaction memory", agent_id=agent_id, importance=importance, sentiment=sentiment)
+        logger.debug(
+            "Stored interaction memory",
+            agent_id=agent_id,
+            importance=importance,
+            sentiment=sentiment,
+        )
 
     def _apply_interaction_drift(self, agent_id: str, comment: Comment):
         """Apply personality drift from interaction"""
@@ -260,7 +285,9 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
                 break
 
         # Apply drift
-        self.drift_engine.apply_interaction(agent_id, interaction_type, other_agent, sentiment, intensity)
+        self.drift_engine.apply_interaction(
+            agent_id, interaction_type, other_agent, sentiment, intensity
+        )
 
     def _update_relationships(self, comments: List[Comment]):
         """Update relationships based on interactions"""
@@ -268,16 +295,24 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
             for comment2 in comments[i + 1 :]:
                 if comment1.agent_id != comment2.agent_id:
                     # Calculate interaction sentiment
-                    sentiment = (self._analyze_sentiment(comment1.content) + self._analyze_sentiment(comment2.content)) / 2
+                    sentiment = (
+                        self._analyze_sentiment(comment1.content)
+                        + self._analyze_sentiment(comment2.content)
+                    ) / 2
 
                     # Check for inside jokes
                     inside_joke = None
                     if "lol" in comment1.content and "lol" in comment2.content:
-                        inside_joke = f"That thing from {datetime.now().strftime('%B %d')}"
+                        inside_joke = (
+                            f"That thing from {datetime.now().strftime('%B %d')}"
+                        )
 
                     # Update relationship
                     self.memory_system.update_relationship(
-                        comment1.agent_id, comment2.agent_id, sentiment, inside_joke=inside_joke
+                        comment1.agent_id,
+                        comment2.agent_id,
+                        sentiment,
+                        inside_joke=inside_joke,
                     )
 
     async def _run_analytics(self):
@@ -286,20 +321,30 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
             logger.info("Running analytics collection")
 
             # Collect community metrics
-            community_metrics = self.analytics.collect_community_metrics(str(self.memory_system.base_path))
+            community_metrics = self.analytics.collect_community_metrics(
+                str(self.memory_system.base_path)
+            )
 
             # Collect agent metrics
             for agent_id in self.personality_manager.personalities.keys():
-                self.analytics.collect_agent_metrics(agent_id, str(self.memory_system.base_path))
+                self.analytics.collect_agent_metrics(
+                    agent_id, str(self.memory_system.base_path)
+                )
 
             # Generate interaction heatmap
-            self.analytics.generate_interaction_heatmap(str(self.memory_system.base_path), days_back=7)
+            self.analytics.generate_interaction_heatmap(
+                str(self.memory_system.base_path), days_back=7
+            )
 
             # Analyze sentiment trends
-            sentiment_trend = self.analytics.analyze_sentiment_trends(str(self.memory_system.base_path), days_back=30)
+            sentiment_trend = self.analytics.analyze_sentiment_trends(
+                str(self.memory_system.base_path), days_back=30
+            )
 
             # Generate chaos metrics
-            chaos_metrics = self.analytics.generate_chaos_metrics(str(self.memory_system.base_path))
+            chaos_metrics = self.analytics.generate_chaos_metrics(
+                str(self.memory_system.base_path)
+            )
 
             self.last_analytics_run = datetime.now()
 
@@ -403,18 +448,39 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
         if personality_state.energy_level < 0.3:
             return random.choice(["tired.gif", "miku_shrug.png", "sleepy.webp"])
         elif personality_state.chaos_tolerance > 0.7:
-            return random.choice(["community_fire.gif", "chaos_emerald.png", "pandemonium.gif"])
+            return random.choice(
+                ["community_fire.gif", "chaos_emerald.png", "pandemonium.gif"]
+            )
         elif personality_state.positivity > 0.7:
             return random.choice(["aqua_happy.png", "felix.webp", "teamwork.webp"])
         elif personality_state.analytical_depth > 0.5:
-            return random.choice(["thinking_foxgirl.png", "rem_glasses.png", "neptune_thinking.png"])
+            return random.choice(
+                ["thinking_foxgirl.png", "rem_glasses.png", "neptune_thinking.png"]
+            )
         else:
             return None
 
     def _analyze_sentiment(self, text: str) -> float:
         """Simple sentiment analysis"""
-        positive_words = ["good", "great", "awesome", "love", "happy", "excited", "lol", "nice"]
-        negative_words = ["bad", "hate", "angry", "frustrated", "broken", "failed", "wrong"]
+        positive_words = [
+            "good",
+            "great",
+            "awesome",
+            "love",
+            "happy",
+            "excited",
+            "lol",
+            "nice",
+        ]
+        negative_words = [
+            "bad",
+            "hate",
+            "angry",
+            "frustrated",
+            "broken",
+            "failed",
+            "wrong",
+        ]
 
         text_lower = text.lower()
         positive_count = sum(1 for word in positive_words if word in text_lower)
@@ -454,7 +520,16 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
         hashtags = re.findall(r"#(\w+)", text)
 
         # Extract key technical terms
-        tech_terms = ["python", "javascript", "bug", "feature", "deploy", "test", "api", "database"]
+        tech_terms = [
+            "python",
+            "javascript",
+            "bug",
+            "feature",
+            "deploy",
+            "test",
+            "api",
+            "database",
+        ]
         found_terms = [term for term in tech_terms if term in text.lower()]
 
         return list(set(hashtags + found_terms))[:10]
@@ -467,7 +542,12 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
             try:
                 # Get recent posts
                 with Session(self.engine) as session:
-                    posts = session.query(Post).order_by(Post.created_at.desc()).limit(10).all()
+                    posts = (
+                        session.query(Post)
+                        .order_by(Post.created_at.desc())
+                        .limit(10)
+                        .all()
+                    )
 
                 # Process each post
                 for post in posts:
@@ -497,8 +577,16 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
     async def _simulate_incident(self):
         """Simulate a major incident that affects all agents"""
         incident_types = [
-            ("system_crash", "The Great Database Meltdown", "Everything was on fire for 3 hours"),
-            ("successful_collaboration", "The Epic Bug Hunt", "We found and fixed 47 bugs in one day"),
+            (
+                "system_crash",
+                "The Great Database Meltdown",
+                "Everything was on fire for 3 hours",
+            ),
+            (
+                "successful_collaboration",
+                "The Epic Bug Hunt",
+                "We found and fixed 47 bugs in one day",
+            ),
             ("meme_viral", "The Undefined Incident", "That meme broke the internet"),
             ("heated_debate", "Tabs vs Spaces War", "It got personal"),
         ]
@@ -507,7 +595,8 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
 
         # Create incident memory
         participants = random.sample(
-            list(self.personality_manager.personalities.keys()), k=min(3, len(self.personality_manager.personalities))
+            list(self.personality_manager.personalities.keys()),
+            k=min(3, len(self.personality_manager.personalities)),
         )
 
         incident = IncidentMemory(
@@ -517,7 +606,11 @@ class MemoryEnhancedRunner(EnhancedAgentRunner):
             description=description,
             participants=participants,
             outcome="Chaos ensued, lessons were learned",
-            lessons_learned=["Always have backups", "Communication is key", "Memes can be dangerous"],
+            lessons_learned=[
+                "Always have backups",
+                "Communication is key",
+                "Memes can be dangerous",
+            ],
         )
 
         # Store incident

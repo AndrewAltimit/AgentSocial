@@ -4,6 +4,7 @@ Personalities slowly change over time through interactions
 """
 
 import json
+import os
 import random
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -63,7 +64,11 @@ class PersonalityDriftEngine:
     Stores drift history as markdown files
     """
 
-    def __init__(self, base_path: str = "/var/lib/bulletin_board/personality"):
+    def __init__(self, base_path: str = None):
+        if base_path is None:
+            base_path = os.environ.get(
+                "BULLETIN_BOARD_PERSONALITY_PATH", "/var/lib/bulletin_board/personality"
+            )
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
@@ -93,13 +98,20 @@ class PersonalityDriftEngine:
             return self._create_default_state(agent_id)
 
     def apply_interaction(
-        self, agent_id: str, interaction_type: str, other_agent: Optional[str], sentiment: float, intensity: float = 0.5
+        self,
+        agent_id: str,
+        interaction_type: str,
+        other_agent: Optional[str],
+        sentiment: float,
+        intensity: float = 0.5,
     ) -> PersonalityState:
         """Apply interaction effects to personality"""
         current = self.get_current_state(agent_id)
 
         # Create influence based on interaction
-        influence = self._create_interaction_influence(interaction_type, other_agent, sentiment, intensity)
+        influence = self._create_interaction_influence(
+            interaction_type, other_agent, sentiment, intensity
+        )
 
         # Apply influence to personality
         new_state = self._apply_influence(current, influence)
@@ -117,7 +129,9 @@ class PersonalityDriftEngine:
 
         return new_state
 
-    def apply_incident(self, agent_id: str, incident_type: str, impact_level: float) -> PersonalityState:
+    def apply_incident(
+        self, agent_id: str, incident_type: str, impact_level: float
+    ) -> PersonalityState:
         """Apply major incident effects to personality"""
         current = self.get_current_state(agent_id)
 
@@ -135,7 +149,12 @@ class PersonalityDriftEngine:
         self._save_state(new_state)
         self._record_influence(agent_id, influence)
 
-        logger.info("Applied incident influence", agent_id=agent_id, incident=incident_type, impact=impact_level)
+        logger.info(
+            "Applied incident influence",
+            agent_id=agent_id,
+            incident=incident_type,
+            impact=impact_level,
+        )
 
         return new_state
 
@@ -147,7 +166,9 @@ class PersonalityDriftEngine:
         baseline = self._get_baseline_personality(agent_id)
 
         # Calculate drift toward baseline
-        new_state = self._drift_toward(current, baseline, self.reversion_rate * hours_passed)
+        new_state = self._drift_toward(
+            current, baseline, self.reversion_rate * hours_passed
+        )
 
         # Add small random drift
         new_state = self._add_random_drift(new_state, hours_passed)
@@ -176,7 +197,9 @@ class PersonalityDriftEngine:
             # Negative relationships increase conflict avoidance or aggression
             elif relationship_quality < -0.5:
                 if current.conflict_avoidance > 0.5:
-                    current.conflict_avoidance = min(1.0, current.conflict_avoidance + 0.02)
+                    current.conflict_avoidance = min(
+                        1.0, current.conflict_avoidance + 0.02
+                    )
                 else:
                     current.aggression = min(1.0, current.aggression + 0.01)
 
@@ -184,7 +207,11 @@ class PersonalityDriftEngine:
         return current
 
     def _create_interaction_influence(
-        self, interaction_type: str, other_agent: Optional[str], sentiment: float, intensity: float
+        self,
+        interaction_type: str,
+        other_agent: Optional[str],
+        sentiment: float,
+        intensity: float,
     ) -> DriftInfluence:
         """Create influence from interaction"""
         trait_impacts = {}
@@ -208,10 +235,17 @@ class PersonalityDriftEngine:
                 "energy_level": intensity * 0.02,
             }
         elif interaction_type == "debate":
-            trait_impacts = {"analytical_depth": intensity * 0.1, "verbosity": intensity * 0.05, "formality": intensity * 0.02}
+            trait_impacts = {
+                "analytical_depth": intensity * 0.1,
+                "verbosity": intensity * 0.05,
+                "formality": intensity * 0.02,
+            }
         else:
             # Generic interaction
-            trait_impacts = {"energy_level": sentiment * intensity * 0.02, "positivity": sentiment * intensity * 0.05}
+            trait_impacts = {
+                "energy_level": sentiment * intensity * 0.02,
+                "positivity": sentiment * intensity * 0.05,
+            }
 
         return DriftInfluence(
             event_type="interaction",
@@ -221,7 +255,9 @@ class PersonalityDriftEngine:
             timestamp=datetime.now().isoformat(),
         )
 
-    def _create_incident_influence(self, incident_type: str, impact_level: float) -> DriftInfluence:
+    def _create_incident_influence(
+        self, incident_type: str, impact_level: float
+    ) -> DriftInfluence:
         """Create influence from major incident"""
         trait_impacts = {}
 
@@ -251,7 +287,10 @@ class PersonalityDriftEngine:
             }
         else:
             # Generic incident
-            trait_impacts = {"chaos_tolerance": impact_level * 0.1, "energy_level": impact_level * 0.05}
+            trait_impacts = {
+                "chaos_tolerance": impact_level * 0.1,
+                "energy_level": impact_level * 0.05,
+            }
 
         return DriftInfluence(
             event_type="incident",
@@ -262,7 +301,10 @@ class PersonalityDriftEngine:
         )
 
     def _apply_influence(
-        self, state: PersonalityState, influence: DriftInfluence, magnitude_multiplier: float = 1.0
+        self,
+        state: PersonalityState,
+        influence: DriftInfluence,
+        magnitude_multiplier: float = 1.0,
     ) -> PersonalityState:
         """Apply influence to personality state"""
         new_state = PersonalityState(**asdict(state))
@@ -273,11 +315,18 @@ class PersonalityDriftEngine:
                 current_value = getattr(new_state, trait)
 
                 # Apply with reduced stability factor for stronger effect
-                change = impact * magnitude_multiplier * (1 - self.stability_factor * 0.5)
+                change = (
+                    impact * magnitude_multiplier * (1 - self.stability_factor * 0.5)
+                )
                 new_value = current_value + change
 
                 # Clamp to valid range
-                if trait in ["aggression", "supportiveness", "humor_tendency", "analytical_depth"]:
+                if trait in [
+                    "aggression",
+                    "supportiveness",
+                    "humor_tendency",
+                    "analytical_depth",
+                ]:
                     new_value = max(-1.0, min(1.0, new_value))
                 else:
                     new_value = max(0.0, min(1.0, new_value))
@@ -290,7 +339,9 @@ class PersonalityDriftEngine:
 
         return new_state
 
-    def _drift_toward(self, current: PersonalityState, target: PersonalityState, rate: float) -> PersonalityState:
+    def _drift_toward(
+        self, current: PersonalityState, target: PersonalityState, rate: float
+    ) -> PersonalityState:
         """Drift current personality toward target"""
         new_state = PersonalityState(**asdict(current))
 
@@ -317,7 +368,9 @@ class PersonalityDriftEngine:
         new_state.timestamp = datetime.now().isoformat()
         return new_state
 
-    def _add_random_drift(self, state: PersonalityState, hours: float) -> PersonalityState:
+    def _add_random_drift(
+        self, state: PersonalityState, hours: float
+    ) -> PersonalityState:
         """Add small random drift to personality"""
         new_state = PersonalityState(**asdict(state))
 
@@ -339,7 +392,9 @@ class PersonalityDriftEngine:
 
         return new_state
 
-    def _calculate_drift_velocity(self, old_state: PersonalityState, new_state: PersonalityState) -> float:
+    def _calculate_drift_velocity(
+        self, old_state: PersonalityState, new_state: PersonalityState
+    ) -> float:
         """Calculate how fast personality is changing"""
         total_change = 0.0
         trait_count = 0
@@ -362,7 +417,9 @@ class PersonalityDriftEngine:
 
         return total_change / max(trait_count, 1)
 
-    def _is_major_shift(self, old_state: PersonalityState, new_state: PersonalityState) -> bool:
+    def _is_major_shift(
+        self, old_state: PersonalityState, new_state: PersonalityState
+    ) -> bool:
         """Check if personality shift is major"""
         # Check for significant changes in key traits
         major_traits = ["chaos_tolerance", "aggression", "trust_level"]
@@ -468,7 +525,11 @@ class PersonalityDriftEngine:
             json.dump(influences, f, indent=2)
 
     def _record_major_shift(
-        self, agent_id: str, old_state: PersonalityState, new_state: PersonalityState, incident: Optional[str] = None
+        self,
+        agent_id: str,
+        old_state: PersonalityState,
+        new_state: PersonalityState,
+        incident: Optional[str] = None,
     ):
         """Record major personality shift"""
         shift_file = self.base_path / "major_shifts.md"
@@ -483,18 +544,28 @@ class PersonalityDriftEngine:
             f.write("\n### Changes\n")
 
             # Record significant changes
-            for trait in ["energy_level", "chaos_tolerance", "aggression", "trust_level"]:
+            for trait in [
+                "energy_level",
+                "chaos_tolerance",
+                "aggression",
+                "trust_level",
+            ]:
                 if hasattr(old_state, trait):
                     old_val = getattr(old_state, trait)
                     new_val = getattr(new_state, trait)
                     change = new_val - old_val
 
                     if abs(change) > 0.05:
-                        f.write(f"- {trait}: {old_val:.3f} → {new_val:.3f} ({change:+.3f})\n")
+                        f.write(
+                            f"- {trait}: {old_val:.3f} → {new_val:.3f} ({change:+.3f})\n"
+                        )
 
             f.write(f"\n**Drift Velocity**: {new_state.drift_velocity:.4f}\n")
             f.write("\n---\n")
 
         logger.info(
-            "Recorded major personality shift", agent_id=agent_id, velocity=new_state.drift_velocity, incident=incident
+            "Recorded major personality shift",
+            agent_id=agent_id,
+            velocity=new_state.drift_velocity,
+            incident=incident,
         )

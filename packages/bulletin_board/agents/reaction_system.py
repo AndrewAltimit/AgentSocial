@@ -2,18 +2,26 @@
 Reaction and meme system for bulletin board agents
 """
 
+import os
 import random
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+import aiohttp
+import yaml
 from structlog import get_logger
 
 logger = get_logger()
 
 
 # Available reactions from the Media repository
-REACTION_BASE_URL = "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/"
-REACTION_CONFIG_URL = f"{REACTION_BASE_URL}config.yaml"
+REACTION_BASE_URL = os.environ.get(
+    "REACTION_BASE_URL",
+    "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
+)
+REACTION_CONFIG_URL = os.environ.get(
+    "REACTION_CONFIG_URL", f"{REACTION_BASE_URL}config.yaml"
+)
 
 
 @dataclass
@@ -42,13 +50,77 @@ class ReactionManager:
     def __init__(self):
         self.reactions: Dict[str, Reaction] = {}
         self.reaction_cache: Dict[str, str] = {}
-        self.load_reactions()
+        # Note: load_reactions() should be called asynchronously after initialization
+        # For synchronous init, we'll use the fallback data
+        self._load_fallback_reactions()
 
-    def load_reactions(self):
+    def _load_fallback_reactions(self):
+        """Load fallback reactions synchronously for initialization"""
+        common_reactions = {
+            "miku_typing.webp": ["work", "methodical", "coding"],
+            "konata_typing.webp": ["determined", "focused", "intense"],
+            "yuki_typing.webp": ["urgent", "debugging", "late_night"],
+            "hifumi_studious.png": ["research", "documentation", "analysis"],
+            "confused.gif": ["confusion", "unexpected", "wtf"],
+            "kagami_annoyed.png": ["annoyed", "again", "frustrated"],
+            "miku_shrug.png": ["acceptance", "whatever", "good_enough"],
+            "felix.webp": ["excitement", "success", "elegant"],
+            "aqua_happy.png": ["relief", "finally", "success"],
+            "thinking_foxgirl.png": ["contemplation", "deep_thought", "philosophy"],
+            "thinking_girl.png": ["analysis", "considering", "implications"],
+            "rem_glasses.png": ["pattern_found", "recognition", "analysis_complete"],
+            "neptune_thinking.png": ["system_analysis", "architecture", "big_picture"],
+            "youre_absolutely_right.webp": [
+                "agreement",
+                "acknowledgment",
+                "good_point",
+            ],
+            "teamwork.webp": ["collaboration", "success_together", "joint_effort"],
+            "noire_not_amused.png": ["recurring_issue", "not_again", "pattern"],
+            "satania_smug.png": ["told_you_so", "predicted", "called_it"],
+            "kanna_facepalm.png": ["obvious_mistake", "why", "bruh"],
+            "miku_laughing.png": ["humor", "funny_bug", "absurd"],
+            "community_fire.gif": ["chaos", "everything_broken", "disaster"],
+        }
+
+        for filename, tags in common_reactions.items():
+            self.reactions[filename] = Reaction(
+                name=filename.split(".")[0],
+                url=f"{REACTION_BASE_URL}{filename}",
+                tags=tags,
+                contexts=tags,
+            )
+
+    async def load_reactions(self):
         """Load available reactions from config"""
         try:
-            # For now, hardcode common reactions
-            # In production, fetch from REACTION_CONFIG_URL
+            # Try to fetch from remote URL in production
+            if os.environ.get("ENVIRONMENT") == "production":
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(REACTION_CONFIG_URL) as response:
+                            if response.status == 200:
+                                config = yaml.safe_load(await response.text())
+                                for reaction in config.get("reactions", []):
+                                    self.reactions[reaction["filename"]] = Reaction(
+                                        name=reaction["name"],
+                                        url=f"{REACTION_BASE_URL}{reaction['filename']}",
+                                        tags=reaction.get("tags", []),
+                                        contexts=reaction.get(
+                                            "contexts", reaction.get("tags", [])
+                                        ),
+                                    )
+                                logger.info(
+                                    "Loaded reactions from remote config",
+                                    count=len(self.reactions),
+                                )
+                                return
+                except Exception as e:
+                    logger.warning(
+                        "Failed to load remote reactions, using fallback", error=str(e)
+                    )
+
+            # Fallback to hardcoded reactions for development
             common_reactions = {
                 "miku_typing.webp": ["work", "methodical", "coding"],
                 "konata_typing.webp": ["determined", "focused", "intense"],
@@ -182,7 +254,9 @@ class MemeGenerator:
     def __init__(self):
         self.meme_cache: Dict[str, str] = {}
 
-    def generate_meme_text(self, template_id: str, context: dict, personality_style: str = "casual") -> Dict[str, str]:
+    def generate_meme_text(
+        self, template_id: str, context: dict, personality_style: str = "casual"
+    ) -> Dict[str, str]:
         """Generate text for meme based on context"""
         template = self.TEMPLATES.get(template_id)
         if not template:
@@ -223,7 +297,9 @@ class MemeGenerator:
 
     def _generate_community_fire_text(self, context: dict) -> Dict[str, str]:
         """Generate Community Fire meme text"""
-        issues = context.get("issues", ["Tests failing", "Prod down", "Memory leak", "DNS"])
+        issues = context.get(
+            "issues", ["Tests failing", "Prod down", "Memory leak", "DNS"]
+        )
 
         text = {"person": "Me coming back from lunch"}
 
@@ -265,7 +341,9 @@ class MemeGenerator:
             "answer_d": "D: You already know it's DNS",
         }
 
-    def _generate_generic_text(self, template: MemeTemplate, context: dict) -> Dict[str, str]:
+    def _generate_generic_text(
+        self, template: MemeTemplate, context: dict
+    ) -> Dict[str, str]:
         """Generate generic meme text"""
         text = {}
         for area in template.text_areas:
@@ -315,7 +393,9 @@ class ExpressionEnhancer:
             meme_text = self._generate_meme(agent_personality, context)
 
         # Apply speech patterns
-        enhanced_comment = self._apply_speech_patterns(comment, agent_personality.get("speech_patterns", []))
+        enhanced_comment = self._apply_speech_patterns(
+            comment, agent_personality.get("speech_patterns", [])
+        )
 
         return enhanced_comment, reaction_url, meme_text
 
@@ -382,7 +462,9 @@ class ExpressionEnhancer:
                 template_id = template
 
         # Generate meme text
-        meme_text = self.meme_generator.generate_meme_text(template_id, context, personality.get("formality", "casual"))
+        meme_text = self.meme_generator.generate_meme_text(
+            template_id, context, personality.get("formality", "casual")
+        )
 
         # Create markdown
         return self.meme_generator.create_meme_markdown(template_id, meme_text)

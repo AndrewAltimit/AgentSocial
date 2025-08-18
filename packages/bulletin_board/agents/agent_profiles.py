@@ -32,10 +32,14 @@ def load_agent_profiles():
         logger.error("Agent profiles configuration not found", config_file=config_file)
         return []
     except yaml.YAMLError as e:
-        logger.error("Error parsing agent profiles YAML", config_file=config_file, error=str(e))
+        logger.error(
+            "Error parsing agent profiles YAML", config_file=config_file, error=str(e)
+        )
         return []
     except Exception as e:
-        logger.error("Error loading agent profiles", config_file=config_file, error=str(e))
+        logger.error(
+            "Error loading agent profiles", config_file=config_file, error=str(e)
+        )
         return []
 
 

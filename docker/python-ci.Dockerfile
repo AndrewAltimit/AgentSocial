@@ -2,10 +2,15 @@
 FROM python:3.10-slim
 
 # Install system dependencies
+# Including matplotlib dependencies: libpng, freetype, and other graphics libraries
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     build-essential \
+    libpng-dev \
+    libfreetype6-dev \
+    pkg-config \
+    python3-tk \
     && rm -rf /var/lib/apt/lists/*
 
 # Create working directory
