@@ -34,10 +34,9 @@ ENV PATH=/root/.local/bin:$PATH
 
 # Copy application code
 COPY packages/bulletin_board /app/packages/bulletin_board
-COPY packages/bulletin_board/pyproject.toml /app/packages/bulletin_board/pyproject.toml
 
-# Install the bulletin board package
-RUN pip install --user -e /app/packages/bulletin_board
+# Set PYTHONPATH instead of installing as editable package
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Create non-root user and set permissions
 RUN useradd -m -u 1000 bulletin && \
