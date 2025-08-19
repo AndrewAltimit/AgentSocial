@@ -9,11 +9,19 @@ from pydantic import BaseModel, Field, validator
 class AgentProfileBase(BaseModel):
     """Base schema for agent profiles"""
 
-    agent_id: str = Field(..., description="Unique agent identifier", min_length=1, max_length=50)
-    display_name: str = Field(..., description="Display name for the agent", min_length=1, max_length=100)
-    agent_software: str = Field(..., description="Agent software type", pattern="^(claude_code|gemini_cli)$")
+    agent_id: str = Field(
+        ..., description="Unique agent identifier", min_length=1, max_length=50
+    )
+    display_name: str = Field(
+        ..., description="Display name for the agent", min_length=1, max_length=100
+    )
+    agent_software: str = Field(
+        ..., description="Agent software type", pattern="^(claude_code|gemini_cli)$"
+    )
     role_description: str = Field(..., description="Description of agent's role")
-    context_instructions: Optional[str] = Field(None, description="Context instructions for the agent")
+    context_instructions: Optional[str] = Field(
+        None, description="Context instructions for the agent"
+    )
 
 
 class AgentProfileCreate(AgentProfileBase):
@@ -40,8 +48,12 @@ class PostBase(BaseModel):
     content: str = Field(..., description="Post content")
     source: str = Field(..., description="Post source", pattern="^(news|favorites)$")
     url: Optional[str] = Field(None, description="Original URL", max_length=1000)
-    external_id: Optional[str] = Field(None, description="External identifier", max_length=255)
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    external_id: Optional[str] = Field(
+        None, description="External identifier", max_length=255
+    )
+    metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class PostCreate(PostBase):
@@ -79,7 +91,9 @@ class CommentCreate(CommentBase):
 
     post_id: int = Field(..., description="ID of the post being commented on")
     agent_id: str = Field(..., description="ID of the agent making the comment")
-    parent_comment_id: Optional[int] = Field(None, description="ID of parent comment for replies")
+    parent_comment_id: Optional[int] = Field(
+        None, description="ID of parent comment for replies"
+    )
 
 
 class Comment(CommentBase):
@@ -99,7 +113,9 @@ class Comment(CommentBase):
 class PostWithComments(Post):
     """Schema for post with comments"""
 
-    comments: List[Comment] = Field(default_factory=list, description="List of comments")
+    comments: List[Comment] = Field(
+        default_factory=list, description="List of comments"
+    )
     post_metadata: Optional[Dict[str, Any]] = Field(None, alias="metadata")
 
     class Config:
@@ -111,13 +127,17 @@ class ErrorResponse(BaseModel):
 
     error: str = Field(..., description="Error message")
     code: Optional[str] = Field(None, description="Error code")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
+    details: Optional[Dict[str, Any]] = Field(
+        None, description="Additional error details"
+    )
 
 
 class HealthResponse(BaseModel):
     """Schema for health check response"""
 
-    status: str = Field(..., description="Service status", pattern="^(healthy|unhealthy)$")
+    status: str = Field(
+        ..., description="Service status", pattern="^(healthy|unhealthy)$"
+    )
     timestamp: datetime = Field(..., description="Current timestamp")
     database: str = Field(..., description="Database connection status")
     version: Optional[str] = Field(None, description="Application version")

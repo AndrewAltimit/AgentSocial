@@ -38,30 +38,50 @@ class Settings(metaclass=SettingsMeta):
             )
 
             # GitHub Feed Settings
-            cls._config_cache["GITHUB_FEED_REPO"] = os.getenv("GITHUB_FEED_REPO", "AndrewAltimit/AgentSocialFeed")
-            cls._config_cache["GITHUB_FEED_BRANCH"] = os.getenv("GITHUB_FEED_BRANCH", "main")
-            cls._config_cache["GITHUB_FEED_PATH"] = os.getenv("GITHUB_FEED_PATH", "favorites.json")
+            cls._config_cache["GITHUB_FEED_REPO"] = os.getenv(
+                "GITHUB_FEED_REPO", "AndrewAltimit/AgentSocialFeed"
+            )
+            cls._config_cache["GITHUB_FEED_BRANCH"] = os.getenv(
+                "GITHUB_FEED_BRANCH", "main"
+            )
+            cls._config_cache["GITHUB_FEED_PATH"] = os.getenv(
+                "GITHUB_FEED_PATH", "favorites.json"
+            )
             cls._config_cache["GITHUB_TOKEN"] = os.getenv("GITHUB_READ_TOKEN", "")
 
             # News Collector Settings
             cls._config_cache["NEWS_API_KEY"] = os.getenv("NEWS_API_KEY", "")
-            cls._config_cache["NEWS_SOURCES"] = os.getenv("NEWS_SOURCES", "techcrunch,ars-technica,hacker-news").split(",")
-            cls._config_cache["NEWS_FETCH_INTERVAL"] = int(os.getenv("NEWS_FETCH_INTERVAL", "3600"))
+            cls._config_cache["NEWS_SOURCES"] = os.getenv(
+                "NEWS_SOURCES", "techcrunch,ars-technica,hacker-news"
+            ).split(",")
+            cls._config_cache["NEWS_FETCH_INTERVAL"] = int(
+                os.getenv("NEWS_FETCH_INTERVAL", "3600")
+            )
 
             # Agent Settings
-            cls._config_cache["AGENT_ANALYSIS_CUTOFF_HOURS"] = int(os.getenv("AGENT_ANALYSIS_CUTOFF_HOURS", "24"))
+            cls._config_cache["AGENT_ANALYSIS_CUTOFF_HOURS"] = int(
+                os.getenv("AGENT_ANALYSIS_CUTOFF_HOURS", "24")
+            )
 
             # Web App Settings
             cls._config_cache["APP_HOST"] = os.getenv("APP_HOST", "0.0.0.0")
             cls._config_cache["APP_PORT"] = int(os.getenv("APP_PORT", "8080"))
-            cls._config_cache["APP_DEBUG"] = os.getenv("APP_DEBUG", "False").lower() == "true"
+            cls._config_cache["APP_DEBUG"] = (
+                os.getenv("APP_DEBUG", "False").lower() == "true"
+            )
 
             # Agent connectivity settings
-            cls._config_cache["BULLETIN_BOARD_URL"] = os.getenv("BULLETIN_BOARD_URL", "http://bulletin-web:8080")
+            cls._config_cache["BULLETIN_BOARD_URL"] = os.getenv(
+                "BULLETIN_BOARD_URL", "http://bulletin-web:8080"
+            )
 
             # Security
-            cls._config_cache["INTERNAL_NETWORK_ONLY"] = os.getenv("INTERNAL_NETWORK_ONLY", "True").lower() == "true"
-            cls._config_cache["ALLOWED_AGENT_IPS"] = os.getenv("ALLOWED_AGENT_IPS", "172.20.0.0/16").split(",")
+            cls._config_cache["INTERNAL_NETWORK_ONLY"] = (
+                os.getenv("INTERNAL_NETWORK_ONLY", "True").lower() == "true"
+            )
+            cls._config_cache["ALLOWED_AGENT_IPS"] = os.getenv(
+                "ALLOWED_AGENT_IPS", "172.20.0.0/16"
+            ).split(",")
 
             # Logging
             cls._config_cache["LOG_LEVEL"] = os.getenv("LOG_LEVEL", "INFO")
@@ -77,7 +97,9 @@ class Settings(metaclass=SettingsMeta):
     def _get_default_config(cls) -> Dict[str, Any]:
         """Return default configuration when environment loading fails"""
         return {
-            "DATABASE_URL": ("postgresql://bulletin:bulletin@" "postgres:5432/bulletin_board"),
+            "DATABASE_URL": (
+                "postgresql://bulletin:bulletin@" "postgres:5432/bulletin_board"
+            ),
             "GITHUB_FEED_REPO": "AndrewAltimit/AgentSocialFeed",
             "GITHUB_FEED_BRANCH": "main",
             "GITHUB_FEED_PATH": "favorites.json",

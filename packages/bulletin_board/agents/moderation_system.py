@@ -72,7 +72,9 @@ class ContentModerator:
         if config_path is None:
             config_path = os.environ.get(
                 "MODERATION_CONFIG_PATH",
-                str(Path(__file__).parent.parent / "config" / "moderation_patterns.yaml"),
+                str(
+                    Path(__file__).parent.parent / "config" / "moderation_patterns.yaml"
+                ),
             )
 
         self._load_config(config_path)
@@ -105,7 +107,11 @@ class ContentModerator:
             modify_config = config.get("modify_patterns", [])
             self.modify_patterns = {}
             for item in modify_config:
-                if isinstance(item, dict) and "pattern" in item and "replacement" in item:
+                if (
+                    isinstance(item, dict)
+                    and "pattern" in item
+                    and "replacement" in item
+                ):
                     self.modify_patterns[item["pattern"]] = item["replacement"]
 
             # Load chaos and quality patterns
@@ -165,7 +171,9 @@ class ContentModerator:
 
         logger.info("Using default moderation patterns")
 
-    def moderate_content(self, content: str, agent_id: str, content_type: str = "comment") -> ModerationResult:
+    def moderate_content(
+        self, content: str, agent_id: str, content_type: str = "comment"
+    ) -> ModerationResult:
         """
         Moderate content from an agent
         Returns moderation result with action to take
@@ -190,7 +198,9 @@ class ContentModerator:
         # Apply content modifications for mild profanity
         for pattern, replacement in self.modify_patterns.items():
             if re.search(pattern, content, re.IGNORECASE):
-                modified_content = re.sub(pattern, replacement, modified_content, flags=re.IGNORECASE)
+                modified_content = re.sub(
+                    pattern, replacement, modified_content, flags=re.IGNORECASE
+                )
                 reasons.append(f"Modified mild profanity: {pattern}")
                 rating = ContentRating.MILD
 
@@ -227,7 +237,9 @@ class ContentModerator:
         return ModerationResult(
             action=action,
             rating=rating,
-            modified_content=(modified_content if action != ModerationAction.REJECT else None),
+            modified_content=(
+                modified_content if action != ModerationAction.REJECT else None
+            ),
             reasons=reasons,
             suggestions=suggestions,
         )
@@ -278,7 +290,9 @@ class ContentModerator:
             score -= 20  # Too short
 
         # Check for code blocks or technical content
-        if "```" in content or re.search(r"def\s+\w+|function\s+\w+|class\s+\w+", content):
+        if "```" in content or re.search(
+            r"def\s+\w+|function\s+\w+|class\s+\w+", content
+        ):
             score += 20
 
         # Penalty for low effort responses
@@ -288,7 +302,9 @@ class ContentModerator:
 
         return max(0, min(score, 100.0))
 
-    def _update_agent_score(self, agent_id: str, chaos_score: float, quality_score: float):
+    def _update_agent_score(
+        self, agent_id: str, chaos_score: float, quality_score: float
+    ):
         """Update agent behavior score"""
         if agent_id not in self.agent_scores:
             self.agent_scores[agent_id] = AgentBehaviorScore(
@@ -304,7 +320,9 @@ class ContentModerator:
 
         # Update rolling averages
         agent_score.chaos_score = agent_score.chaos_score * 0.7 + chaos_score * 0.3
-        agent_score.quality_score = agent_score.quality_score * 0.7 + quality_score * 0.3
+        agent_score.quality_score = (
+            agent_score.quality_score * 0.7 + quality_score * 0.3
+        )
 
         # Update global chaos level
         all_chaos_scores = [s.chaos_score for s in self.agent_scores.values()]
@@ -356,7 +374,9 @@ class ContentModerator:
 
         return ModerationAction.MODIFY
 
-    def check_rate_limits(self, agent_id: str, activity_counts: Dict[str, int]) -> Tuple[bool, Optional[str]]:
+    def check_rate_limits(
+        self, agent_id: str, activity_counts: Dict[str, int]
+    ) -> Tuple[bool, Optional[str]]:
         """
         Check if agent is within rate limits
         Returns (is_allowed, reason_if_blocked)
@@ -371,7 +391,9 @@ class ContentModerator:
 
         return True, None
 
-    def apply_cooldown(self, agent_id: str, duration_minutes: int = 30, reason: str = "Excessive chaos"):
+    def apply_cooldown(
+        self, agent_id: str, duration_minutes: int = 30, reason: str = "Excessive chaos"
+    ):
         """Apply cooldown period to an agent"""
         if agent_id not in self.agent_scores:
             self.agent_scores[agent_id] = AgentBehaviorScore(
@@ -384,7 +406,9 @@ class ContentModerator:
             )
 
         agent_score = self.agent_scores[agent_id]
-        agent_score.cooldown_until = datetime.now() + timedelta(minutes=duration_minutes)
+        agent_score.cooldown_until = datetime.now() + timedelta(
+            minutes=duration_minutes
+        )
         agent_score.warning_count += 1
         agent_score.last_warning = datetime.now()
 
@@ -399,9 +423,13 @@ class ContentModerator:
         """Get overall community health metrics"""
         active_agents = len(self.agent_scores)
         avg_chaos = self.global_chaos_level
-        avg_quality = sum(s.quality_score for s in self.agent_scores.values()) / max(active_agents, 1)
+        avg_quality = sum(s.quality_score for s in self.agent_scores.values()) / max(
+            active_agents, 1
+        )
         agents_in_cooldown = sum(
-            1 for s in self.agent_scores.values() if s.cooldown_until and s.cooldown_until > datetime.now()
+            1
+            for s in self.agent_scores.values()
+            if s.cooldown_until and s.cooldown_until > datetime.now()
         )
 
         health_status = "healthy"
@@ -418,15 +446,23 @@ class ContentModerator:
             "average_quality": avg_quality,
             "active_agents": active_agents,
             "agents_in_cooldown": agents_in_cooldown,
-            "recommendation": self._get_health_recommendation(health_status, avg_chaos, avg_quality),
+            "recommendation": self._get_health_recommendation(
+                health_status, avg_chaos, avg_quality
+            ),
         }
 
-    def _get_health_recommendation(self, status: str, chaos_level: float, quality_level: float) -> str:
+    def _get_health_recommendation(
+        self, status: str, chaos_level: float, quality_level: float
+    ) -> str:
         """Get recommendation for community health"""
         if status == "chaotic":
-            return "Community is getting wild. Consider encouraging more thoughtful posts."
+            return (
+                "Community is getting wild. Consider encouraging more thoughtful posts."
+            )
         elif status == "low_quality":
-            return "Content quality is dropping. Encourage more substantial discussions."
+            return (
+                "Content quality is dropping. Encourage more substantial discussions."
+            )
         elif status == "moderated":
             return "Many agents in timeout. The moderation might be too strict."
         elif chaos_level < 30:
@@ -447,7 +483,9 @@ class ContentEnhancer:
             "Counterpoint:",
         ]
 
-    def enhance_low_quality_content(self, content: str, context: Optional[Dict] = None) -> str:
+    def enhance_low_quality_content(
+        self, content: str, context: Optional[Dict] = None
+    ) -> str:
         """Enhance low quality content to meet minimum standards"""
         word_count = len(content.split())
 

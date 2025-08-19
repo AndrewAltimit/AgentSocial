@@ -66,7 +66,9 @@ class PersonalityDriftEngine:
 
     def __init__(self, base_path: Optional[str] = None):
         if base_path is None:
-            base_path = os.environ.get("BULLETIN_BOARD_PERSONALITY_PATH", "/var/lib/bulletin_board/personality")
+            base_path = os.environ.get(
+                "BULLETIN_BOARD_PERSONALITY_PATH", "/var/lib/bulletin_board/personality"
+            )
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
@@ -107,7 +109,9 @@ class PersonalityDriftEngine:
         current = self.get_current_state(agent_id)
 
         # Create influence based on interaction
-        influence = self._create_interaction_influence(interaction_type, other_agent, sentiment, intensity)
+        influence = self._create_interaction_influence(
+            interaction_type, other_agent, sentiment, intensity
+        )
 
         # Apply influence to personality
         new_state = self._apply_influence(current, influence)
@@ -125,7 +129,9 @@ class PersonalityDriftEngine:
 
         return new_state
 
-    def apply_incident(self, agent_id: str, incident_type: str, impact_level: float) -> PersonalityState:
+    def apply_incident(
+        self, agent_id: str, incident_type: str, impact_level: float
+    ) -> PersonalityState:
         """Apply major incident effects to personality"""
         current = self.get_current_state(agent_id)
 
@@ -160,7 +166,9 @@ class PersonalityDriftEngine:
         baseline = self._get_baseline_personality(agent_id)
 
         # Calculate drift toward baseline
-        new_state = self._drift_toward(current, baseline, self.reversion_rate * hours_passed)
+        new_state = self._drift_toward(
+            current, baseline, self.reversion_rate * hours_passed
+        )
 
         # Add small random drift
         new_state = self._add_random_drift(new_state, hours_passed)
@@ -189,7 +197,9 @@ class PersonalityDriftEngine:
             # Negative relationships increase conflict avoidance or aggression
             elif relationship_quality < -0.5:
                 if current.conflict_avoidance > 0.5:
-                    current.conflict_avoidance = min(1.0, current.conflict_avoidance + 0.02)
+                    current.conflict_avoidance = min(
+                        1.0, current.conflict_avoidance + 0.02
+                    )
                 else:
                     current.aggression = min(1.0, current.aggression + 0.01)
 
@@ -245,7 +255,9 @@ class PersonalityDriftEngine:
             timestamp=datetime.now().isoformat(),
         )
 
-    def _create_incident_influence(self, incident_type: str, impact_level: float) -> DriftInfluence:
+    def _create_incident_influence(
+        self, incident_type: str, impact_level: float
+    ) -> DriftInfluence:
         """Create influence from major incident"""
         trait_impacts = {}
 
@@ -303,7 +315,9 @@ class PersonalityDriftEngine:
                 current_value = getattr(new_state, trait)
 
                 # Apply with reduced stability factor for stronger effect
-                change = impact * magnitude_multiplier * (1 - self.stability_factor * 0.5)
+                change = (
+                    impact * magnitude_multiplier * (1 - self.stability_factor * 0.5)
+                )
                 new_value = current_value + change
 
                 # Clamp to valid range
@@ -325,7 +339,9 @@ class PersonalityDriftEngine:
 
         return new_state
 
-    def _drift_toward(self, current: PersonalityState, target: PersonalityState, rate: float) -> PersonalityState:
+    def _drift_toward(
+        self, current: PersonalityState, target: PersonalityState, rate: float
+    ) -> PersonalityState:
         """Drift current personality toward target"""
         new_state = PersonalityState(**asdict(current))
 
@@ -352,7 +368,9 @@ class PersonalityDriftEngine:
         new_state.timestamp = datetime.now().isoformat()
         return new_state
 
-    def _add_random_drift(self, state: PersonalityState, hours: float) -> PersonalityState:
+    def _add_random_drift(
+        self, state: PersonalityState, hours: float
+    ) -> PersonalityState:
         """Add small random drift to personality"""
         new_state = PersonalityState(**asdict(state))
 
@@ -374,7 +392,9 @@ class PersonalityDriftEngine:
 
         return new_state
 
-    def _calculate_drift_velocity(self, old_state: PersonalityState, new_state: PersonalityState) -> float:
+    def _calculate_drift_velocity(
+        self, old_state: PersonalityState, new_state: PersonalityState
+    ) -> float:
         """Calculate how fast personality is changing"""
         total_change = 0.0
         trait_count = 0
@@ -397,7 +417,9 @@ class PersonalityDriftEngine:
 
         return total_change / max(trait_count, 1)
 
-    def _is_major_shift(self, old_state: PersonalityState, new_state: PersonalityState) -> bool:
+    def _is_major_shift(
+        self, old_state: PersonalityState, new_state: PersonalityState
+    ) -> bool:
         """Check if personality shift is major"""
         # Check for significant changes in key traits
         major_traits = ["chaos_tolerance", "aggression", "trust_level"]
@@ -534,7 +556,9 @@ class PersonalityDriftEngine:
                     change = new_val - old_val
 
                     if abs(change) > 0.05:
-                        f.write(f"- {trait}: {old_val:.3f} → {new_val:.3f} ({change:+.3f})\n")
+                        f.write(
+                            f"- {trait}: {old_val:.3f} → {new_val:.3f} ({change:+.3f})\n"
+                        )
 
             f.write(f"\n**Drift Velocity**: {new_state.drift_velocity:.4f}\n")
             f.write("\n---\n")
