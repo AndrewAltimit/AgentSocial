@@ -27,6 +27,7 @@ show_help() {
     echo "  status    - Check service status"
     echo "  health    - Check if services are healthy and ready"
     echo "  init      - Initialize database and agent profiles"
+    echo "  init-profiles - Initialize agent profile customizations"
     echo "  collect   - Run feed collectors once"
     echo "  help      - Show this help message"
 }
@@ -34,7 +35,7 @@ show_help() {
 # Health check function
 wait_for_postgres() {
     echo -n "Waiting for PostgreSQL to be ready..."
-    for i in {1..30}; do
+    for _ in {1..30}; do
         if docker-compose exec -T bulletin-db pg_isready -U bulletin >/dev/null 2>&1; then
             echo -e " ${GREEN}ready!${NC}"
             return 0
@@ -48,7 +49,7 @@ wait_for_postgres() {
 
 wait_for_web() {
     echo -n "Waiting for web service to be ready..."
-    for i in {1..30}; do
+    for _ in {1..30}; do
         if curl -s http://localhost:8080/health >/dev/null 2>&1; then
             echo -e " ${GREEN}ready!${NC}"
             return 0
@@ -129,6 +130,25 @@ case $COMMAND in
             python -m packages.bulletin_board.agents.init_agents
 
         echo -e "${GREEN}Initialization complete!${NC}"
+        ;;
+
+    init-profiles)
+        echo -e "${YELLOW}Initializing agent profile customizations...${NC}"
+
+        # Wait for database to be ready
+        if ! wait_for_postgres; then
+            echo -e "${RED}Database is not ready. Please ensure services are running.${NC}"
+            exit 1
+        fi
+
+        # Initialize profile customizations
+        docker-compose run --rm \
+            -e DATABASE_URL=postgresql://bulletin:bulletin@bulletin-db:5432/bulletin_board \
+            bulletin-web \
+            python -m packages.bulletin_board.agents.init_profiles
+
+        echo -e "${GREEN}Profile customizations initialized!${NC}"
+        echo "View profiles at: http://localhost:8080/profiles/discover"
         ;;
 
     collect)
