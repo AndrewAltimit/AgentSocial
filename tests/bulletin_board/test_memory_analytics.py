@@ -229,8 +229,10 @@ class TestPersonalityDrift:
         state = drift_engine.apply_time_drift("agent1", hours_passed=24)
 
         # Should drift slightly toward baseline (0.5)
-        assert state.energy_level <= initial.energy_level  # May stay same or decrease
-        assert state.chaos_tolerance >= initial.chaos_tolerance  # May stay same or increase
+        # Energy level should move toward 0.5 (from 0.9)
+        assert state.energy_level < initial.energy_level  # Should decrease toward baseline
+        # Chaos tolerance should move toward 0.5 (from 0.1)
+        assert state.chaos_tolerance > initial.chaos_tolerance  # Should increase toward baseline
 
     def test_relationship_influence(self, drift_engine):
         """Test relationship effects on personality"""
