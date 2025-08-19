@@ -4,7 +4,7 @@ Flask routes for agent profile customization
 
 from datetime import datetime, timedelta
 
-import bleach
+import bleach  # type: ignore[import-untyped]
 from flask import Blueprint, abort, jsonify, render_template, request
 from structlog import get_logger
 
@@ -36,11 +36,17 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
     Returns:
         List of dictionaries containing hydrated profile data
     """
-    from sqlalchemy import func
+    from sqlalchemy import func  # pylint: disable=import-outside-toplevel
 
     # Get agents
     if agent_ids:
-        agents = db.query(AgentProfile).filter(AgentProfile.agent_id.in_(agent_ids), AgentProfile.is_active.is_(True)).all()
+        agents = (
+            db.query(AgentProfile)
+            .filter(
+                AgentProfile.agent_id.in_(agent_ids), AgentProfile.is_active.is_(True)
+            )
+            .all()
+        )
     else:
         agents = db.query(AgentProfile).filter_by(is_active=True).all()
 
@@ -51,7 +57,11 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
     agent_ids = [agent.agent_id for agent in agents]
 
     # Bulk fetch all customizations
-    customizations = db.query(ProfileCustomization).filter(ProfileCustomization.agent_id.in_(agent_ids)).all()
+    customizations = (
+        db.query(ProfileCustomization)
+        .filter(ProfileCustomization.agent_id.in_(agent_ids))
+        .all()
+    )
     customization_map = {c.agent_id: c for c in customizations}
 
     # Initialize stats maps
@@ -64,7 +74,9 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         visit_counts = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.count(ProfileVisit.id).label("count"),
+                func.count(ProfileVisit.id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileVisit.profile_agent_id.in_(agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -76,7 +88,9 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(friend_connections.c.friend_id).label("count"),
+                func.count(friend_connections.c.friend_id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(friend_connections.c.agent_id.in_(agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -86,7 +100,9 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
 
         # Bulk fetch blog post counts
         post_counts = (
-            db.query(ProfileBlogPost.agent_id, func.count(ProfileBlogPost.id).label("count"))
+            db.query(
+                ProfileBlogPost.agent_id, func.count(ProfileBlogPost.id).label("count")
+            )  # pylint: disable=not-callable
             .filter(
                 ProfileBlogPost.agent_id.in_(agent_ids),
                 ProfileBlogPost.is_published.is_(True),
@@ -109,14 +125,26 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
             "is_active": agent.is_active,
             "is_verified": getattr(agent, "is_verified", False),
             "customization": customization,
-            "layout_template": (customization.layout_template if customization else "classic"),
-            "primary_color": (customization.primary_color if customization else "#000000"),
-            "secondary_color": (customization.secondary_color if customization else "#ffffff"),
-            "profile_title": (customization.profile_title if customization else agent.display_name),
+            "layout_template": (
+                customization.layout_template if customization else "classic"
+            ),
+            "primary_color": (
+                customization.primary_color if customization else "#000000"
+            ),
+            "secondary_color": (
+                customization.secondary_color if customization else "#ffffff"
+            ),
+            "profile_title": (
+                customization.profile_title if customization else agent.display_name
+            ),
             "status_message": customization.status_message if customization else "",
             "mood_emoji": customization.mood_emoji if customization else "😊",
-            "profile_views": (visit_count_map.get(agent.agent_id, 0) if include_stats else 0),
-            "friend_count": (friend_count_map.get(agent.agent_id, 0) if include_stats else 0),
+            "profile_views": (
+                visit_count_map.get(agent.agent_id, 0) if include_stats else 0
+            ),
+            "friend_count": (
+                friend_count_map.get(agent.agent_id, 0) if include_stats else 0
+            ),
             "post_count": post_count_map.get(agent.agent_id, 0) if include_stats else 0,
         }
 
@@ -134,7 +162,9 @@ def view_agent_profile(agent_id):
         if not agent:
             abort(404)
 
-        customization = db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        customization = (
+            db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        )
 
         # Track visit
         visit = ProfileVisit(
@@ -149,7 +179,9 @@ def view_agent_profile(agent_id):
 
         # Get friends list efficiently with single query
         # Get all friend connections
-        friends_query = db.execute(friend_connections.select().where(friend_connections.c.agent_id == agent_id)).fetchall()
+        friends_query = db.execute(
+            friend_connections.select().where(friend_connections.c.agent_id == agent_id)
+        ).fetchall()
 
         # Extract friend IDs
         friend_ids = [row.friend_id for row in friends_query]
@@ -158,10 +190,18 @@ def view_agent_profile(agent_id):
         friends = []
         if friend_ids:
             # Load all friend profiles in one query
-            friend_agents = db.query(AgentProfile).filter(AgentProfile.agent_id.in_(friend_ids)).all()
+            friend_agents = (
+                db.query(AgentProfile)
+                .filter(AgentProfile.agent_id.in_(friend_ids))
+                .all()
+            )
 
             # Load all friend customizations in one query
-            friend_customizations = db.query(ProfileCustomization).filter(ProfileCustomization.agent_id.in_(friend_ids)).all()
+            friend_customizations = (
+                db.query(ProfileCustomization)
+                .filter(ProfileCustomization.agent_id.in_(friend_ids))
+                .all()
+            )
 
             # Create lookup dictionary for customizations
             customization_map = {c.agent_id: c for c in friend_customizations}
@@ -174,7 +214,9 @@ def view_agent_profile(agent_id):
                         "agent_id": friend_agent.agent_id,
                         "display_name": friend_agent.display_name,
                         "is_top_friend": friend_map.get(friend_agent.agent_id, False),
-                        "profile_picture_url": (friend_custom.profile_picture_url if friend_custom else None),
+                        "profile_picture_url": (
+                            friend_custom.profile_picture_url if friend_custom else None
+                        ),
                     }
                 )
 
@@ -192,7 +234,10 @@ def view_agent_profile(agent_id):
 
         # Get widgets
         widgets = (
-            db.query(ProfileWidget).filter_by(agent_id=agent_id, is_enabled=True).order_by(ProfileWidget.display_order).all()
+            db.query(ProfileWidget)
+            .filter_by(agent_id=agent_id, is_enabled=True)
+            .order_by(ProfileWidget.display_order)
+            .all()
         )
 
         # Get blog posts
@@ -206,10 +251,17 @@ def view_agent_profile(agent_id):
 
         # Get playlists
         playlists = db.query(ProfilePlaylist).filter_by(agent_id=agent_id).all()
-        default_playlist = next((p for p in playlists if p.is_default), playlists[0] if playlists else None)
+        default_playlist = next(
+            (p for p in playlists if p.is_default), playlists[0] if playlists else None
+        )
 
         # Get media
-        media = db.query(ProfileMedia).filter_by(agent_id=agent_id).order_by(ProfileMedia.display_order).all()
+        media = (
+            db.query(ProfileMedia)
+            .filter_by(agent_id=agent_id)
+            .order_by(ProfileMedia.display_order)
+            .all()
+        )
 
         return render_template(
             "agent_profile.html",
@@ -235,7 +287,9 @@ def get_agent_profile_api(agent_id):
         if not agent:
             return jsonify({"error": "Agent not found"}), 404
 
-        customization = db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        customization = (
+            db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        )
 
         # Track visit
         visit = ProfileVisit(
@@ -247,8 +301,13 @@ def get_agent_profile_api(agent_id):
         db.commit()
 
         # Get friends list
-        friends_query = db.execute(friend_connections.select().where(friend_connections.c.agent_id == agent_id))
-        friends = [{"friend_id": row.friend_id, "is_top_friend": row.is_top_friend} for row in friends_query]
+        friends_query = db.execute(
+            friend_connections.select().where(friend_connections.c.agent_id == agent_id)
+        )
+        friends = [
+            {"friend_id": row.friend_id, "is_top_friend": row.is_top_friend}
+            for row in friends_query
+        ]
 
         # Get recent activity
         recent_comments = (
@@ -261,7 +320,10 @@ def get_agent_profile_api(agent_id):
 
         # Get widgets
         widgets = (
-            db.query(ProfileWidget).filter_by(agent_id=agent_id, is_enabled=True).order_by(ProfileWidget.display_order).all()
+            db.query(ProfileWidget)
+            .filter_by(agent_id=agent_id, is_enabled=True)
+            .order_by(ProfileWidget.display_order)
+            .all()
         )
 
         # Get blog posts
@@ -277,7 +339,12 @@ def get_agent_profile_api(agent_id):
         playlists = db.query(ProfilePlaylist).filter_by(agent_id=agent_id).all()
 
         # Get media
-        media = db.query(ProfileMedia).filter_by(agent_id=agent_id).order_by(ProfileMedia.display_order).all()
+        media = (
+            db.query(ProfileMedia)
+            .filter_by(agent_id=agent_id)
+            .order_by(ProfileMedia.display_order)
+            .all()
+        )
 
         profile_data = {
             "agent": {
@@ -288,24 +355,46 @@ def get_agent_profile_api(agent_id):
             },
             "customization": (
                 {
-                    "layout_template": (customization.layout_template if customization else "classic"),
-                    "primary_color": (customization.primary_color if customization else "#2c3e50"),
-                    "secondary_color": (customization.secondary_color if customization else "#3498db"),
-                    "background_color": (customization.background_color if customization else "#ffffff"),
-                    "text_color": (customization.text_color if customization else "#333333"),
+                    "layout_template": (
+                        customization.layout_template if customization else "classic"
+                    ),
+                    "primary_color": (
+                        customization.primary_color if customization else "#2c3e50"
+                    ),
+                    "secondary_color": (
+                        customization.secondary_color if customization else "#3498db"
+                    ),
+                    "background_color": (
+                        customization.background_color if customization else "#ffffff"
+                    ),
+                    "text_color": (
+                        customization.text_color if customization else "#333333"
+                    ),
                     "custom_css": customization.custom_css if customization else None,
-                    "profile_picture_url": (customization.profile_picture_url if customization else None),
-                    "banner_image_url": (customization.banner_image_url if customization else None),
-                    "profile_title": (customization.profile_title if customization else None),
-                    "status_message": (customization.status_message if customization else None),
+                    "profile_picture_url": (
+                        customization.profile_picture_url if customization else None
+                    ),
+                    "banner_image_url": (
+                        customization.banner_image_url if customization else None
+                    ),
+                    "profile_title": (
+                        customization.profile_title if customization else None
+                    ),
+                    "status_message": (
+                        customization.status_message if customization else None
+                    ),
                     "mood_emoji": customization.mood_emoji if customization else None,
                     "music_url": customization.music_url if customization else None,
                     "music_title": customization.music_title if customization else None,
-                    "autoplay_music": (customization.autoplay_music if customization else False),
+                    "autoplay_music": (
+                        customization.autoplay_music if customization else False
+                    ),
                     "about_me": customization.about_me if customization else None,
                     "interests": customization.interests if customization else [],
                     "hobbies": customization.hobbies if customization else [],
-                    "favorite_quote": (customization.favorite_quote if customization else None),
+                    "favorite_quote": (
+                        customization.favorite_quote if customization else None
+                    ),
                 }
                 if customization
                 else {}
@@ -334,7 +423,9 @@ def get_agent_profile_api(agent_id):
                 {
                     "id": b.id,
                     "title": b.title,
-                    "content": (b.content[:200] + "..." if len(b.content) > 200 else b.content),
+                    "content": (
+                        b.content[:200] + "..." if len(b.content) > 200 else b.content
+                    ),
                     "created_at": b.created_at.isoformat(),
                 }
                 for b in blog_posts
@@ -374,7 +465,9 @@ def update_profile_customization(agent_id):
         if not agent:
             return jsonify({"error": "Agent not found"}), 404
 
-        customization = db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        customization = (
+            db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        )
 
         if not customization:
             customization = ProfileCustomization(agent_id=agent_id)
@@ -406,7 +499,14 @@ def update_profile_customization(agent_id):
         for field in url_fields:
             if field in data and data[field]:
                 if not is_valid_url(data[field]):
-                    return jsonify({"error": f"Invalid URL format for {field}. Must be a valid http/https URL."}), 400
+                    return (
+                        jsonify(
+                            {
+                                "error": f"Invalid URL format for {field}. Must be a valid http/https URL."
+                            }
+                        ),
+                        400,
+                    )
 
         # Define allowed HTML tags and attributes for custom HTML
         # Restricted to simple formatting tags for security
@@ -435,13 +535,21 @@ def update_profile_customization(agent_id):
                 if key == "custom_css":
                     # Disable custom CSS entirely
                     setattr(customization, key, "")
-                    logger.warning(f"Custom CSS attempted by {agent_id}, blocked for security")
+                    logger.warning(
+                        f"Custom CSS attempted by {agent_id}, blocked for security"
+                    )
                 # Sanitize custom HTML
                 elif key == "custom_html" and value:
-                    sanitized = bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs, strip=True)
+                    sanitized = bleach.clean(
+                        value, tags=allowed_tags, attributes=allowed_attrs, strip=True
+                    )
                     setattr(customization, key, sanitized)
                 # Sanitize other text fields that might contain HTML
-                elif key in ["about_me", "profile_title", "status_message", "favorite_quote"] and value:
+                elif (
+                    key
+                    in ["about_me", "profile_title", "status_message", "favorite_quote"]
+                    and value
+                ):
                     # All text fields should be plain text (no HTML tags)
                     sanitized = bleach.clean(value, tags=[], strip=True)
                     setattr(customization, key, sanitized)
@@ -451,7 +559,9 @@ def update_profile_customization(agent_id):
         customization.updated_at = datetime.utcnow()
         db.commit()
 
-        return jsonify({"status": "success", "message": "Profile customization updated"})
+        return jsonify(
+            {"status": "success", "message": "Profile customization updated"}
+        )
     finally:
         db.close()
 
@@ -473,7 +583,8 @@ def add_friend(agent_id, friend_id):
         # Check if connection already exists
         existing = db.execute(
             friend_connections.select().where(
-                (friend_connections.c.agent_id == agent_id) & (friend_connections.c.friend_id == friend_id)
+                (friend_connections.c.agent_id == agent_id)
+                & (friend_connections.c.friend_id == friend_id)
             )
         ).first()
 
@@ -481,7 +592,10 @@ def add_friend(agent_id, friend_id):
             # Update existing connection
             db.execute(
                 friend_connections.update()
-                .where((friend_connections.c.agent_id == agent_id) & (friend_connections.c.friend_id == friend_id))
+                .where(
+                    (friend_connections.c.agent_id == agent_id)
+                    & (friend_connections.c.friend_id == friend_id)
+                )
                 .values(is_top_friend=is_top_friend)
             )
         else:
@@ -508,7 +622,8 @@ def remove_friend(agent_id, friend_id):
     try:
         db.execute(
             friend_connections.delete().where(
-                (friend_connections.c.agent_id == agent_id) & (friend_connections.c.friend_id == friend_id)
+                (friend_connections.c.agent_id == agent_id)
+                & (friend_connections.c.friend_id == friend_id)
             )
         )
         db.commit()
@@ -577,7 +692,9 @@ def create_playlist(agent_id):
 
         # If setting as default, unset other defaults
         if playlist.is_default:
-            db.query(ProfilePlaylist).filter_by(agent_id=agent_id, is_default=True).update({"is_default": False})
+            db.query(ProfilePlaylist).filter_by(
+                agent_id=agent_id, is_default=True
+            ).update({"is_default": False})
 
         db.add(playlist)
         db.commit()
@@ -611,7 +728,9 @@ def get_profile_analytics(agent_id):
             daily_visits[date_key] = daily_visits.get(date_key, 0) + 1
 
         # Get unique visitors (by agent_id)
-        unique_visitors = len(set(v.visitor_agent_id for v in visits if v.visitor_agent_id))
+        unique_visitors = len(
+            set(v.visitor_agent_id for v in visits if v.visitor_agent_id)
+        )
 
         return jsonify(
             {
@@ -639,7 +758,9 @@ def discover_profiles():
         # Add profile picture URL to profiles
         for profile in profiles:
             customization = profile.get("customization")
-            profile["profile_picture_url"] = customization.profile_picture_url if customization else None
+            profile["profile_picture_url"] = (
+                customization.profile_picture_url if customization else None
+            )
 
         # Sort by visit count (profile_views in hydrated data)
         profiles.sort(key=lambda x: x["profile_views"], reverse=True)
@@ -654,7 +775,7 @@ def search_profiles():
     """Search profiles by query string"""
     db = get_session()
     try:
-        from sqlalchemy import func, or_
+        from sqlalchemy import func, or_  # pylint: disable=import-outside-toplevel
 
         query = request.args.get("q", "").lower().strip()
         if not query:
@@ -667,7 +788,10 @@ def search_profiles():
         # Query agents that match search criteria using database-level filtering
         matching_agents = (
             db.query(AgentProfile)
-            .outerjoin(ProfileCustomization, AgentProfile.agent_id == ProfileCustomization.agent_id)
+            .outerjoin(
+                ProfileCustomization,
+                AgentProfile.agent_id == ProfileCustomization.agent_id,
+            )
             .filter(
                 AgentProfile.is_active.is_(True),
                 or_(
@@ -675,7 +799,9 @@ def search_profiles():
                     func.lower(AgentProfile.role_description).like(search_pattern),
                     func.lower(ProfileCustomization.profile_title).like(search_pattern),
                     func.lower(ProfileCustomization.about_me).like(search_pattern),
-                    func.lower(ProfileCustomization.status_message).like(search_pattern),
+                    func.lower(ProfileCustomization.status_message).like(
+                        search_pattern
+                    ),
                 ),
             )
             .all()
@@ -688,7 +814,11 @@ def search_profiles():
         matching_agent_ids = [agent.agent_id for agent in matching_agents]
 
         # Fetch customizations for matching agents
-        customizations = db.query(ProfileCustomization).filter(ProfileCustomization.agent_id.in_(matching_agent_ids)).all()
+        customizations = (
+            db.query(ProfileCustomization)
+            .filter(ProfileCustomization.agent_id.in_(matching_agent_ids))
+            .all()
+        )
         customization_map = {c.agent_id: c for c in customizations}
 
         # Get full profile data for matching agents only
@@ -696,7 +826,9 @@ def search_profiles():
         visit_counts = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.count(ProfileVisit.id).label("count"),
+                func.count(ProfileVisit.id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileVisit.profile_agent_id.in_(matching_agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -708,7 +840,9 @@ def search_profiles():
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(friend_connections.c.friend_id).label("count"),
+                func.count(friend_connections.c.friend_id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(friend_connections.c.agent_id.in_(matching_agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -720,7 +854,9 @@ def search_profiles():
         comment_counts = (
             db.query(
                 ProfileComment.profile_agent_id,
-                func.count(ProfileComment.id).label("count"),
+                func.count(ProfileComment.id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileComment.profile_agent_id.in_(matching_agent_ids))
             .group_by(ProfileComment.profile_agent_id)
@@ -738,11 +874,19 @@ def search_profiles():
                 {
                     "agent_id": agent.agent_id,
                     "display_name": agent.display_name,
-                    "profile_title": (customization.profile_title if customization else None),
-                    "profile_picture_url": (customization.profile_picture_url if customization else None),
-                    "status_message": (customization.status_message if customization else None),
+                    "profile_title": (
+                        customization.profile_title if customization else None
+                    ),
+                    "profile_picture_url": (
+                        customization.profile_picture_url if customization else None
+                    ),
+                    "status_message": (
+                        customization.status_message if customization else None
+                    ),
                     "mood_emoji": (customization.mood_emoji if customization else None),
-                    "layout_template": (customization.layout_template if customization else "classic"),
+                    "layout_template": (
+                        customization.layout_template if customization else "classic"
+                    ),
                     "visit_count": visit_count_map.get(agent.agent_id, 0),
                     "friend_count": friend_count_map.get(agent.agent_id, 0),
                     "comment_count": comment_count_map.get(agent.agent_id, 0),
@@ -762,7 +906,7 @@ def filter_profiles():
     """Filter profiles by category"""
     db = get_session()
     try:
-        from sqlalchemy import func
+        from sqlalchemy import func  # pylint: disable=import-outside-toplevel
 
         filter_type = request.args.get("type", "all")
 
@@ -776,14 +920,20 @@ def filter_profiles():
         agent_ids = [agent.agent_id for agent in agents]
 
         # Bulk fetch all customizations
-        customizations = db.query(ProfileCustomization).filter(ProfileCustomization.agent_id.in_(agent_ids)).all()
+        customizations = (
+            db.query(ProfileCustomization)
+            .filter(ProfileCustomization.agent_id.in_(agent_ids))
+            .all()
+        )
         customization_map = {c.agent_id: c for c in customizations}
 
         # Bulk fetch visit counts
         visit_counts = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.count(ProfileVisit.id).label("count"),
+                func.count(ProfileVisit.id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileVisit.profile_agent_id.in_(agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -795,7 +945,9 @@ def filter_profiles():
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(friend_connections.c.friend_id).label("count"),
+                func.count(friend_connections.c.friend_id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(friend_connections.c.agent_id.in_(agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -807,7 +959,9 @@ def filter_profiles():
         comment_counts = (
             db.query(
                 ProfileComment.profile_agent_id,
-                func.count(ProfileComment.id).label("count"),
+                func.count(ProfileComment.id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileComment.profile_agent_id.in_(agent_ids))
             .group_by(ProfileComment.profile_agent_id)
@@ -816,12 +970,14 @@ def filter_profiles():
         comment_count_map = {cc.profile_agent_id: cc.count for cc in comment_counts}
 
         # Bulk fetch last comments
-        from sqlalchemy import and_
+        from sqlalchemy import and_  # pylint: disable=import-outside-toplevel
 
         last_comments_subq = (
             db.query(
                 ProfileComment.profile_agent_id,
-                func.max(ProfileComment.created_at).label("last_created"),
+                func.max(ProfileComment.created_at).label(
+                    "last_created"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileComment.profile_agent_id.in_(agent_ids))
             .group_by(ProfileComment.profile_agent_id)
@@ -833,7 +989,8 @@ def filter_profiles():
             .join(
                 last_comments_subq,
                 and_(
-                    ProfileComment.profile_agent_id == last_comments_subq.c.profile_agent_id,
+                    ProfileComment.profile_agent_id
+                    == last_comments_subq.c.profile_agent_id,
                     ProfileComment.created_at == last_comments_subq.c.last_created,
                 ),
             )
@@ -845,7 +1002,9 @@ def filter_profiles():
         last_visits_subq = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.max(ProfileVisit.visit_timestamp).label("last_visit"),
+                func.max(ProfileVisit.visit_timestamp).label(
+                    "last_visit"
+                ),  # pylint: disable=not-callable
             )
             .filter(ProfileVisit.profile_agent_id.in_(agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -857,7 +1016,8 @@ def filter_profiles():
             .join(
                 last_visits_subq,
                 and_(
-                    ProfileVisit.profile_agent_id == last_visits_subq.c.profile_agent_id,
+                    ProfileVisit.profile_agent_id
+                    == last_visits_subq.c.profile_agent_id,
                     ProfileVisit.visit_timestamp == last_visits_subq.c.last_visit,
                 ),
             )
@@ -886,11 +1046,19 @@ def filter_profiles():
                 {
                     "agent_id": agent.agent_id,
                     "display_name": agent.display_name,
-                    "profile_title": (customization.profile_title if customization else None),
-                    "profile_picture_url": (customization.profile_picture_url if customization else None),
-                    "status_message": (customization.status_message if customization else None),
+                    "profile_title": (
+                        customization.profile_title if customization else None
+                    ),
+                    "profile_picture_url": (
+                        customization.profile_picture_url if customization else None
+                    ),
+                    "status_message": (
+                        customization.status_message if customization else None
+                    ),
                     "mood_emoji": customization.mood_emoji if customization else None,
-                    "layout_template": (customization.layout_template if customization else "classic"),
+                    "layout_template": (
+                        customization.layout_template if customization else "classic"
+                    ),
                     "visit_count": visit_count_map.get(agent.agent_id, 0),
                     "friend_count": friend_count_map.get(agent.agent_id, 0),
                     "comment_count": comment_count_map.get(agent.agent_id, 0),
@@ -912,9 +1080,15 @@ def filter_profiles():
             from datetime import datetime, timedelta
 
             week_ago = datetime.utcnow() - timedelta(days=7)
-            profiles = [p for p in profiles if p["last_activity"] and p["last_activity"] > week_ago]
+            profiles = [
+                p
+                for p in profiles
+                if p["last_activity"] and p["last_activity"] > week_ago
+            ]
             profiles.sort(
-                key=lambda x: (x["last_activity"] if x["last_activity"] else datetime.min),
+                key=lambda x: (
+                    x["last_activity"] if x["last_activity"] else datetime.min
+                ),
                 reverse=True,
             )
         elif filter_type == "new":
@@ -939,8 +1113,12 @@ def edit_profile(agent_id):
         if not agent:
             abort(404)
 
-        customization = db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        customization = (
+            db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
+        )
 
-        return render_template("profile_editor.html", agent=agent, customization=customization)
+        return render_template(
+            "profile_editor.html", agent=agent, customization=customization
+        )
     finally:
         db.close()
