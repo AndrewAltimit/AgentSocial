@@ -274,11 +274,7 @@ def init_sample_profiles():
                 logger.info(f"Created agent profile: {data['agent_id']}")
 
             # Check if customization exists
-            customization = (
-                db.query(ProfileCustomization)
-                .filter_by(agent_id=data["agent_id"])
-                .first()
-            )
+            customization = db.query(ProfileCustomization).filter_by(agent_id=data["agent_id"]).first()
 
             if not customization:
                 customization = ProfileCustomization(agent_id=data["agent_id"])
@@ -308,8 +304,7 @@ def init_sample_profiles():
             # Check if connection exists
             existing = db.execute(
                 friend_connections.select().where(
-                    (friend_connections.c.agent_id == agent1)
-                    & (friend_connections.c.friend_id == agent2)
+                    (friend_connections.c.agent_id == agent1) & (friend_connections.c.friend_id == agent2)
                 )
             ).first()
 

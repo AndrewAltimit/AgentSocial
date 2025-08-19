@@ -321,6 +321,127 @@ class TestProfileRoutes:
         assert len(friend_agents) == 4
         assert len(friend_customizations) <= 4  # May be less if no customizations
 
+    @patch("packages.bulletin_board.app.profile_routes.get_session")
+    def test_search_profiles_endpoint(self, mock_get_session):
+        """Test the search profiles API endpoint"""
+        from flask import Flask
+
+        from packages.bulletin_board.app.profile_routes import profile_bp
+
+        # Mock database session
+        mock_session = MagicMock()
+        mock_get_session.return_value = mock_session
+
+        # Create mock agents with customizations
+        mock_agents = [
+            MagicMock(
+                agent_id="agent1",
+                display_name="Test Agent One",
+                role_description="A test agent for searching",
+                is_active=True,
+            ),
+            MagicMock(
+                agent_id="agent2",
+                display_name="Another Agent",
+                role_description="Different role",
+                is_active=True,
+            ),
+        ]
+
+        mock_customizations = [
+            MagicMock(
+                agent_id="agent1",
+                profile_title="Senior Developer",
+                status_message="Coding all day",
+                about_me="I love testing",
+                interests=["coding", "testing"],
+                profile_picture_url=None,
+                mood_emoji="😊",
+                layout_template="retro",
+            ),
+            None,  # agent2 has no customization
+        ]
+
+        # Mock query chains
+        mock_session.query.return_value.filter_by.return_value.all.return_value = mock_agents
+        mock_session.query.return_value.filter_by.return_value.first.side_effect = mock_customizations
+        mock_session.query.return_value.filter_by.return_value.count.return_value = 5
+
+        app = Flask(__name__)
+        app.register_blueprint(profile_bp, url_prefix="/profiles")
+
+        with app.test_client() as client:
+            # Test search with matching query
+            response = client.get("/profiles/api/discover/search?q=test")
+            assert response.status_code == 200
+            data = response.get_json()
+            assert "profiles" in data
+            # Should find agent1 due to "test" in multiple fields
+
+            # Test empty search
+            response = client.get("/profiles/api/discover/search?q=")
+            assert response.status_code == 200
+            data = response.get_json()
+            assert data["profiles"] == []
+
+    @patch("packages.bulletin_board.app.profile_routes.get_session")
+    def test_filter_profiles_endpoint(self, mock_get_session):
+        """Test the filter profiles API endpoint"""
+        from datetime import datetime, timedelta
+
+        from flask import Flask
+
+        from packages.bulletin_board.app.profile_routes import profile_bp
+
+        # Mock database session
+        mock_session = MagicMock()
+        mock_get_session.return_value = mock_session
+
+        # Create mock agents
+        now = datetime.utcnow()
+        mock_agents = [
+            MagicMock(agent_id=f"agent{i}", display_name=f"Agent {i}", is_active=True, created_at=now - timedelta(days=i))
+            for i in range(3)
+        ]
+
+        # Mock query results
+        mock_session.query.return_value.filter_by.return_value.all.return_value = mock_agents
+        mock_session.query.return_value.filter_by.return_value.first.return_value = None
+        mock_session.query.return_value.filter_by.return_value.count.return_value = 10
+        mock_session.query.return_value.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(
+            created_at=now, visit_timestamp=now
+        )
+        # Mock friend connections
+        mock_session.execute.return_value.fetchall.return_value = []
+
+        app = Flask(__name__)
+        app.register_blueprint(profile_bp, url_prefix="/profiles")
+
+        with app.test_client() as client:
+            # Test "all" filter
+            response = client.get("/profiles/api/discover/filter?type=all")
+            assert response.status_code == 200
+            data = response.get_json()
+            assert "profiles" in data
+
+            # Test "popular" filter
+            response = client.get("/profiles/api/discover/filter?type=popular")
+            assert response.status_code == 200
+            data = response.get_json()
+            assert "profiles" in data
+
+            # Test "new" filter
+            response = client.get("/profiles/api/discover/filter?type=new")
+            assert response.status_code == 200
+            data = response.get_json()
+            assert "profiles" in data
+
+            # Test "active" filter
+            response = client.get("/profiles/api/discover/filter?type=active")
+            assert response.status_code == 200
+            data = response.get_json()
+            assert "profiles" in data
+
 
 class TestDataValidation:
     """Test data validation and constraints"""

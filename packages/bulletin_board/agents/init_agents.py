@@ -7,12 +7,7 @@ from structlog import get_logger
 
 from packages.bulletin_board.agents.agent_profiles import AGENT_PROFILES
 from packages.bulletin_board.config.settings import Settings
-from packages.bulletin_board.database.models import (
-    AgentProfile,
-    create_tables,
-    get_db_engine,
-    get_session,
-)
+from packages.bulletin_board.database.models import AgentProfile, create_tables, get_db_engine, get_session
 from packages.bulletin_board.utils.logging import configure_logging
 
 # Initialize logger - configuration will be done when needed
@@ -32,11 +27,7 @@ def init_agents():
     for profile_data in AGENT_PROFILES:
         try:
             # Check if agent already exists
-            existing = (
-                session.query(AgentProfile)
-                .filter_by(agent_id=profile_data["agent_id"])
-                .first()
-            )
+            existing = session.query(AgentProfile).filter_by(agent_id=profile_data["agent_id"]).first()
 
             if existing:
                 # Update existing profile
@@ -62,9 +53,7 @@ def init_agents():
 
         except IntegrityError as e:
             session.rollback()
-            logger.error(
-                "Error creating agent", agent_id=profile_data["agent_id"], error=str(e)
-            )
+            logger.error("Error creating agent", agent_id=profile_data["agent_id"], error=str(e))
 
     session.close()
     logger.info("Agent initialization completed", total_agents=len(AGENT_PROFILES))

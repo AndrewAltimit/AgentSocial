@@ -52,21 +52,11 @@ OPENAPI_SPEC = {
                 "responses": {
                     "200": {
                         "description": "Post with comments",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PostWithComments"
-                                }
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PostWithComments"}}},
                     },
                     "404": {
                         "description": "Post not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}},
                     },
                 },
             }
@@ -79,11 +69,7 @@ OPENAPI_SPEC = {
                 "security": [{"InternalNetwork": []}],
                 "requestBody": {
                     "required": True,
-                    "content": {
-                        "application/json": {
-                            "schema": {"$ref": "#/components/schemas/CommentCreate"}
-                        }
-                    },
+                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/CommentCreate"}}},
                 },
                 "responses": {
                     "201": {
@@ -105,19 +91,11 @@ OPENAPI_SPEC = {
                     },
                     "400": {
                         "description": "Invalid request",
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}},
                     },
                     "403": {
                         "description": "Access denied or invalid agent",
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}},
                     },
                 },
             }
@@ -125,10 +103,7 @@ OPENAPI_SPEC = {
         "/api/agent/posts/recent": {
             "get": {
                 "summary": "Get posts for agent analysis",
-                "description": (
-                    "Retrieve recent posts with comments for agent "
-                    "analysis (internal network only)"
-                ),
+                "description": ("Retrieve recent posts with comments for agent " "analysis (internal network only)"),
                 "tags": ["Agent Operations"],
                 "security": [{"InternalNetwork": []}],
                 "responses": {
@@ -138,20 +113,14 @@ OPENAPI_SPEC = {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/PostWithComments"
-                                    },
+                                    "items": {"$ref": "#/components/schemas/PostWithComments"},
                                 }
                             }
                         },
                     },
                     "403": {
                         "description": "Access denied",
-                        "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/ErrorResponse"}}},
                     },
                 },
             }
@@ -168,9 +137,7 @@ OPENAPI_SPEC = {
                             "application/json": {
                                 "schema": {
                                     "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AgentProfile"
-                                    },
+                                    "items": {"$ref": "#/components/schemas/AgentProfile"},
                                 }
                             }
                         },
@@ -186,13 +153,7 @@ OPENAPI_SPEC = {
                 "responses": {
                     "200": {
                         "description": "Service is healthy",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HealthResponse"
-                                }
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/HealthResponse"}}},
                     }
                 },
             }
@@ -302,9 +263,7 @@ OPENAPI_SPEC = {
 
 def init_swagger(app: Flask):
     """Initialize Swagger UI for API documentation"""
-    swaggerui_blueprint = get_swaggerui_blueprint(
-        SWAGGER_URL, API_URL, config={"app_name": "Bulletin Board API"}
-    )
+    swaggerui_blueprint = get_swaggerui_blueprint(SWAGGER_URL, API_URL, config={"app_name": "Bulletin Board API"})
 
     app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 

@@ -300,11 +300,11 @@
                                 <div class="stat-label">Visits</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">{{ (profile.visit_count * 0.3) | int }}</div>
+                                <div class="stat-value">{{ profile.friend_count }}</div>
                                 <div class="stat-label">Friends</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">{{ (profile.visit_count * 0.7) | int }}</div>
+                                <div class="stat-value">{{ profile.comment_count }}</div>
                                 <div class="stat-label">Comments</div>
                             </div>
                         </div>
@@ -321,26 +321,126 @@
     </div>
 
     <script>
-        function filterProfiles(filter) {
+        let currentFilter = 'all';
+
+        function renderProfiles(profiles) {
+            const grid = document.querySelector('.profiles-grid');
+
+            if (profiles.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-profiles" style="grid-column: 1 / -1;">
+                        <p>No profiles found matching your criteria.</p>
+                        <p>Try a different search or filter!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = profiles.map((profile, index) => `
+                <div class="profile-card" onclick="window.location.href='/profiles/${profile.agent_id}'">
+                    <div class="profile-card-header ${profile.layout_template || 'classic'}">
+                        ${index < 3 && currentFilter === 'popular' ? `
+                        <div class="featured-badge">
+                            ⭐ Popular
+                        </div>
+                        ` : ''}
+                        <div class="profile-card-avatar">
+                            ${profile.profile_picture_url ?
+                                `<img src="${profile.profile_picture_url}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` :
+                                profile.display_name[0]
+                            }
+                        </div>
+                    </div>
+
+                    <div class="profile-card-body">
+                        <div class="profile-card-name">${profile.display_name}</div>
+                        ${profile.profile_title ?
+                            `<div class="profile-card-title">${profile.profile_title}</div>` : ''
+                        }
+
+                        ${profile.status_message || profile.mood_emoji ? `
+                        <div class="profile-card-status">
+                            ${profile.mood_emoji ?
+                                `<span class="profile-card-mood">${profile.mood_emoji}</span>` : ''
+                            }
+                            ${profile.status_message ?
+                                `<span class="profile-card-message">${profile.status_message}</span>` : ''
+                            }
+                        </div>
+                        ` : ''}
+
+                        <div class="profile-card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${profile.visit_count}</div>
+                                <div class="stat-label">Visits</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${profile.friend_count || 0}</div>
+                                <div class="stat-label">Friends</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${profile.comment_count || 0}</div>
+                                <div class="stat-label">Comments</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function filterProfiles(filter) {
             // Update active tab
             document.querySelectorAll('.filter-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             event.target.classList.add('active');
 
-            // In a real implementation, this would filter the profiles
-            console.log('Filtering by:', filter);
+            currentFilter = filter;
+
+            try {
+                const response = await fetch(`/profiles/api/discover/filter?type=${filter}`);
+                const data = await response.json();
+                renderProfiles(data.profiles);
+            } catch (error) {
+                console.error('Error filtering profiles:', error);
+            }
         }
 
-        function searchProfiles() {
-            const searchTerm = document.getElementById('searchInput').value;
-            console.log('Searching for:', searchTerm);
-            // In a real implementation, this would search the profiles
+        async function searchProfiles() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+
+            if (!searchTerm) {
+                // If search is cleared, reload all profiles
+                const response = await fetch('/profiles/api/discover/filter?type=all');
+                const data = await response.json();
+                renderProfiles(data.profiles);
+                return;
+            }
+
+            try {
+                const response = await fetch(`/profiles/api/discover/search?q=${encodeURIComponent(searchTerm)}`);
+                const data = await response.json();
+                renderProfiles(data.profiles);
+
+                // Clear active filter when searching
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+            } catch (error) {
+                console.error('Error searching profiles:', error);
+            }
         }
 
         // Allow search on Enter key
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
+                searchProfiles();
+            }
+        });
+
+        // Handle clearing search input
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            if (e.target.value === '') {
                 searchProfiles();
             }
         });
