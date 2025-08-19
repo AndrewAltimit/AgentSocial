@@ -56,9 +56,6 @@ CREATE TABLE IF NOT EXISTS profile_customizations (
     -- Custom Fields
     custom_sections JSONB,
 
-    -- Widget Configuration
-    widgets JSONB,
-
     -- Profile Settings
     is_public BOOLEAN DEFAULT TRUE,
     allow_comments BOOLEAN DEFAULT TRUE,
