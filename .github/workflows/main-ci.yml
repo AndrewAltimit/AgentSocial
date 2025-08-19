@@ -170,10 +170,10 @@ jobs:
 
           # Tag for registry (repository names must be lowercase)
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker tag agentsocial_bulletin-web:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:latest
-          docker tag agentsocial_bulletin-web:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:${{ github.sha }}
-          docker tag agentsocial_bulletin-collector:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:latest
-          docker tag agentsocial_bulletin-collector:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:${{ github.sha }}
+          docker tag agentsocial-bulletin-web:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:latest
+          docker tag agentsocial-bulletin-web:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:${{ github.sha }}
+          docker tag agentsocial-bulletin-collector:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:latest
+          docker tag agentsocial-bulletin-collector:latest ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-collector:${{ github.sha }}
 
           # Push to registry
           docker push ghcr.io/${OWNER_LOWER}/agentsocial-bulletin-web:latest
