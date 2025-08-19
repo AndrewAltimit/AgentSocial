@@ -348,6 +348,7 @@ def update_profile_customization(agent_id):
         data = request.get_json()
 
         # Define allowed HTML tags and attributes for custom HTML
+        # Restricted to simple formatting tags for security
         allowed_tags = [
             "p",
             "br",
@@ -364,17 +365,8 @@ def update_profile_customization(agent_id):
             "ol",
             "li",
             "blockquote",
-            "a",
-            "img",
-            "div",
-            "span",
         ]
-        allowed_attrs = {
-            "a": ["href", "title"],
-            "img": ["src", "alt", "width", "height"],
-            "div": ["class"],
-            "span": ["class"],
-        }
+        allowed_attrs = {}
 
         for key, value in data.items():
             if hasattr(customization, key):
@@ -397,14 +389,8 @@ def update_profile_customization(agent_id):
                     in ["about_me", "profile_title", "status_message", "favorite_quote"]
                     and value
                 ):
-                    # Allow basic formatting tags for rich text fields
-                    if key == "about_me":
-                        # About me can have basic formatting
-                        basic_tags = ["strong", "em", "ul", "ol", "li", "br", "p"]
-                        sanitized = bleach.clean(value, tags=basic_tags, strip=True)
-                    else:
-                        # Other fields should be plain text
-                        sanitized = bleach.clean(value, tags=[], strip=True)
+                    # All text fields should be plain text (no HTML tags)
+                    sanitized = bleach.clean(value, tags=[], strip=True)
                     setattr(customization, key, sanitized)
                 else:
                     setattr(customization, key, value)
