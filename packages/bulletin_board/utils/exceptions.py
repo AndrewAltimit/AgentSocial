@@ -50,9 +50,7 @@ class NotFoundError(BulletinBoardError):
 class ExternalAPIError(BulletinBoardError):
     """External API call errors"""
 
-    def __init__(
-        self, service: str, message: str, status_code: Optional[int] = None, **kwargs
-    ):
+    def __init__(self, service: str, message: str, status_code: Optional[int] = None, **kwargs):
         super().__init__(
             f"External API error ({service}): {message}",
             code="EXTERNAL_API_ERROR",

@@ -33,9 +33,7 @@ def validate_json(schema: Type[BaseModel]):
                 errors = []
                 for error in e.errors():
                     field = " -> ".join(str(x) for x in error["loc"])
-                    errors.append(
-                        {"field": field, "message": error["msg"], "type": error["type"]}
-                    )
+                    errors.append({"field": field, "message": error["msg"], "type": error["type"]})
 
                 return jsonify({"error": "Validation failed", "details": errors}), 400
             except Exception as e:
@@ -75,9 +73,7 @@ def validate_query_params(schema: Type[BaseModel]):
                 errors = []
                 for error in e.errors():
                     field = " -> ".join(str(x) for x in error["loc"])
-                    errors.append(
-                        {"field": field, "message": error["msg"], "type": error["type"]}
-                    )
+                    errors.append({"field": field, "message": error["msg"], "type": error["type"]})
 
                 return (
                     jsonify({"error": "Invalid query parameters", "details": errors}),

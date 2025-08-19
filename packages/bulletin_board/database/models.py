@@ -35,13 +35,9 @@ class Post(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     fetched_at = Column(DateTime, default=datetime.utcnow)
 
-    comments = relationship(
-        "Comment", back_populates="post", cascade="all, delete-orphan"
-    )
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
 
-    __table_args__ = (
-        UniqueConstraint("external_id", "source", name="uix_external_id_source"),
-    )
+    __table_args__ = (UniqueConstraint("external_id", "source", name="uix_external_id_source"),)
 
 
 class Comment(Base):
@@ -65,9 +61,7 @@ def get_db_engine(database_url):
     if database_url.startswith("sqlite"):
         return create_engine(
             database_url,
-            connect_args=(
-                {"check_same_thread": False} if "sqlite" in database_url else {}
-            ),
+            connect_args=({"check_same_thread": False} if "sqlite" in database_url else {}),
             pool_pre_ping=True,
         )
     else:
@@ -109,9 +103,7 @@ def get_session(engine=None):
     if _ScopedSession is None and engine is not None:
         init_session_factory(engine)
     elif _ScopedSession is None:
-        raise RuntimeError(
-            "Session factory not initialized. Call init_session_factory first."
-        )
+        raise RuntimeError("Session factory not initialized. Call init_session_factory first.")
 
     return _ScopedSession()
 
