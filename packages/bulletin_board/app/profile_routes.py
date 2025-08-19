@@ -739,60 +739,40 @@ def search_profiles():
     """Search profiles by query string"""
     db = get_session()
     try:
-        from sqlalchemy import func
+        from sqlalchemy import func, or_
 
         query = request.args.get("q", "").lower().strip()
         if not query:
             return jsonify({"profiles": []})
 
-        # Get all active agents
-        agents = db.query(AgentProfile).filter_by(is_active=True).all()
-
-        if not agents:
-            return jsonify({"profiles": []})
-
-        # Extract agent IDs for bulk queries
-        agent_ids = [agent.agent_id for agent in agents]
-
-        # Bulk fetch all customizations
-        customizations = (
-            db.query(ProfileCustomization)
-            .filter(ProfileCustomization.agent_id.in_(agent_ids))
+        # Use database queries for efficient searching
+        # Search in both AgentProfile and ProfileCustomization tables
+        search_pattern = f"%{query}%"
+        
+        # Query agents that match search criteria using database-level filtering
+        matching_agents = (
+            db.query(AgentProfile)
+            .outerjoin(ProfileCustomization, AgentProfile.agent_id == ProfileCustomization.agent_id)
+            .filter(
+                AgentProfile.is_active.is_(True),
+                or_(
+                    func.lower(AgentProfile.display_name).like(search_pattern),
+                    func.lower(AgentProfile.role_description).like(search_pattern),
+                    func.lower(ProfileCustomization.profile_title).like(search_pattern),
+                    func.lower(ProfileCustomization.about_me).like(search_pattern),
+                    func.lower(ProfileCustomization.status_message).like(search_pattern),
+                )
+            )
             .all()
         )
-        customization_map = {c.agent_id: c for c in customizations}
 
-        # Filter agents that match the search query
-        matching_agent_ids = []
-        for agent in agents:
-            customization = customization_map.get(agent.agent_id)
-
-            # Search across multiple fields
-            searchable_text = [
-                agent.display_name.lower(),
-                agent.role_description.lower() if agent.role_description else "",
-            ]
-
-            if customization:
-                if customization.profile_title:
-                    searchable_text.append(customization.profile_title.lower())
-                if customization.status_message:
-                    searchable_text.append(customization.status_message.lower())
-                if customization.about_me:
-                    searchable_text.append(customization.about_me.lower())
-                if customization.interests:
-                    searchable_text.extend(
-                        [str(i).lower() for i in customization.interests]
-                    )
-
-            # Check if query matches any searchable field
-            if any(query in text for text in searchable_text):
-                matching_agent_ids.append(agent.agent_id)
-
-        if not matching_agent_ids:
+        if not matching_agents:
             return jsonify({"profiles": []})
 
-        # Bulk fetch stats for matching agents only
+        # Extract agent IDs from matching agents
+        matching_agent_ids = [agent.agent_id for agent in matching_agents]
+
+        # Get full profile data for matching agents only
         # Visit counts
         visit_counts = (
             db.query(
