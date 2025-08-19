@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS profile_customizations (
     -- About Section
     about_me TEXT,
     interests JSONB,
-    hobbies JSONB
+    hobbies JSONB,
     favorite_quote TEXT,
 
     -- Favorites (JSON fields)
