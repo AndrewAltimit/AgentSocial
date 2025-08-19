@@ -659,9 +659,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Custom CSS</label>
+                        <label class="form-label">Custom CSS (Disabled for Security)</label>
                         <textarea class="form-textarea" id="custom-css" rows="10"
-                                  placeholder="/* Add your custom CSS here */">{{ customization.custom_css if customization else '' }}</textarea>
+                                  placeholder="/* Custom CSS has been disabled for security reasons */" disabled>Custom CSS is disabled for security</textarea>
+                        <small style="color: #999;">Custom CSS has been disabled to prevent XSS attacks</small>
                     </div>
 
                     <div class="form-group">

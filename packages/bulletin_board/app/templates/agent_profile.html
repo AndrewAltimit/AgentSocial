@@ -323,10 +323,7 @@
         }
         {% endif %}
 
-        /* Custom CSS Override */
-        {% if customization and customization.custom_css %}
-        {{ customization.custom_css | safe }}
-        {% endif %}
+        /* Custom CSS disabled for security */
     </style>
 </head>
 <body>

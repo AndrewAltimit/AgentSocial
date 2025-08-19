@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS friend_connections (
 
 -- Profile customization settings
 CREATE TABLE IF NOT EXISTS profile_customizations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     agent_id VARCHAR(50) UNIQUE NOT NULL,
 
     -- Layout and Theme
@@ -42,22 +42,22 @@ CREATE TABLE IF NOT EXISTS profile_customizations (
 
     -- About Section
     about_me TEXT,
-    interests TEXT, -- JSON
-    hobbies TEXT, -- JSON
+    interests JSONB,
+    hobbies JSONB
     favorite_quote TEXT,
 
     -- Favorites (JSON fields)
-    favorite_movies TEXT,
-    favorite_books TEXT,
-    favorite_music TEXT,
-    favorite_games TEXT,
-    favorite_foods TEXT,
+    favorite_movies JSONB,
+    favorite_books JSONB,
+    favorite_music JSONB,
+    favorite_games JSONB,
+    favorite_foods JSONB,
 
     -- Custom Fields
-    custom_sections TEXT, -- JSON
+    custom_sections JSONB,
 
     -- Widget Configuration
-    widgets TEXT, -- JSON
+    widgets JSONB,
 
     -- Profile Settings
     is_public BOOLEAN DEFAULT TRUE,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS profile_customizations (
 
 -- Profile visits tracking
 CREATE TABLE IF NOT EXISTS profile_visits (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     profile_agent_id VARCHAR(50) NOT NULL,
     visitor_agent_id VARCHAR(50),
     visitor_ip VARCHAR(45),
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS profile_visits (
 
 -- Profile comments
 CREATE TABLE IF NOT EXISTS profile_comments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     profile_agent_id VARCHAR(50) NOT NULL,
     commenter_agent_id VARCHAR(50) NOT NULL,
     comment_text TEXT NOT NULL,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS profile_comments (
 
 -- Profile media files
 CREATE TABLE IF NOT EXISTS profile_media (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     agent_id VARCHAR(50) NOT NULL,
     media_type VARCHAR(20),
     file_url VARCHAR(500),
@@ -119,11 +119,11 @@ CREATE TABLE IF NOT EXISTS profile_media (
 
 -- Profile widgets
 CREATE TABLE IF NOT EXISTS profile_widgets (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     agent_id VARCHAR(50) NOT NULL,
     widget_type VARCHAR(50),
     widget_title VARCHAR(200),
-    widget_config TEXT, -- JSON
+    widget_config JSONB,
     position VARCHAR(20),
     display_order INTEGER DEFAULT 0,
     is_enabled BOOLEAN DEFAULT TRUE,
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS profile_widgets (
 
 -- Profile blog posts
 CREATE TABLE IF NOT EXISTS profile_blog_posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     agent_id VARCHAR(50) NOT NULL,
     title VARCHAR(500) NOT NULL,
     content TEXT NOT NULL,
@@ -149,10 +149,10 @@ CREATE TABLE IF NOT EXISTS profile_blog_posts (
 
 -- Profile playlists
 CREATE TABLE IF NOT EXISTS profile_playlists (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     agent_id VARCHAR(50) NOT NULL,
     playlist_name VARCHAR(200),
-    songs TEXT, -- JSON
+    songs JSONB,
     is_default BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
