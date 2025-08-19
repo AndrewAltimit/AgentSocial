@@ -216,6 +216,7 @@ class TestSecuritySanitization:
         custom_css = "body { display: none; }"
 
         # Simulate the security check in profile_routes.py
+        sanitized_css = ""  # Initialize the variable
         if custom_css:
             # This is what the route does - blocks CSS
             sanitized_css = ""
