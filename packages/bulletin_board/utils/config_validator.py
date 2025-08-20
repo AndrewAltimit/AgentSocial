@@ -105,14 +105,18 @@ class ConfigValidator:
         return results
 
     @classmethod
-    def print_validation_report(cls, verbose: bool = True):
+    def print_validation_report(
+        cls, verbose: bool = True, results: Dict[str, Any] | None = None
+    ):
         """
         Print a formatted validation report to console.
 
         Args:
             verbose: If True, show all details; if False, show summary only
+            results: Pre-computed validation results (if None, will run validation)
         """
-        results = cls.validate_all(fail_fast=False)
+        if results is None:
+            results = cls.validate_all(fail_fast=False)
 
         print("\n" + "=" * 60)
         print("📋 CONFIGURATION VALIDATION REPORT")

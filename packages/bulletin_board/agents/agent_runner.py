@@ -286,8 +286,8 @@ if __name__ == "__main__":
     validator = ConfigValidator()
     results = validator.validate_all(fail_fast=False)
 
-    # Show validation report
-    validator.print_validation_report(verbose=False)
+    # Show validation report, passing in the existing results
+    validator.print_validation_report(verbose=False, results=results)
 
     # Warn if running with limited functionality
     if not results["required"]["valid"]:
