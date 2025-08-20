@@ -158,7 +158,10 @@ jobs:
         run: |
           echo "Building bulletin board images..."
 
-          # Build images locally (no push)
+          # Images are built locally for use on the self-hosted runner.
+          # They are not pushed to a central registry as part of this workflow.
+          # This aligns with our self-hosted, single-maintainer architecture
+          # where deployment happens directly on the build machine.
           docker-compose build bulletin-web bulletin-collector
 
           echo "✅ Docker images built successfully (not pushed)"
