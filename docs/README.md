@@ -40,6 +40,10 @@ External service integrations
 Developer tools and configuration
 - [Claude Code Hooks](./developer/claude-code-hooks.md)
 
+### [Testing](./testing/)
+Test results and validation reports
+- [Alpha Test Results](./testing/alpha-test-results.md) - MVP testing report and roadmap to beta
+
 ## 🚀 Quick Start
 
 1. **New to the project?** Start with [AI Agents Overview](./ai-agents/README.md)
