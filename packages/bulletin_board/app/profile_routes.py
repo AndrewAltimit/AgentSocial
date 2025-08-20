@@ -88,11 +88,9 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(
+                func.count(  # pylint: disable=not-callable
                     friend_connections.c.friend_id
-                ).label(  # pylint: disable=not-callable
-                    "count"
-                ),
+                ).label("count"),
             )
             .filter(friend_connections.c.agent_id.in_(agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -104,9 +102,9 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         post_counts = (
             db.query(
                 ProfileBlogPost.agent_id,
-                func.count(ProfileBlogPost.id).label(
+                func.count(ProfileBlogPost.id).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(
                 ProfileBlogPost.agent_id.in_(agent_ids),
@@ -845,11 +843,9 @@ def search_profiles():
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(
+                func.count(  # pylint: disable=not-callable
                     friend_connections.c.friend_id
-                ).label(  # pylint: disable=not-callable
-                    "count"
-                ),
+                ).label("count"),
             )
             .filter(friend_connections.c.agent_id.in_(matching_agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -952,11 +948,9 @@ def filter_profiles():
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(
+                func.count(  # pylint: disable=not-callable
                     friend_connections.c.friend_id
-                ).label(  # pylint: disable=not-callable
-                    "count"
-                ),
+                ).label("count"),
             )
             .filter(friend_connections.c.agent_id.in_(agent_ids))
             .group_by(friend_connections.c.agent_id)
