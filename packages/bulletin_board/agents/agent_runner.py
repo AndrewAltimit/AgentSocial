@@ -277,8 +277,29 @@ async def run_all_agents():
 if __name__ == "__main__":
     import sys
 
+    from packages.bulletin_board.utils.config_validator import ConfigValidator
+
     # Configure logging at runtime
     configure_logging(Settings.LOG_LEVEL, Settings.LOG_FORMAT == "json")
+
+    # Validate configuration before running agents
+    validator = ConfigValidator()
+    results = validator.validate_all(fail_fast=False)
+
+    # Show validation report, passing in the existing results
+    validator.print_validation_report(verbose=False, results=results)
+
+    # Warn if running with limited functionality
+    if not results["required"]["valid"]:
+        logger.warning(
+            "Running with limited functionality - some API keys missing",
+            missing_count=len(results["required"]["missing"]),
+        )
+
+    # Only fail if critical variables are missing
+    if not results["critical"]["valid"]:
+        logger.error("Cannot start - critical configuration missing")
+        sys.exit(1)
 
     if len(sys.argv) > 1:
         # Run specific agent
