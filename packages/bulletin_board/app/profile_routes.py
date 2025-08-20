@@ -74,9 +74,9 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         visit_counts = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.count(ProfileVisit.id).label(
+                func.count(ProfileVisit.id).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileVisit.profile_agent_id.in_(agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -88,9 +88,11 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(friend_connections.c.friend_id).label(
+                func.count(
+                    friend_connections.c.friend_id
+                ).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(friend_connections.c.agent_id.in_(agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -101,8 +103,11 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
         # Bulk fetch blog post counts
         post_counts = (
             db.query(
-                ProfileBlogPost.agent_id, func.count(ProfileBlogPost.id).label("count")
-            )  # pylint: disable=not-callable
+                ProfileBlogPost.agent_id,
+                func.count(ProfileBlogPost.id).label(
+                    "count"
+                ),  # pylint: disable=not-callable
+            )
             .filter(
                 ProfileBlogPost.agent_id.in_(agent_ids),
                 ProfileBlogPost.is_published.is_(True),
@@ -826,9 +831,9 @@ def search_profiles():
         visit_counts = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.count(ProfileVisit.id).label(
+                func.count(ProfileVisit.id).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileVisit.profile_agent_id.in_(matching_agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -840,9 +845,11 @@ def search_profiles():
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(friend_connections.c.friend_id).label(
+                func.count(
+                    friend_connections.c.friend_id
+                ).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(friend_connections.c.agent_id.in_(matching_agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -854,9 +861,9 @@ def search_profiles():
         comment_counts = (
             db.query(
                 ProfileComment.profile_agent_id,
-                func.count(ProfileComment.id).label(
+                func.count(ProfileComment.id).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileComment.profile_agent_id.in_(matching_agent_ids))
             .group_by(ProfileComment.profile_agent_id)
@@ -931,9 +938,9 @@ def filter_profiles():
         visit_counts = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.count(ProfileVisit.id).label(
+                func.count(ProfileVisit.id).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileVisit.profile_agent_id.in_(agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
@@ -945,9 +952,11 @@ def filter_profiles():
         friend_counts = (
             db.query(
                 friend_connections.c.agent_id,
-                func.count(friend_connections.c.friend_id).label(
+                func.count(
+                    friend_connections.c.friend_id
+                ).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(friend_connections.c.agent_id.in_(agent_ids))
             .group_by(friend_connections.c.agent_id)
@@ -959,9 +968,9 @@ def filter_profiles():
         comment_counts = (
             db.query(
                 ProfileComment.profile_agent_id,
-                func.count(ProfileComment.id).label(
+                func.count(ProfileComment.id).label(  # pylint: disable=not-callable
                     "count"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileComment.profile_agent_id.in_(agent_ids))
             .group_by(ProfileComment.profile_agent_id)
@@ -975,9 +984,11 @@ def filter_profiles():
         last_comments_subq = (
             db.query(
                 ProfileComment.profile_agent_id,
-                func.max(ProfileComment.created_at).label(
+                func.max(
+                    ProfileComment.created_at
+                ).label(  # pylint: disable=not-callable
                     "last_created"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileComment.profile_agent_id.in_(agent_ids))
             .group_by(ProfileComment.profile_agent_id)
@@ -1002,9 +1013,11 @@ def filter_profiles():
         last_visits_subq = (
             db.query(
                 ProfileVisit.profile_agent_id,
-                func.max(ProfileVisit.visit_timestamp).label(
+                func.max(
+                    ProfileVisit.visit_timestamp
+                ).label(  # pylint: disable=not-callable
                     "last_visit"
-                ),  # pylint: disable=not-callable
+                ),
             )
             .filter(ProfileVisit.profile_agent_id.in_(agent_ids))
             .group_by(ProfileVisit.profile_agent_id)
