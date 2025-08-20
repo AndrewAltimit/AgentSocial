@@ -85,7 +85,9 @@ class AnalyticsCollector:
 
     def __init__(self, base_path: Optional[str] = None):
         if base_path is None:
-            base_path = os.environ.get("BULLETIN_BOARD_ANALYTICS_PATH", "/var/lib/bulletin_board/analytics")
+            base_path = os.environ.get(
+                "BULLETIN_BOARD_ANALYTICS_PATH", "/var/lib/bulletin_board/analytics"
+            )
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
@@ -183,7 +185,9 @@ class AnalyticsCollector:
 
             # Calculate response time
             response_times = self._extract_response_times(lines)
-            avg_response = sum(response_times) / len(response_times) if response_times else 0
+            avg_response = (
+                sum(response_times) / len(response_times) if response_times else 0
+            )
 
             # Calculate engagement score
             engagement = (comments + reactions * 0.5 + memes * 2) / max(posts, 1)
@@ -217,10 +221,14 @@ class AnalyticsCollector:
             return metrics
 
         except Exception as e:
-            logger.error("Failed to collect agent metrics", agent_id=agent_id, error=str(e))
+            logger.error(
+                "Failed to collect agent metrics", agent_id=agent_id, error=str(e)
+            )
             return self._empty_agent_metrics(agent_id)
 
-    def generate_interaction_heatmap(self, data_path: str, days_back: int = 7) -> InteractionHeatmap:
+    def generate_interaction_heatmap(
+        self, data_path: str, days_back: int = 7
+    ) -> InteractionHeatmap:
         """Generate interaction heatmap between agents"""
         try:
             # Find recent interaction files
@@ -256,7 +264,9 @@ class AnalyticsCollector:
             files = result.stdout.strip().split("\n")
 
             # Build interaction matrix
-            interactions: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+            interactions: Dict[str, Dict[str, float]] = defaultdict(
+                lambda: defaultdict(float)
+            )
 
             for file_path in files:
                 if not file_path:
@@ -290,7 +300,9 @@ class AnalyticsCollector:
             logger.error("Failed to generate interaction heatmap", error=str(e))
             return self._empty_heatmap()
 
-    def analyze_sentiment_trends(self, data_path: str, days_back: int = 30) -> SentimentTrend:
+    def analyze_sentiment_trends(
+        self, data_path: str, days_back: int = 30
+    ) -> SentimentTrend:
         """Analyze sentiment trends over time"""
         try:
             # Collect sentiment data points
@@ -329,14 +341,19 @@ class AnalyticsCollector:
                 return self._empty_sentiment_trend()
 
             # Create time series
-            timestamps = [(datetime.now() - timedelta(hours=i)).isoformat() for i in range(len(sentiment_data))]
+            timestamps = [
+                (datetime.now() - timedelta(hours=i)).isoformat()
+                for i in range(len(sentiment_data))
+            ]
 
             # Calculate moving average
             window = min(24, len(sentiment_data) // 4)
             moving_avg = self._moving_average(sentiment_data, window)
 
             # Calculate volatility
-            volatility = float(np.std(sentiment_data)) if len(sentiment_data) > 1 else 0.0
+            volatility = (
+                float(np.std(sentiment_data)) if len(sentiment_data) > 1 else 0.0
+            )
 
             # Determine trend
             if len(moving_avg) > 1:
@@ -388,7 +405,12 @@ class AnalyticsCollector:
             }
 
             # Calculate overall chaos score
-            chaos_score = rapid_responses * 0.2 + meme_density * 0.3 + reaction_velocity * 0.2 + thread_derailment * 0.3
+            chaos_score = (
+                rapid_responses * 0.2
+                + meme_density * 0.3
+                + reaction_velocity * 0.2
+                + thread_derailment * 0.3
+            )
 
             chaos_metrics = {
                 "timestamp": datetime.now().isoformat(),
@@ -548,7 +570,10 @@ class AnalyticsCollector:
         total_count = len(lines)
 
         for line in lines:
-            if any(indicator in line.lower() for indicator in ["meme", "rapid", "chaos", "reaction"]):
+            if any(
+                indicator in line.lower()
+                for indicator in ["meme", "rapid", "chaos", "reaction"]
+            ):
                 chaos_count += 1
 
         return (chaos_count / max(total_count, 1)) * 100
@@ -564,7 +589,9 @@ class AnalyticsCollector:
 
         return [topic for topic, _ in topics.most_common(10)]
 
-    def _find_interaction_partners(self, lines: List[str], agent_id: str) -> List[Tuple[str, int]]:
+    def _find_interaction_partners(
+        self, lines: List[str], agent_id: str
+    ) -> List[Tuple[str, int]]:
         """Find agents this agent interacts with most"""
         partners: Counter = Counter()
         for line in lines:
@@ -576,7 +603,9 @@ class AnalyticsCollector:
 
         return partners.most_common()
 
-    def _detect_clusters(self, interactions: Dict[str, Dict[str, float]]) -> List[List[str]]:
+    def _detect_clusters(
+        self, interactions: Dict[str, Dict[str, float]]
+    ) -> List[List[str]]:
         """Simple community detection for agent clusters"""
         clusters = []
         processed = set()
@@ -680,7 +709,11 @@ class AnalyticsCollector:
         json_file = self.metrics_dir / f"{name}_{timestamp}.json"
         with open(json_file, "w") as f:
             json.dump(
-                (asdict(metrics) if hasattr(metrics, "__dataclass_fields__") else metrics),
+                (
+                    asdict(metrics)
+                    if hasattr(metrics, "__dataclass_fields__")
+                    else metrics
+                ),
                 f,
                 indent=2,
             )
@@ -726,7 +759,10 @@ class AnalyticsCollector:
         """Create visual representation of interaction heatmap"""
         try:
             agents = list(
-                set(list(heatmap.interactions.keys()) + [a for d in heatmap.interactions.values() for a in d.keys()])
+                set(
+                    list(heatmap.interactions.keys())
+                    + [a for d in heatmap.interactions.values() for a in d.keys()]
+                )
             )
 
             if not agents:
@@ -738,7 +774,10 @@ class AnalyticsCollector:
 
             for i, agent1 in enumerate(agents):
                 for j, agent2 in enumerate(agents):
-                    if agent1 in heatmap.interactions and agent2 in heatmap.interactions[agent1]:
+                    if (
+                        agent1 in heatmap.interactions
+                        and agent2 in heatmap.interactions[agent1]
+                    ):
                         matrix[i][j] = heatmap.interactions[agent1][agent2]
 
             # Create plot
@@ -836,7 +875,9 @@ class AnalyticsCollector:
 
     def _empty_heatmap(self) -> InteractionHeatmap:
         """Return empty heatmap"""
-        return InteractionHeatmap(timestamp=datetime.now().isoformat(), interactions={}, clusters=[])
+        return InteractionHeatmap(
+            timestamp=datetime.now().isoformat(), interactions={}, clusters=[]
+        )
 
     def _empty_sentiment_trend(self) -> SentimentTrend:
         """Return empty sentiment trend"""

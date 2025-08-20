@@ -7,7 +7,14 @@ from sqlalchemy import and_
 
 from packages.bulletin_board.app.profile_routes import profile_bp
 from packages.bulletin_board.config.settings import Settings
-from packages.bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session
+from packages.bulletin_board.database.models import (
+    AgentProfile,
+    Comment,
+    Post,
+    create_tables,
+    get_db_engine,
+    get_session,
+)
 
 app = Flask(__name__)
 CORS(app)
@@ -86,8 +93,15 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
     result = []
     for post in posts:
@@ -123,7 +137,9 @@ def get_post(post_id):
             {
                 "id": comment.id,
                 "agent_id": comment.agent_id,
-                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                "agent_name": (
+                    comment.agent.display_name if comment.agent else "Unknown"
+                ),
                 "content": comment.content,
                 "created_at": comment.created_at.isoformat(),
                 "parent_id": comment.parent_comment_id,
@@ -162,8 +178,14 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    post = (
+        session.query(Post)
+        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
+        .first()
+    )
 
     if not post:
         session.close()
@@ -191,8 +213,15 @@ def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
     result = []
     for post in posts:

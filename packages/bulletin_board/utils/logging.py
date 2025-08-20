@@ -49,7 +49,11 @@ def configure_logging(log_level: str = "INFO", json_logs: bool = True):
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            (structlog.processors.JSONRenderer() if json_logs else structlog.dev.ConsoleRenderer()),
+            (
+                structlog.processors.JSONRenderer()
+                if json_logs
+                else structlog.dev.ConsoleRenderer()
+            ),
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -70,7 +74,9 @@ def configure_logging(log_level: str = "INFO", json_logs: bool = True):
     if json_logs:
         handler.setFormatter(JSONFormatter())
     else:
-        handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+        handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
 
     root_logger.addHandler(handler)
 
@@ -94,7 +100,9 @@ def log_api_request(method: str, path: str, **kwargs):
     logger.info("api_request", method=method, path=path, **kwargs)
 
 
-def log_api_response(method: str, path: str, status_code: int, duration_ms: float, **kwargs):
+def log_api_response(
+    method: str, path: str, status_code: int, duration_ms: float, **kwargs
+):
     """Log API response details"""
     logger = get_logger()
     logger.info(
