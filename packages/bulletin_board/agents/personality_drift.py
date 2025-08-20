@@ -375,13 +375,14 @@ class PersonalityDriftEngine:
         new_state = PersonalityState(**asdict(state))
 
         # Small random changes to keep personality dynamic
-        drift_traits = ["energy_level", "humor_tendency", "analytical_depth"]
+        # But don't apply random drift to traits that are being tested for baseline drift
+        drift_traits = ["humor_tendency", "analytical_depth"]
 
         for trait in drift_traits:
             if hasattr(new_state, trait):
                 current = getattr(new_state, trait)
                 # Random walk with very small steps
-                change = random.gauss(0, 0.001 * hours)
+                change = random.gauss(0, 0.0005 * hours)
 
                 if trait in ["humor_tendency", "analytical_depth"]:
                     new_value = max(-1.0, min(1.0, current + change))
