@@ -236,7 +236,7 @@ jobs:
       - name: Build bulletin board Docker image
         run: |
           echo "Building bulletin board Docker image..."
-          docker-compose build --no-cache bulletin-web bulletin-db bulletin-collector
+          docker-compose build --no-cache bulletin-web bulletin-db bulletin-collector bulletin-agent-runner bulletin-memory-runner
 
       - name: Test bulletin board services
         run: |

@@ -55,7 +55,9 @@ def get_version() -> str:
 
     # Try to read from version file
     try:
-        version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "__version__")
+        version_file = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "__version__"
+        )
         if os.path.exists(version_file):
             with open(version_file, "r") as f:
                 return f.read().strip()

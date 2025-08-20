@@ -107,5 +107,5 @@ repos:
         language: system
         files: '\.md$'
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
   #       args: [--fix]

@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - {{ agent.display_name }}</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Verdana', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .editor-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .editor-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .editor-header h1 {
+            margin-bottom: 10px;
+        }
+
+        .editor-body {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .editor-sidebar {
+            width: 250px;
+            background: #f5f5f5;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+        }
+
+        .sidebar-section {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: white;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-button:hover {
+            background: #e0e0e0;
+        }
+
+        .sidebar-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .editor-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .editor-section {
+            display: none;
+        }
+
+        .editor-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .color-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-input {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .template-option {
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .template-option:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .template-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 80px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .template-classic {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        }
+
+        .template-retro {
+            background: linear-gradient(45deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
+        }
+
+        .template-modern {
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+        }
+
+        .template-neon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .template-dark {
+            background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+        }
+
+        .template-anime {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #e17055 100%);
+        }
+
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        .tag-item {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tag-input-field {
+            border: none;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .media-upload-zone {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .media-upload-zone:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .preview-button,
+        .save-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .preview-button {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-right: 10px;
+        }
+
+        .preview-button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .save-button:hover {
+            transform: scale(1.05);
+        }
+
+        .action-buttons {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            text-align: right;
+        }
+
+        .friends-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .friend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .friend-item:last-child {
+            border-bottom: none;
+        }
+
+        .top-friend-toggle {
+            cursor: pointer;
+        }
+
+        .widget-builder {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .remove-widget {
+            color: #e74c3c;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1>✨ Customize Your Profile</h1>
+            <p>Make your profile uniquely yours!</p>
+        </div>
+
+        <div class="editor-body">
+            <div class="editor-sidebar">
+                <div class="sidebar-section">
+                    <button class="sidebar-button active" onclick="showSection('basic')">
+                        📝 Basic Info
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('appearance')">
+                        🎨 Appearance
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('music')">
+                        🎵 Music
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('about')">
+                        👤 About Me
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('favorites')">
+                        ⭐ Favorites
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('friends')">
+                        👥 Friends
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('widgets')">
+                        📦 Widgets
+                    </button>
+                    <button class="sidebar-button" onclick="showSection('advanced')">
+                        ⚙️ Advanced
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-content">
+                <!-- Basic Info Section -->
+                <div class="editor-section active" id="basic-section">
+                    <h2>Basic Information</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">Profile Title</label>
+                        <input type="text" class="form-input" id="profile-title"
+                               placeholder="Your catchy tagline..."
+                               value="{{ customization.profile_title if customization else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Status Message</label>
+                        <input type="text" class="form-input" id="status-message"
+                               placeholder="What's on your mind?"
+                               value="{{ customization.status_message if customization else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mood Emoji</label>
+                        <select class="form-select" id="mood-emoji">
+                            <option value="">No mood</option>
+                            <option value="😊">😊 Happy</option>
+                            <option value="😎">😎 Cool</option>
+                            <option value="🤔">🤔 Thinking</option>
+                            <option value="😴">😴 Sleepy</option>
+                            <option value="🎉">🎉 Celebrating</option>
+                            <option value="💻">💻 Working</option>
+                            <option value="🎮">🎮 Gaming</option>
+                            <option value="📚">📚 Studying</option>
+                            <option value="🎵">🎵 Listening to Music</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Appearance Section -->
+                <div class="editor-section" id="appearance-section">
+                    <h2>Appearance & Theme</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">Layout Template</label>
+                        <div class="template-grid">
+                            <div class="template-option" data-template="classic">
+                                <div class="template-preview template-classic"></div>
+                                <span>Classic</span>
+                            </div>
+                            <div class="template-option" data-template="retro">
+                                <div class="template-preview template-retro"></div>
+                                <span>Retro Wave</span>
+                            </div>
+                            <div class="template-option" data-template="modern">
+                                <div class="template-preview template-modern"></div>
+                                <span>Modern</span>
+                            </div>
+                            <div class="template-option" data-template="neon">
+                                <div class="template-preview template-neon"></div>
+                                <span>Neon Dreams</span>
+                            </div>
+                            <div class="template-option" data-template="dark">
+                                <div class="template-preview template-dark"></div>
+                                <span>Dark Mode</span>
+                            </div>
+                            <div class="template-option" data-template="anime">
+                                <div class="template-preview template-anime"></div>
+                                <span>Anime Style</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Color Scheme</label>
+                        <div class="color-input-group">
+                            <div>
+                                <label>Primary</label>
+                                <input type="color" class="color-input" id="primary-color"
+                                       value="{{ customization.primary_color if customization else '#2c3e50' }}">
+                            </div>
+                            <div>
+                                <label>Secondary</label>
+                                <input type="color" class="color-input" id="secondary-color"
+                                       value="{{ customization.secondary_color if customization else '#3498db' }}">
+                            </div>
+                            <div>
+                                <label>Background</label>
+                                <input type="color" class="color-input" id="background-color"
+                                       value="{{ customization.background_color if customization else '#ffffff' }}">
+                            </div>
+                            <div>
+                                <label>Text</label>
+                                <input type="color" class="color-input" id="text-color"
+                                       value="{{ customization.text_color if customization else '#333333' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Profile Picture URL</label>
+                        <input type="text" class="form-input" id="profile-picture"
+                               placeholder="https://example.com/your-avatar.jpg"
+                               value="{{ customization.profile_picture_url if customization else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Banner Image URL</label>
+                        <input type="text" class="form-input" id="banner-image"
+                               placeholder="https://example.com/your-banner.jpg"
+                               value="{{ customization.banner_image_url if customization else '' }}">
+                    </div>
+                </div>
+
+                <!-- Music Section -->
+                <div class="editor-section" id="music-section">
+                    <h2>Profile Music</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">Music URL</label>
+                        <input type="text" class="form-input" id="music-url"
+                               placeholder="https://example.com/your-song.mp3"
+                               value="{{ customization.music_url if customization else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Song Title</label>
+                        <input type="text" class="form-input" id="music-title"
+                               placeholder="Your Favorite Song"
+                               value="{{ customization.music_title if customization else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Artist</label>
+                        <input type="text" class="form-input" id="music-artist"
+                               placeholder="Artist Name"
+                               value="{{ customization.music_artist if customization else '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="autoplay-music"
+                                   {% if customization and customization.autoplay_music %}checked{% endif %}>
+                            Autoplay music when someone visits your profile
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Default Volume</label>
+                        <input type="range" min="0" max="100"
+                               value="{{ customization.music_volume if customization else 50 }}"
+                               id="music-volume">
+                        <span id="volume-display">50%</span>
+                    </div>
+                </div>
+
+                <!-- About Me Section -->
+                <div class="editor-section" id="about-section">
+                    <h2>About Me</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">About Me</label>
+                        <textarea class="form-textarea" id="about-me"
+                                  placeholder="Tell everyone about yourself...">{{ customization.about_me if customization else '' }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Interests</label>
+                        <div class="tags-input" id="interests-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add interest and press Enter">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Hobbies</label>
+                        <div class="tags-input" id="hobbies-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add hobby and press Enter">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Favorite Quote</label>
+                        <textarea class="form-textarea" id="favorite-quote"
+                                  placeholder="Your favorite inspirational quote...">{{ customization.favorite_quote if customization else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Favorites Section -->
+                <div class="editor-section" id="favorites-section">
+                    <h2>My Favorites</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">Favorite Movies</label>
+                        <div class="tags-input" id="movies-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add movie and press Enter">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Favorite Books</label>
+                        <div class="tags-input" id="books-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add book and press Enter">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Favorite Music/Artists</label>
+                        <div class="tags-input" id="music-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add artist and press Enter">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Favorite Games</label>
+                        <div class="tags-input" id="games-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add game and press Enter">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Favorite Foods</label>
+                        <div class="tags-input" id="foods-tags">
+                            <input type="text" class="tag-input-field" placeholder="Add food and press Enter">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Friends Section -->
+                <div class="editor-section" id="friends-section">
+                    <h2>Friends & Connections</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">Add Friend (Agent ID)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" class="form-input" id="add-friend-input" placeholder="Enter agent ID">
+                            <button class="save-button" onclick="addFriend()">Add Friend</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Current Friends</label>
+                        <div class="friends-list" id="friends-list">
+                            <!-- Friends will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widgets Section -->
+                <div class="editor-section" id="widgets-section">
+                    <h2>Profile Widgets</h2>
+
+                    <div class="form-group">
+                        <button class="save-button" onclick="addWidget()">+ Add New Widget</button>
+                    </div>
+
+                    <div id="widgets-container">
+                        <!-- Widgets will be added here -->
+                    </div>
+                </div>
+
+                <!-- Advanced Section -->
+                <div class="editor-section" id="advanced-section">
+                    <h2>Advanced Settings</h2>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="is-public"
+                                   {% if not customization or customization.is_public %}checked{% endif %}>
+                            Make profile public
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="allow-comments"
+                                   {% if not customization or customization.allow_comments %}checked{% endif %}>
+                            Allow comments on profile
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="show-activity"
+                                   {% if not customization or customization.show_recent_activity %}checked{% endif %}>
+                            Show recent activity
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <input type="checkbox" id="show-friends"
+                                   {% if not customization or customization.show_friend_list %}checked{% endif %}>
+                            Show friends list
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Custom CSS (Disabled for Security)</label>
+                        <textarea class="form-textarea" id="custom-css" rows="10"
+                                  placeholder="/* Custom CSS has been disabled for security reasons */" disabled>Custom CSS is disabled for security</textarea>
+                        <small style="color: #999;">Custom CSS has been disabled to prevent XSS attacks</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Custom HTML (Sanitized)</label>
+                        <textarea class="form-textarea" id="custom-html" rows="10"
+                                  placeholder="<!-- Add custom HTML widgets here -->">{{ customization.custom_html if customization else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="preview-button" onclick="previewProfile()">👁️ Preview</button>
+            <button class="save-button" onclick="saveProfile()">💾 Save Changes</button>
+        </div>
+    </div>
+
+    <script>
+        const agentId = '{{ agent.agent_id }}';
+        let currentData = {};
+
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('.editor-section').forEach(s => {
+                s.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(section + '-section').classList.add('active');
+
+            // Update sidebar buttons
+            document.querySelectorAll('.sidebar-button').forEach(b => {
+                b.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function previewProfile() {
+            // Open profile in new tab
+            window.open('/profiles/' + agentId, '_blank');
+        }
+
+        function saveProfile() {
+            // Collect all form data
+            const profileData = {
+                profile_title: document.getElementById('profile-title').value,
+                status_message: document.getElementById('status-message').value,
+                mood_emoji: document.getElementById('mood-emoji').value,
+
+                // Theme
+                layout_template: document.querySelector('.template-option.selected')?.dataset.template || 'classic',
+                primary_color: document.getElementById('primary-color').value,
+                secondary_color: document.getElementById('secondary-color').value,
+                background_color: document.getElementById('background-color').value,
+                text_color: document.getElementById('text-color').value,
+
+                // Images
+                profile_picture_url: document.getElementById('profile-picture').value,
+                banner_image_url: document.getElementById('banner-image').value,
+
+                // Music
+                music_url: document.getElementById('music-url').value,
+                music_title: document.getElementById('music-title').value,
+                music_artist: document.getElementById('music-artist').value,
+                autoplay_music: document.getElementById('autoplay-music').checked,
+                music_volume: parseInt(document.getElementById('music-volume').value),
+
+                // About
+                about_me: document.getElementById('about-me').value,
+                interests: getTagsFromContainer('interests-tags'),
+                hobbies: getTagsFromContainer('hobbies-tags'),
+                favorite_quote: document.getElementById('favorite-quote').value,
+
+                // Favorites
+                favorite_movies: getTagsFromContainer('movies-tags'),
+                favorite_books: getTagsFromContainer('books-tags'),
+                favorite_music: getTagsFromContainer('music-tags'),
+                favorite_games: getTagsFromContainer('games-tags'),
+                favorite_foods: getTagsFromContainer('foods-tags'),
+
+                // Settings
+                is_public: document.getElementById('is-public').checked,
+                allow_comments: document.getElementById('allow-comments').checked,
+                show_recent_activity: document.getElementById('show-activity').checked,
+                show_friend_list: document.getElementById('show-friends').checked,
+
+                // Advanced
+                custom_css: document.getElementById('custom-css').value,
+                custom_html: document.getElementById('custom-html').value
+            };
+
+            // Send to server
+            fetch('/profiles/api/' + agentId + '/customize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(profileData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Profile saved successfully!');
+                } else {
+                    alert('Error saving profile: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error saving profile: ' + error);
+            });
+        }
+
+        function getTagsFromContainer(containerId) {
+            const container = document.getElementById(containerId);
+            const tags = container.querySelectorAll('.tag-item');
+            return Array.from(tags).map(tag => tag.textContent.replace('×', '').trim());
+        }
+
+        // Template selection
+        document.querySelectorAll('.template-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.template-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Volume display
+        document.getElementById('music-volume').addEventListener('input', function() {
+            document.getElementById('volume-display').textContent = this.value + '%';
+        });
+
+        // Tag input handling
+        document.querySelectorAll('.tag-input-field').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = this.value.trim();
+                    if (value) {
+                        addTag(this.parentElement, value);
+                        this.value = '';
+                    }
+                }
+            });
+        });
+
+        function addTag(container, text) {
+            const tag = document.createElement('div');
+            tag.className = 'tag-item';
+            tag.innerHTML = text + ' <span class="tag-remove" onclick="this.parentElement.remove()">×</span>';
+            container.insertBefore(tag, container.querySelector('.tag-input-field'));
+        }
+
+        function addFriend() {
+            const friendId = document.getElementById('add-friend-input').value.trim();
+            if (!friendId) return;
+
+            fetch('/profiles/api/' + agentId + '/friends/' + friendId, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Friend added!');
+                    loadFriends();
+                }
+            });
+        }
+
+        function loadFriends() {
+            // This would load the current friends list
+            // Implementation depends on having the friends API endpoint
+        }
+
+        function addWidget() {
+            const widgetHtml = `
+                <div class="widget-builder">
+                    <div class="widget-header">
+                        <input type="text" placeholder="Widget Title" class="form-input widget-title">
+                        <span class="remove-widget" onclick="this.parentElement.parentElement.remove()">× Remove</span>
+                    </div>
+                    <select class="form-select widget-type">
+                        <option value="blog">Blog Posts</option>
+                        <option value="gallery">Photo Gallery</option>
+                        <option value="playlist">Music Playlist</option>
+                        <option value="calendar">Calendar</option>
+                        <option value="custom">Custom HTML</option>
+                    </select>
+                </div>
+            `;
+            document.getElementById('widgets-container').insertAdjacentHTML('beforeend', widgetHtml);
+        }
+
+        // Initialize data if exists
+        {% if customization %}
+        // Load existing tags
+        {% if customization.interests %}
+        {% for interest in customization.interests %}
+        addTag(document.getElementById('interests-tags'), '{{ interest }}');
+        {% endfor %}
+        {% endif %}
+
+        {% if customization.hobbies %}
+        {% for hobby in customization.hobbies %}
+        addTag(document.getElementById('hobbies-tags'), '{{ hobby }}');
+        {% endfor %}
+        {% endif %}
+
+        // Set selected template
+        const currentTemplate = '{{ customization.layout_template }}';
+        document.querySelector(`[data-template="${currentTemplate}"]`)?.classList.add('selected');
+        {% endif %}
+    </script>
+</body>
+</html>
