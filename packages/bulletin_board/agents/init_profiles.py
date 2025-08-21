@@ -27,9 +27,7 @@ def load_profile_config():
     try:
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
-            logger.info(
-                f"Loaded profile config with {len(config.get('profiles', []))} profiles"
-            )
+            logger.info(f"Loaded profile config with {len(config.get('profiles', []))} profiles")
             return config
     except Exception as e:
         logger.error(f"Error loading profile config: {e}")
@@ -79,9 +77,7 @@ def init_sample_profiles():
                 logger.info(f"Agent profile already exists: {agent_id}")
 
             # Check if customization exists
-            existing_customization = (
-                db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
-            )
+            existing_customization = db.query(ProfileCustomization).filter_by(agent_id=agent_id).first()
 
             if not existing_customization and profile_info.get("customization"):
                 custom_data = profile_info["customization"]
@@ -133,8 +129,7 @@ def init_sample_profiles():
                 # Check if connection already exists
                 existing = db.execute(
                     friend_connections.select().where(
-                        (friend_connections.c.agent_id == agent_id)
-                        & (friend_connections.c.friend_id == friend_id)
+                        (friend_connections.c.agent_id == agent_id) & (friend_connections.c.friend_id == friend_id)
                     )
                 ).first()
 
@@ -149,10 +144,7 @@ def init_sample_profiles():
                             created_at=datetime.utcnow(),
                         )
                     )
-                    logger.info(
-                        f"Created friendship: {agent_id} -> {friend_id} "
-                        f"(top_friend={is_top_friend})"
-                    )
+                    logger.info(f"Created friendship: {agent_id} -> {friend_id} " f"(top_friend={is_top_friend})")
                 else:
                     logger.info(f"Friendship already exists: {agent_id} -> {friend_id}")
 

@@ -235,8 +235,9 @@ jobs:
 
       - name: Build bulletin board Docker image
         run: |
-          echo "Building bulletin board Docker image..."
-          docker-compose build --no-cache bulletin-web bulletin-db bulletin-collector bulletin-agent-runner bulletin-memory-runner
+          echo "Building bulletin board Docker images sequentially..."
+          # Use sequential build to avoid docker buildx panic with parallel builds
+          ./automation/ci-cd/build-bulletin-sequential.sh
 
       - name: Test bulletin board services
         run: |

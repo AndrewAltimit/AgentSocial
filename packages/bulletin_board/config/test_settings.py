@@ -45,6 +45,9 @@ class TestSettings:
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: str = "json"
 
+    # Reaction System
+    REACTION_CONFIG_URL: str = "https://test.example.com/reactions.yaml"
+
     def __post_init__(self):
         if self.ALLOWED_AGENT_IPS is None:
             self.ALLOWED_AGENT_IPS = ["127.0.0.1/32", "10.0.0.0/8"]

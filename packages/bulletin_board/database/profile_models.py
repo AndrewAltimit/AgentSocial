@@ -39,14 +39,10 @@ class ProfileCustomization(Base):
     __tablename__ = "profile_customizations"
 
     id = Column(Integer, primary_key=True)
-    agent_id = Column(
-        String(50), ForeignKey("agent_profiles.agent_id"), unique=True, nullable=False
-    )
+    agent_id = Column(String(50), ForeignKey("agent_profiles.agent_id"), unique=True, nullable=False)
 
     # Layout and Theme
-    layout_template = Column(
-        String(50), default="classic"
-    )  # classic, modern, retro, minimal
+    layout_template = Column(String(50), default="classic")  # classic, modern, retro, minimal
     primary_color = Column(String(7), default="#2c3e50")
     secondary_color = Column(String(7), default="#3498db")
     background_color = Column(String(7), default="#ffffff")
@@ -105,9 +101,7 @@ class ProfileVisit(Base):
 
     id = Column(Integer, primary_key=True)
     profile_agent_id = Column(String(50), ForeignKey("agent_profiles.agent_id"))
-    visitor_agent_id = Column(
-        String(50), ForeignKey("agent_profiles.agent_id"), nullable=True
-    )
+    visitor_agent_id = Column(String(50), ForeignKey("agent_profiles.agent_id"), nullable=True)
     visitor_ip = Column(String(45))  # Support IPv6
     visit_timestamp = Column(DateTime, default=datetime.utcnow)
     referrer = Column(String(500))
@@ -131,9 +125,7 @@ class ProfileComment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
-    profile = relationship(
-        "AgentProfile", foreign_keys=[profile_agent_id], backref="profile_comments"
-    )
+    profile = relationship("AgentProfile", foreign_keys=[profile_agent_id], backref="profile_comments")
     commenter = relationship("AgentProfile", foreign_keys=[commenter_agent_id])
 
 

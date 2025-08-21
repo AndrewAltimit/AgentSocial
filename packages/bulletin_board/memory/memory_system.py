@@ -67,9 +67,7 @@ class FileMemorySystem:
 
     def __init__(self, base_path: Optional[str] = None):
         if base_path is None:
-            base_path = os.environ.get(
-                "BULLETIN_BOARD_MEMORY_PATH", "/var/lib/bulletin_board/memories"
-            )
+            base_path = os.environ.get("BULLETIN_BOARD_MEMORY_PATH", "/var/lib/bulletin_board/memories")
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
@@ -200,14 +198,10 @@ class FileMemorySystem:
             return memories
 
         except Exception as e:
-            logger.error(
-                "Memory search failed", agent_id=agent_id, query=query, error=str(e)
-            )
+            logger.error("Memory search failed", agent_id=agent_id, query=query, error=str(e))
             return []
 
-    def _parse_grep_output(
-        self, output: str, memory_type: Optional[str]
-    ) -> List[Memory]:
+    def _parse_grep_output(self, output: str, memory_type: Optional[str]) -> List[Memory]:
         """Parse grep output back into Memory objects"""
         memories = []
         current_memory: Dict[str, Any] = {}
@@ -334,35 +328,21 @@ class FileMemorySystem:
         title = title_match.group(1) if title_match else "Unknown"
 
         timestamp_match = re.search(r"\*\*Timestamp\*\*: (.+)", content)
-        timestamp = (
-            timestamp_match.group(1) if timestamp_match else datetime.now().isoformat()
-        )
+        timestamp = timestamp_match.group(1) if timestamp_match else datetime.now().isoformat()
 
         participants_match = re.search(r"\*\*Participants\*\*: (.+)", content)
-        participants = (
-            [p.strip() for p in participants_match.group(1).split(",")]
-            if participants_match
-            else []
-        )
+        participants = [p.strip() for p in participants_match.group(1).split(",")] if participants_match else []
 
-        description_match = re.search(
-            r"## Description\n\n(.+?)\n\n##", content, re.DOTALL
-        )
+        description_match = re.search(r"## Description\n\n(.+?)\n\n##", content, re.DOTALL)
         description = description_match.group(1) if description_match else ""
 
         outcome_match = re.search(r"## Outcome\n\n(.+?)\n\n##", content, re.DOTALL)
         outcome = outcome_match.group(1) if outcome_match else ""
 
-        lessons_match = re.search(
-            r"## Lessons Learned\n\n(.+?)\n\n\*\*", content, re.DOTALL
-        )
+        lessons_match = re.search(r"## Lessons Learned\n\n(.+?)\n\n\*\*", content, re.DOTALL)
         lessons = []
         if lessons_match:
-            lessons = [
-                line.strip("- ")
-                for line in lessons_match.group(1).split("\n")
-                if line.strip()
-            ]
+            lessons = [line.strip("- ") for line in lessons_match.group(1).split("\n") if line.strip()]
 
         ref_count_match = re.search(r"\*\*Reference Count\*\*: (\d+)", content)
         ref_count = int(ref_count_match.group(1)) if ref_count_match else 0
@@ -417,11 +397,7 @@ class FileMemorySystem:
             relationship.negative_interactions += 1
 
         # Calculate new affinity
-        current_affinity = (
-            relationship.affinity_history[-1][1]
-            if relationship.affinity_history
-            else 0.0
-        )
+        current_affinity = relationship.affinity_history[-1][1] if relationship.affinity_history else 0.0
         # Affinity changes slowly over time
         affinity_change = interaction_sentiment * 0.1
         new_affinity = max(-1.0, min(1.0, current_affinity + affinity_change))
@@ -452,9 +428,7 @@ class FileMemorySystem:
             new_affinity=new_affinity,
         )
 
-    def get_relationship(
-        self, agent_id: str, other_agent_id: str
-    ) -> Optional[RelationshipMemory]:
+    def get_relationship(self, agent_id: str, other_agent_id: str) -> Optional[RelationshipMemory]:
         """Get relationship data between two agents"""
         rel_id = "_".join(sorted([agent_id, other_agent_id]))
         rel_file = self.relationships_dir / f"{rel_id}.json"
@@ -467,9 +441,7 @@ class FileMemorySystem:
 
         return RelationshipMemory(**rel_data)
 
-    def find_similar_situations(
-        self, agent_id: str, current_context: str, limit: int = 5
-    ) -> List[Memory]:
+    def find_similar_situations(self, agent_id: str, current_context: str, limit: int = 5) -> List[Memory]:
         """Find similar past situations using grep with multiple search terms"""
         # Extract key terms from context
         key_terms = self._extract_key_terms(current_context)

@@ -485,10 +485,15 @@ class TestEndToEndScenarios:
 
                 data = json.loads(response.data)
                 assert data["title"] == "Breaking: New AI Model Released"
-                assert len(data["comments"]) == 2
+                # With nested structure, only top-level comment appears at root
+                assert len(data["comments"]) == 1
 
-                # Verify comment thread
-                comments = sorted(data["comments"], key=lambda x: x["created_at"])
-                assert "significant breakthrough" in comments[0]["content"]
-                assert "implications are fascinating" in comments[1]["content"]
-                assert comments[1].get("parent_id") == comments[0]["id"]
+                # Verify comment thread - first comment at top level
+                first_comment = data["comments"][0]
+                assert "significant breakthrough" in first_comment["content"]
+
+                # Second comment is nested as a reply
+                assert len(first_comment["replies"]) == 1
+                reply = first_comment["replies"][0]
+                assert "implications are fascinating" in reply["content"]
+                assert reply.get("parent_id") == first_comment["id"]
