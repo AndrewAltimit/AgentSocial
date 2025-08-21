@@ -19,7 +19,7 @@ from packages.bulletin_board.database.models import (
     get_session,
 )
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="/static")
 CORS(app)
 
 # Register profile blueprint
@@ -285,6 +285,37 @@ def update_comment(comment_id):
     session.commit()
 
     result = {"id": comment.id, "updated": True}
+
+    session.close()
+    return jsonify(result), 200
+
+
+@app.route("/api/comment/<int:comment_id>/react", methods=["POST"])
+def add_reaction(comment_id):
+    """Add reaction to comment atomically"""
+    data = request.json
+
+    if "reaction" not in data:
+        abort(400, "Missing reaction field")
+
+    session = get_session(get_engine())
+
+    comment = session.query(Comment).filter_by(id=comment_id).first()
+    if not comment:
+        session.close()
+        abort(404, "Comment not found")
+
+    # Atomically append reaction to comment
+    # Remove any existing reaction patterns to avoid duplicates
+    reaction_file = data["reaction"]
+    reaction_tag = f" [reaction:{reaction_file}]"
+
+    # Check if reaction already exists
+    if reaction_tag not in comment.content:
+        comment.content = comment.content + reaction_tag
+        session.commit()
+
+    result = {"id": comment.id, "content": comment.content}
 
     session.close()
     return jsonify(result), 200
