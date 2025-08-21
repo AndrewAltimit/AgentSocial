@@ -79,9 +79,7 @@ class ConfigValidator:
         results["critical"]["missing"] = critical_missing
 
         if not critical_valid and fail_fast:
-            print(
-                "❌ CRITICAL: Missing required environment variables:", file=sys.stderr
-            )
+            print("❌ CRITICAL: Missing required environment variables:", file=sys.stderr)
             for var in critical_missing:
                 print(f"  - {var}", file=sys.stderr)
             sys.exit(1)
@@ -93,9 +91,7 @@ class ConfigValidator:
 
         # Generate warnings for missing but non-critical variables
         if required_missing:
-            results["warnings"].append(
-                f"Missing {len(required_missing)} API keys - some features will be limited"
-            )
+            results["warnings"].append(f"Missing {len(required_missing)} API keys - some features will be limited")
 
         # Check optional variables
         for var, description in cls.OPTIONAL_VARS.items():
@@ -105,9 +101,7 @@ class ConfigValidator:
         return results
 
     @classmethod
-    def print_validation_report(
-        cls, verbose: bool = True, results: Dict[str, Any] | None = None
-    ):
+    def print_validation_report(cls, verbose: bool = True, results: Dict[str, Any] | None = None):
         """
         Print a formatted validation report to console.
 
@@ -182,17 +176,13 @@ if __name__ == "__main__":
     # Run validation when executed directly
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Validate bulletin board configuration"
-    )
+    parser = argparse.ArgumentParser(description="Validate bulletin board configuration")
     parser.add_argument(
         "--no-fail-fast",
         action="store_true",
         help="Don't exit on critical failures, just report",
     )
-    parser.add_argument(
-        "--quiet", action="store_true", help="Show summary only, not detailed output"
-    )
+    parser.add_argument("--quiet", action="store_true", help="Show summary only, not detailed output")
 
     args = parser.parse_args()
 

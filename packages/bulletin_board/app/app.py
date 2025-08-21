@@ -1,6 +1,9 @@
 import ipaddress
+import random
 from datetime import datetime, timedelta
 
+import requests
+import yaml
 from flask import Flask, abort, jsonify, render_template, request
 from flask_cors import CORS
 from sqlalchemy import and_
@@ -99,15 +102,8 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
@@ -129,7 +125,7 @@ def get_posts():
 
 @app.route("/api/posts/<int:post_id>")
 def get_post(post_id):
-    """Get single post with comments"""
+    """Get single post with comments (nested tree structure)"""
     session = get_session(get_engine())
 
     post = session.query(Post).filter_by(id=post_id).first()
@@ -145,9 +141,7 @@ def get_post(post_id):
                 comment_dict = {
                     "id": comment.id,
                     "agent_id": comment.agent_id,
-                    "agent_name": (
-                        comment.agent.display_name if comment.agent else "Unknown"
-                    ),
+                    "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
                     "content": comment.content,
                     "created_at": comment.created_at.isoformat(),
                     "parent_id": comment.parent_comment_id,
@@ -174,6 +168,45 @@ def get_post(post_id):
     return jsonify(result)
 
 
+@app.route("/api/posts/<int:post_id>/flat")
+def get_post_flat(post_id):
+    """Get single post with comments (flat list for backward compatibility)"""
+    session = get_session(get_engine())
+
+    post = session.query(Post).filter_by(id=post_id).first()
+    if not post:
+        session.close()
+        abort(404)
+
+    # Build flat comment list (original format)
+    comments = []
+    for comment in post.comments:
+        comments.append(
+            {
+                "id": comment.id,
+                "agent_id": comment.agent_id,
+                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                "content": comment.content,
+                "created_at": comment.created_at.isoformat(),
+                "parent_id": comment.parent_comment_id,
+            }
+        )
+
+    result = {
+        "id": post.id,
+        "title": post.title,
+        "content": post.content,
+        "source": post.source,
+        "url": post.url,
+        "created_at": post.created_at.isoformat(),
+        "metadata": post.post_metadata,
+        "comments": comments,
+    }
+
+    session.close()
+    return jsonify(result)
+
+
 @app.route("/api/agent/comment", methods=["POST"])
 def create_comment():
     """Create new comment (internal network only)"""
@@ -191,14 +224,8 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    post = (
-        session.query(Post)
-        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
-        .first()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
 
     if not post:
         session.close()
@@ -221,20 +248,85 @@ def create_comment():
     return jsonify(result), 201
 
 
+@app.route("/api/comment/<int:comment_id>", methods=["PUT"])
+def update_comment(comment_id):
+    """Update comment content (for adding reactions)"""
+    data = request.json
+
+    if "content" not in data:
+        abort(400, "Missing content field")
+
+    session = get_session(get_engine())
+
+    comment = session.query(Comment).filter_by(id=comment_id).first()
+    if not comment:
+        session.close()
+        abort(404, "Comment not found")
+
+    # Update comment content
+    comment.content = data["content"]
+    session.commit()
+
+    result = {"id": comment.id, "updated": True}
+
+    session.close()
+    return jsonify(result), 200
+
+
+@app.route("/api/comment", methods=["POST"])
+def create_public_comment():
+    """Create comment from public UI"""
+    data = request.json
+
+    if not all(k in data for k in ["post_id", "content"]):
+        abort(400, "Missing required fields")
+
+    session = get_session(get_engine())
+
+    # Get a random active agent for demo purposes
+    agents = session.query(AgentProfile).filter_by(is_active=True).all()
+    if not agents:
+        session.close()
+        abort(503, "No active agents available")
+
+    # Select random agent
+    agent = random.choice(agents)
+
+    # Verify post exists
+    post = session.query(Post).filter_by(id=data["post_id"]).first()
+    if not post:
+        session.close()
+        abort(404, "Post not found")
+
+    # Create comment
+    comment = Comment(
+        post_id=data["post_id"],
+        agent_id=agent.agent_id,
+        content=data["content"],
+        parent_comment_id=data.get("parent_comment_id"),
+    )
+
+    session.add(comment)
+    session.commit()
+
+    result = {
+        "id": comment.id,
+        "agent_id": agent.agent_id,
+        "agent_name": agent.display_name,
+        "created_at": comment.created_at.isoformat(),
+    }
+
+    session.close()
+    return jsonify(result), 201
+
+
 @app.route("/api/agent/posts/recent")
 def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
@@ -286,40 +378,62 @@ def get_agents():
     return jsonify(result)
 
 
+# Cache for reactions with TTL
+_reactions_cache = {"data": None, "timestamp": None}
+
+
 @app.route("/api/reactions")
 def get_reactions():
-    """Get available reaction images"""
-    # This is the list of reaction images available in the Media repository
-    reactions = [
-        {"name": "typing", "file": "miku_typing.webp", "category": "working"},
-        {"name": "confused", "file": "confused.gif", "category": "emotions"},
-        {"name": "teamwork", "file": "teamwork.webp", "category": "success"},
-        {"name": "excited", "file": "felix.webp", "category": "emotions"},
-        {"name": "shrug", "file": "miku_shrug.png", "category": "uncertain"},
-        {"name": "thinking", "file": "thinking_foxgirl.png", "category": "thinking"},
-        {
-            "name": "absolutely_right",
-            "file": "youre_absolutely_right.webp",
-            "category": "agreement",
-        },
-        {"name": "happy", "file": "aqua_happy.png", "category": "emotions"},
-        {"name": "annoyed", "file": "kagami_annoyed.png", "category": "emotions"},
-        {"name": "miku_confused", "file": "miku_confused.png", "category": "uncertain"},
-        {"name": "laughing", "file": "miku_laughing.png", "category": "emotions"},
-        {"name": "facepalm", "file": "kanna_facepalm.png", "category": "emotions"},
-        {"name": "not_amused", "file": "noire_not_amused.png", "category": "emotions"},
-        {"name": "thinking_girl", "file": "thinking_girl.png", "category": "thinking"},
-        {"name": "studious", "file": "hifumi_studious.png", "category": "working"},
-        {"name": "konata_typing", "file": "konata_typing.webp", "category": "working"},
-        {"name": "yuki_typing", "file": "yuki_typing.webp", "category": "working"},
-    ]
+    """Get available reaction images from remote YAML"""
+    import time
 
-    return jsonify(
-        {
-            "reactions": reactions,
-            "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
-        }
-    )
+    # Check cache (5 minute TTL)
+    current_time = time.time()
+    if _reactions_cache["data"] and _reactions_cache["timestamp"]:
+        if current_time - _reactions_cache["timestamp"] < 300:  # 5 minutes
+            return jsonify(_reactions_cache["data"])
+
+    # Fetch from remote YAML
+    try:
+        response = requests.get(
+            "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/config.yaml",
+            timeout=5,
+        )
+        if response.status_code == 200:
+            config = yaml.safe_load(response.text)
+            reactions = []
+            for reaction in config.get("reactions", []):
+                reactions.append(
+                    {
+                        "name": reaction.get("name", ""),
+                        "file": reaction.get("file", ""),
+                        "category": reaction.get("category", "uncategorized"),
+                    }
+                )
+
+            result = {
+                "reactions": reactions,
+                "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
+            }
+
+            # Update cache
+            _reactions_cache["data"] = result
+            _reactions_cache["timestamp"] = current_time
+
+            return jsonify(result)
+    except Exception as e:
+        app.logger.error(f"Failed to fetch reactions: {e}")
+
+    # Fallback to a basic set if remote fetch fails
+    fallback = {
+        "reactions": [
+            {"name": "typing", "file": "miku_typing.webp", "category": "working"},
+            {"name": "confused", "file": "confused.gif", "category": "emotions"},
+            {"name": "teamwork", "file": "teamwork.webp", "category": "success"},
+        ],
+        "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
+    }
+    return jsonify(fallback)
 
 
 if __name__ == "__main__":

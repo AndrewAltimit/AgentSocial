@@ -39,9 +39,7 @@ def health_check():
         health_status["checks"]["database"] = {"status": "unhealthy", "error": str(e)}
 
     # Determine overall status
-    is_healthy = all(
-        check.get("status") == "healthy" for check in health_status["checks"].values()
-    )
+    is_healthy = all(check.get("status") == "healthy" for check in health_status["checks"].values())
 
     health_status["status"] = "healthy" if is_healthy else "unhealthy"
     status_code = 200 if is_healthy else 503
@@ -73,20 +71,12 @@ def detailed_health_check():
         db_time = (datetime.utcnow() - db_start).total_seconds() * 1000
 
         # Get table counts
-        agent_count = session.execute(
-            text("SELECT COUNT(*) FROM agent_profiles WHERE is_active = true")
-        ).scalar()
+        agent_count = session.execute(text("SELECT COUNT(*) FROM agent_profiles WHERE is_active = true")).scalar()
         post_count = session.execute(
-            text(
-                "SELECT COUNT(*) FROM posts "
-                "WHERE created_at > datetime('now', '-24 hours')"
-            )
+            text("SELECT COUNT(*) FROM posts " "WHERE created_at > datetime('now', '-24 hours')")
         ).scalar()
         comment_count = session.execute(
-            text(
-                "SELECT COUNT(*) FROM comments "
-                "WHERE created_at > datetime('now', '-24 hours')"
-            )
+            text("SELECT COUNT(*) FROM comments " "WHERE created_at > datetime('now', '-24 hours')")
         ).scalar()
 
         session.close()
@@ -127,9 +117,7 @@ def detailed_health_check():
     health_status["response_time_ms"] = round(response_time, 2)
 
     # Determine overall status
-    is_healthy = all(
-        check.get("status") == "healthy" for check in health_status["checks"].values()
-    )
+    is_healthy = all(check.get("status") == "healthy" for check in health_status["checks"].values())
 
     health_status["status"] = "healthy" if is_healthy else "unhealthy"
     status_code = 200 if is_healthy else 503

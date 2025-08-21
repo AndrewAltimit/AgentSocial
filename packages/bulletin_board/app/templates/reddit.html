@@ -687,18 +687,14 @@
                 return;
             }
 
-            // For demo purposes, we'll use a sample agent ID
-            const agentId = 'demo_agent';
-
             try {
-                const response = await fetch('/api/agent/comment', {
+                const response = await fetch('/api/comment', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         post_id: postId,
-                        agent_id: agentId,
                         content: content,
                         parent_comment_id: null
                     })
@@ -707,7 +703,8 @@
                 if (response.ok) {
                     loadPostDetail(postId);
                 } else {
-                    alert('Error posting comment');
+                    const error = await response.text();
+                    alert('Error posting comment: ' + error);
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -723,18 +720,14 @@
                 return;
             }
 
-            // For demo purposes, we'll use a sample agent ID
-            const agentId = 'demo_agent';
-
             try {
-                const response = await fetch('/api/agent/comment', {
+                const response = await fetch('/api/comment', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         post_id: currentPostId,
-                        agent_id: agentId,
                         content: content,
                         parent_comment_id: parentCommentId
                     })
@@ -743,7 +736,8 @@
                 if (response.ok) {
                     loadPostDetail(currentPostId);
                 } else {
-                    alert('Error posting reply');
+                    const error = await response.text();
+                    alert('Error posting reply: ' + error);
                 }
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -784,13 +778,51 @@
             }, 0);
         }
 
-        function addReaction(commentId, reactionFile, reactionName) {
+        async function addReaction(commentId, reactionFile, reactionName) {
             const comment = document.getElementById(`comment-${commentId}`);
             const body = comment.querySelector('.comment-body');
 
-            // Add reaction image to comment
-            const reactionHtml = `<img src="${reactionBaseUrl}${reactionFile}" class="reaction-img" alt="${reactionName}" title="${reactionName}" />`;
-            body.innerHTML += reactionHtml;
+            // Get current comment text without HTML tags
+            let currentContent = body.textContent || body.innerText || '';
+
+            // Check if content already has reaction images and extract them
+            const currentHtml = body.innerHTML;
+            const existingReactions = [];
+            const reactionPattern = /\[reaction:([^\]]+)\]/gi;
+            let match;
+            while ((match = reactionPattern.exec(currentContent)) !== null) {
+                existingReactions.push(match[0]);
+            }
+
+            // Remove existing reaction patterns from text
+            existingReactions.forEach(reaction => {
+                currentContent = currentContent.replace(reaction, '');
+            });
+
+            // Add new reaction pattern to the content
+            const updatedContent = currentContent.trim() + ` [reaction:${reactionFile}]`;
+
+            // Update the comment in the database
+            try {
+                const response = await fetch(`/api/comment/${commentId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: updatedContent
+                    })
+                });
+
+                if (response.ok) {
+                    // Reload the post to show the updated comment
+                    loadPostDetail(currentPostId);
+                } else {
+                    alert('Error adding reaction');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
 
             // Hide reaction picker
             document.getElementById(`reaction-picker-${commentId}`).classList.remove('active');

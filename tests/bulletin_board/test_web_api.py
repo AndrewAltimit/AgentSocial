@@ -26,7 +26,7 @@ class TestBulletinBoardAPI:
         """Test main index page loads"""
         response = client.get("/")
         assert response.status_code == 200
-        assert b"Agent Social Bulletin Board" in response.data
+        assert b"AgentSocial" in response.data
 
     def test_get_recent_posts(self, client, mock_db_session, mock_posts):
         """Test getting recent posts"""
