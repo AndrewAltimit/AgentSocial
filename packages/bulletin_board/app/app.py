@@ -102,8 +102,15 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
     result = []
     for post in posts:
@@ -141,7 +148,9 @@ def get_post(post_id):
                 comment_dict = {
                     "id": comment.id,
                     "agent_id": comment.agent_id,
-                    "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                    "agent_name": (
+                        comment.agent.display_name if comment.agent else "Unknown"
+                    ),
                     "content": comment.content,
                     "created_at": comment.created_at.isoformat(),
                     "parent_id": comment.parent_comment_id,
@@ -185,7 +194,9 @@ def get_post_flat(post_id):
             {
                 "id": comment.id,
                 "agent_id": comment.agent_id,
-                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                "agent_name": (
+                    comment.agent.display_name if comment.agent else "Unknown"
+                ),
                 "content": comment.content,
                 "created_at": comment.created_at.isoformat(),
                 "parent_id": comment.parent_comment_id,
@@ -224,8 +235,14 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    post = (
+        session.query(Post)
+        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
+        .first()
+    )
 
     if not post:
         session.close()
@@ -325,8 +342,15 @@ def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
     result = []
     for post in posts:
@@ -379,6 +403,9 @@ def get_agents():
 
 
 # Cache for reactions with TTL
+# TODO: In production with multiple workers (e.g., Gunicorn), this in-memory cache
+# won't be shared between processes. Consider using Flask-Caching with a file or
+# Redis backend for process-safe caching.
 _reactions_cache = {"data": None, "timestamp": None}
 
 
@@ -395,34 +422,34 @@ def get_reactions():
 
     # Fetch from remote YAML
     try:
-        response = requests.get(
-            "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/config.yaml",
-            timeout=5,
-        )
-        if response.status_code == 200:
-            config = yaml.safe_load(response.text)
-            reactions = []
-            for reaction in config.get("reactions", []):
-                reactions.append(
-                    {
-                        "name": reaction.get("name", ""),
-                        "file": reaction.get("file", ""),
-                        "category": reaction.get("category", "uncategorized"),
-                    }
-                )
+        response = requests.get(Settings.REACTION_CONFIG_URL, timeout=5)
+        response.raise_for_status()  # Raise exception for bad status codes
 
-            result = {
-                "reactions": reactions,
-                "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
-            }
+        config = yaml.safe_load(response.text)
+        reactions = []
+        for reaction in config.get("reactions", []):
+            reactions.append(
+                {
+                    "name": reaction.get("name", ""),
+                    "file": reaction.get("file", ""),
+                    "category": reaction.get("category", "uncategorized"),
+                }
+            )
 
-            # Update cache
-            _reactions_cache["data"] = result
-            _reactions_cache["timestamp"] = current_time
+        result = {
+            "reactions": reactions,
+            "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
+        }
 
-            return jsonify(result)
-    except Exception as e:
-        app.logger.error(f"Failed to fetch reactions: {e}")
+        # Update cache
+        _reactions_cache["data"] = result
+        _reactions_cache["timestamp"] = current_time
+
+        return jsonify(result)
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Failed to fetch remote reactions: {e}")
+    except yaml.YAMLError as e:
+        app.logger.error(f"Failed to parse reactions YAML: {e}")
 
     # Fallback to a basic set if remote fetch fails
     fallback = {
