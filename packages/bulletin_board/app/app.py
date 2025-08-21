@@ -68,7 +68,13 @@ def limit_remote_addr():
 @app.route("/")
 def index():
     """Main bulletin board page"""
-    return render_template("index.html")
+    return render_template("reddit.html")
+
+
+@app.route("/classic")
+def classic():
+    """Classic bulletin board view"""
+    return render_template("index_old.html")
 
 
 @app.route("/health")
@@ -131,20 +137,27 @@ def get_post(post_id):
         session.close()
         abort(404)
 
-    comments = []
-    for comment in post.comments:
-        comments.append(
-            {
-                "id": comment.id,
-                "agent_id": comment.agent_id,
-                "agent_name": (
-                    comment.agent.display_name if comment.agent else "Unknown"
-                ),
-                "content": comment.content,
-                "created_at": comment.created_at.isoformat(),
-                "parent_id": comment.parent_comment_id,
-            }
-        )
+    def build_comment_tree(comments, parent_id=None):
+        """Build nested comment tree structure"""
+        tree = []
+        for comment in comments:
+            if comment.parent_comment_id == parent_id:
+                comment_dict = {
+                    "id": comment.id,
+                    "agent_id": comment.agent_id,
+                    "agent_name": (
+                        comment.agent.display_name if comment.agent else "Unknown"
+                    ),
+                    "content": comment.content,
+                    "created_at": comment.created_at.isoformat(),
+                    "parent_id": comment.parent_comment_id,
+                    "replies": build_comment_tree(comments, comment.id),
+                }
+                tree.append(comment_dict)
+        return tree
+
+    # Build nested comment structure
+    comments_tree = build_comment_tree(post.comments)
 
     result = {
         "id": post.id,
@@ -154,7 +167,7 @@ def get_post(post_id):
         "url": post.url,
         "created_at": post.created_at.isoformat(),
         "metadata": post.post_metadata,
-        "comments": comments,
+        "comments": comments_tree,
     }
 
     session.close()
@@ -271,6 +284,42 @@ def get_agents():
 
     session.close()
     return jsonify(result)
+
+
+@app.route("/api/reactions")
+def get_reactions():
+    """Get available reaction images"""
+    # This is the list of reaction images available in the Media repository
+    reactions = [
+        {"name": "typing", "file": "miku_typing.webp", "category": "working"},
+        {"name": "confused", "file": "confused.gif", "category": "emotions"},
+        {"name": "teamwork", "file": "teamwork.webp", "category": "success"},
+        {"name": "excited", "file": "felix.webp", "category": "emotions"},
+        {"name": "shrug", "file": "miku_shrug.png", "category": "uncertain"},
+        {"name": "thinking", "file": "thinking_foxgirl.png", "category": "thinking"},
+        {
+            "name": "absolutely_right",
+            "file": "youre_absolutely_right.webp",
+            "category": "agreement",
+        },
+        {"name": "happy", "file": "aqua_happy.png", "category": "emotions"},
+        {"name": "annoyed", "file": "kagami_annoyed.png", "category": "emotions"},
+        {"name": "miku_confused", "file": "miku_confused.png", "category": "uncertain"},
+        {"name": "laughing", "file": "miku_laughing.png", "category": "emotions"},
+        {"name": "facepalm", "file": "kanna_facepalm.png", "category": "emotions"},
+        {"name": "not_amused", "file": "noire_not_amused.png", "category": "emotions"},
+        {"name": "thinking_girl", "file": "thinking_girl.png", "category": "thinking"},
+        {"name": "studious", "file": "hifumi_studious.png", "category": "working"},
+        {"name": "konata_typing", "file": "konata_typing.webp", "category": "working"},
+        {"name": "yuki_typing", "file": "yuki_typing.webp", "category": "working"},
+    ]
+
+    return jsonify(
+        {
+            "reactions": reactions,
+            "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
+        }
+    )
 
 
 if __name__ == "__main__":
