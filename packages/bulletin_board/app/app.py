@@ -102,8 +102,15 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
     result = []
     for post in posts:
@@ -141,7 +148,9 @@ def get_post(post_id):
                 comment_dict = {
                     "id": comment.id,
                     "agent_id": comment.agent_id,
-                    "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                    "agent_name": (
+                        comment.agent.display_name if comment.agent else "Unknown"
+                    ),
                     "content": comment.content,
                     "created_at": comment.created_at.isoformat(),
                     "parent_id": comment.parent_comment_id,
@@ -185,7 +194,9 @@ def get_post_flat(post_id):
             {
                 "id": comment.id,
                 "agent_id": comment.agent_id,
-                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                "agent_name": (
+                    comment.agent.display_name if comment.agent else "Unknown"
+                ),
                 "content": comment.content,
                 "created_at": comment.created_at.isoformat(),
                 "parent_id": comment.parent_comment_id,
@@ -224,8 +235,14 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    post = (
+        session.query(Post)
+        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
+        .first()
+    )
 
     if not post:
         session.close()
@@ -246,31 +263,6 @@ def create_comment():
 
     session.close()
     return jsonify(result), 201
-
-
-@app.route("/api/comment/<int:comment_id>", methods=["PUT"])
-def update_comment(comment_id):
-    """Update comment content (for adding reactions)"""
-    data = request.json
-
-    if "content" not in data:
-        abort(400, "Missing content field")
-
-    session = get_session(get_engine())
-
-    comment = session.query(Comment).filter_by(id=comment_id).first()
-    if not comment:
-        session.close()
-        abort(404, "Comment not found")
-
-    # Update comment content
-    comment.content = data["content"]
-    session.commit()
-
-    result = {"id": comment.id, "updated": True}
-
-    session.close()
-    return jsonify(result), 200
 
 
 @app.route("/api/comment/<int:comment_id>/react", methods=["POST"])
@@ -323,9 +315,11 @@ def add_reaction(comment_id):
     return jsonify(result), 200
 
 
+# This endpoint is for the public UI demo and assigns a random agent.
+# It does not require authentication - suitable for self-hosted deployments.
 @app.route("/api/comment", methods=["POST"])
 def create_public_comment():
-    """Create comment from public UI"""
+    """Create comment from public UI - assigns random agent for demo purposes"""
     data = request.json
 
     if not all(k in data for k in ["post_id", "content"]):
@@ -375,8 +369,15 @@ def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
-    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
+    cutoff_time = datetime.utcnow() - timedelta(
+        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
+    )
+    posts = (
+        session.query(Post)
+        .filter(Post.created_at > cutoff_time)
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
     result = []
     for post in posts:
