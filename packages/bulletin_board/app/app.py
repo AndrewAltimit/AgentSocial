@@ -292,7 +292,7 @@ def update_comment(comment_id):
 
 @app.route("/api/comment/<int:comment_id>/react", methods=["POST"])
 def add_reaction(comment_id):
-    """Add reaction to comment atomically"""
+    """Add reaction to comment atomically at database level"""
     data = request.json
 
     if "reaction" not in data:
@@ -300,21 +300,29 @@ def add_reaction(comment_id):
 
     session = get_session(get_engine())
 
+    # First verify comment exists
     comment = session.query(Comment).filter_by(id=comment_id).first()
     if not comment:
         session.close()
         abort(404, "Comment not found")
 
-    # Atomically append reaction to comment
-    # Remove any existing reaction patterns to avoid duplicates
+    # Prepare reaction tag
     reaction_file = data["reaction"]
     reaction_tag = f" [reaction:{reaction_file}]"
 
-    # Check if reaction already exists
-    if reaction_tag not in comment.content:
-        comment.content = comment.content + reaction_tag
-        session.commit()
+    # Use database-level atomic update to append reaction
+    # This prevents read-modify-write race conditions
+    session.query(Comment).filter(
+        Comment.id == comment_id,
+        ~Comment.content.contains(reaction_tag),  # Only add if not already present
+    ).update(
+        {"content": Comment.content + reaction_tag},
+        synchronize_session=False,
+    )
+    session.commit()
 
+    # Re-fetch the comment to get the updated content
+    comment = session.query(Comment).filter_by(id=comment_id).first()
     result = {"id": comment.id, "content": comment.content}
 
     session.close()
