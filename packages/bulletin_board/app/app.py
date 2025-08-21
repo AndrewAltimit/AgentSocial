@@ -102,15 +102,8 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
@@ -148,9 +141,7 @@ def get_post(post_id):
                 comment_dict = {
                     "id": comment.id,
                     "agent_id": comment.agent_id,
-                    "agent_name": (
-                        comment.agent.display_name if comment.agent else "Unknown"
-                    ),
+                    "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
                     "content": comment.content,
                     "created_at": comment.created_at.isoformat(),
                     "parent_id": comment.parent_comment_id,
@@ -194,9 +185,7 @@ def get_post_flat(post_id):
             {
                 "id": comment.id,
                 "agent_id": comment.agent_id,
-                "agent_name": (
-                    comment.agent.display_name if comment.agent else "Unknown"
-                ),
+                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
                 "content": comment.content,
                 "created_at": comment.created_at.isoformat(),
                 "parent_id": comment.parent_comment_id,
@@ -235,14 +224,8 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    post = (
-        session.query(Post)
-        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
-        .first()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
 
     if not post:
         session.close()
@@ -292,7 +275,18 @@ def update_comment(comment_id):
 
 @app.route("/api/comment/<int:comment_id>/react", methods=["POST"])
 def add_reaction(comment_id):
-    """Add reaction to comment atomically at database level"""
+    """Add reaction to comment atomically at database level
+
+    TODO: Future improvement - Consider migrating to a normalized schema with a
+    dedicated reactions table (comment_id, agent_id, reaction_type, created_at).
+    This would enable:
+    - Analytics on reaction usage
+    - User-specific reaction removal
+    - Reaction history tracking
+    - More efficient queries for reaction counts
+
+    Current implementation uses text tags for simplicity and to avoid migrations.
+    """
     data = request.json
 
     if "reaction" not in data:
@@ -381,15 +375,8 @@ def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
@@ -441,23 +428,30 @@ def get_agents():
     return jsonify(result)
 
 
-# Cache for reactions with TTL
-# TODO: In production with multiple workers (e.g., Gunicorn), this in-memory cache
-# won't be shared between processes. Consider using Flask-Caching with a file or
-# Redis backend for process-safe caching.
-_reactions_cache = {"data": None, "timestamp": None}
-
-
 @app.route("/api/reactions")
 def get_reactions():
     """Get available reaction images from remote YAML"""
+    import json
+    import tempfile
     import time
+    from pathlib import Path
+
+    # Use file-based cache for process safety
+    cache_dir = Path(tempfile.gettempdir()) / "agentsocial_cache"
+    cache_dir.mkdir(exist_ok=True)
+    cache_file = cache_dir / "reactions_cache.json"
 
     # Check cache (5 minute TTL)
     current_time = time.time()
-    if _reactions_cache["data"] and _reactions_cache["timestamp"]:
-        if current_time - _reactions_cache["timestamp"] < 300:  # 5 minutes
-            return jsonify(_reactions_cache["data"])
+    if cache_file.exists():
+        try:
+            with open(cache_file, "r") as f:
+                cache_data = json.load(f)
+                if current_time - cache_data.get("timestamp", 0) < 300:  # 5 minutes
+                    return jsonify(cache_data.get("data"))
+        except (json.JSONDecodeError, IOError):
+            # Invalid cache, will refresh
+            pass
 
     # Fetch from remote YAML
     try:
@@ -480,9 +474,13 @@ def get_reactions():
             "base_url": "https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/",
         }
 
-        # Update cache
-        _reactions_cache["data"] = result
-        _reactions_cache["timestamp"] = current_time
+        # Update file-based cache
+        cache_data = {"data": result, "timestamp": current_time}
+        try:
+            with open(cache_file, "w") as f:
+                json.dump(cache_data, f)
+        except IOError as e:
+            app.logger.warning(f"Failed to write cache file: {e}")
 
         return jsonify(result)
     except requests.exceptions.RequestException as e:
