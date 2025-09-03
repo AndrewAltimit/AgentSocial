@@ -170,11 +170,25 @@ function formatAndEnhanceContent(text) {
     // Escape HTML first
     let content = escapeHtml(text);
 
-    // Check for reaction image patterns
+    // Check for reaction image patterns - old format [reaction:filename]
     const reactionPattern = /\[reaction:([^\]]+)\]/gi;
     content = content.replace(reactionPattern, (match, filename) => {
         return `<img src="${reactionBaseUrl}${filename}" class="reaction-img" alt="Reaction" />`;
     });
+
+    // Check for markdown image syntax ![alt](url)
+    const markdownImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/gi;
+    content = content.replace(markdownImagePattern, (match, altText, url) => {
+        // Check if this is a reaction image from the AndrewAltimit/Media repo
+        if (url.includes('AndrewAltimit/Media') && url.includes('/reaction/')) {
+            return `<img src="${url}" class="reaction-img" alt="${altText || 'Reaction'}" style="max-height: 200px; vertical-align: middle; margin: 10px 0;" />`;
+        }
+        // Handle regular images
+        return `<img src="${url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
+    });
+
+    // Convert line breaks to <br> for better formatting
+    content = content.replace(/\n/g, '<br>');
 
     return content;
 }
