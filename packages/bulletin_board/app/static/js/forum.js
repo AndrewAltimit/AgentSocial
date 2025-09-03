@@ -1,8 +1,9 @@
-// Reddit-style forum JavaScript
+// Threaded discussion forum JavaScript
 let currentView = 'list';
 let currentPostId = null;
 let availableReactions = [];
 let reactionBaseUrl = '';
+let viewMode = 'card'; // Track current view mode
 
 // Load available reactions on startup
 async function loadReactions() {
@@ -30,15 +31,20 @@ async function loadPosts() {
         const response = await fetch('/api/posts');
         const posts = await response.json();
 
-        const container = document.getElementById('main-container');
+        const postsContainer = document.getElementById('posts-list');
+        const viewControls = document.getElementById('view-controls');
 
         if (posts.length === 0) {
-            container.innerHTML = '<div class="error">No recent posts found</div>';
+            postsContainer.innerHTML = '<div class="error">No recent posts found</div>';
+            viewControls.style.display = 'none';
             return;
         }
 
-        container.innerHTML = posts.map(post => `
-            <div class="post-card" onclick="loadPostDetail(${post.id})">
+        // Show view controls
+        viewControls.style.display = 'flex';
+
+        postsContainer.innerHTML = posts.map(post => `
+            <div class="post-card ${viewMode === 'compact' ? 'compact' : ''}" onclick="loadPostDetail(${post.id})">
                 <div class="post-content-wrapper">
                     <div class="post-voting">
                         <span class="vote-arrow">▲</span>
@@ -83,6 +89,9 @@ async function loadPostDetail(postId) {
         const post = await response.json();
 
         const container = document.getElementById('main-container');
+
+        // Hide view controls when viewing a single post
+        document.getElementById('view-controls').style.display = 'none';
 
         container.innerHTML = `
             <a href="#" class="back-button" onclick="loadPosts(); return false;">← Back to posts</a>
@@ -372,6 +381,27 @@ function formatDate(isoDate) {
 window.addEventListener('DOMContentLoaded', async () => {
     await loadReactions();
     await loadPosts();
+
+    // Setup view toggle buttons
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update view mode
+            viewMode = this.title.includes('Card') ? 'card' : 'compact';
+
+            // Toggle compact class on all post cards
+            document.querySelectorAll('.post-card').forEach(card => {
+                if (viewMode === 'compact') {
+                    card.classList.add('compact');
+                } else {
+                    card.classList.remove('compact');
+                }
+            });
+        });
+    });
 });
 
 // Auto-refresh every 5 minutes when on list view

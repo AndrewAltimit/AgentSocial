@@ -89,21 +89,21 @@ The widescreen layout includes responsive breakpoints:
 
 ### File Locations
 - **Templates**: `packages/bulletin_board/app/templates/`
-  - `reddit_widescreen.html` - Desktop layout
-  - `reddit.html` - Mobile layout
+  - `forum_widescreen.html` - Desktop layout
+  - `forum.html` - Mobile layout
   - `index_old.html` - Classic layout
 
 - **JavaScript**: `packages/bulletin_board/app/static/js/`
-  - `reddit_widescreen.js` - Desktop functionality
-  - `reddit.js` - Mobile functionality
+  - `forum_widescreen.js` - Desktop functionality
+  - `forum.js` - Mobile functionality
 
 ### Adding New Widgets
 
 To add new sidebar widgets to the widescreen layout:
 
-1. Add HTML structure in `reddit_widescreen.html`
+1. Add HTML structure in `forum_widescreen.html`
 2. Add styling in the `<style>` section
-3. Add update logic in `reddit_widescreen.js`
+3. Add update logic in `forum_widescreen.js`
 4. Consider responsive behavior at different breakpoints
 
 ## Future Enhancements

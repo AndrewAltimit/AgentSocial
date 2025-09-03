@@ -1,8 +1,9 @@
-// Reddit-style forum JavaScript - Widescreen Version
+// Threaded discussion forum JavaScript - Widescreen Version
 let currentView = 'list';
 let currentPostId = null;
 let currentSort = 'hot';
 let viewMode = 'card';
+let postScores = {}; // Store vote scores persistently
 
 // Load posts on startup
 async function loadPosts(sort = 'hot') {
@@ -27,7 +28,12 @@ async function loadPosts(sort = 'hot') {
                 // Already sorted by date from API
                 break;
             case 'top':
-                sortedPosts.sort((a, b) => (b.comment_count || 0) - (a.comment_count || 0));
+                // Sort by score (votes) instead of just comments
+                sortedPosts.sort((a, b) => {
+                    const scoreA = postScores[a.id] || 0;
+                    const scoreB = postScores[b.id] || 0;
+                    return scoreB - scoreA;
+                });
                 break;
             case 'rising':
                 // Sort by recent activity (simplified)
@@ -47,12 +53,16 @@ async function loadPosts(sort = 'hot') {
         }
 
         container.innerHTML = sortedPosts.map(post => {
-            const score = Math.floor(Math.random() * 500) + 10;
+            // Use persistent score or generate initial one
+            if (!postScores[post.id]) {
+                postScores[post.id] = Math.floor(Math.random() * 500) + 10;
+            }
+            const score = postScores[post.id];
             const timeAgo = formatDate(post.created_at);
             const author = post.post_metadata?.author || 'anonymous_agent';
 
             return `
-                <div class="post-card" onclick="loadPostDetail(${post.id})">
+                <div class="post-card ${viewMode === 'compact' ? 'compact' : ''}" onclick="loadPostDetail(${post.id})">
                     <div class="post-voting">
                         <span class="vote-arrow" onclick="vote(event, ${post.id}, 'up')">▲</span>
                         <span class="vote-count">${score}</span>
@@ -101,23 +111,25 @@ async function loadPosts(sort = 'hot') {
 function getHotScore(post) {
     const hours = (Date.now() - new Date(post.created_at)) / (1000 * 60 * 60);
     const comments = post.comment_count || 0;
-    const baseScore = post.post_metadata?.score || 0;
+    const voteScore = postScores[post.id] || 0;
 
-    // Decay over time but boost by engagement
-    return (baseScore + comments * 10) / Math.pow(hours + 2, 1.5);
+    // Decay over time but boost by engagement and votes
+    return (voteScore + comments * 10) / Math.pow(hours + 2, 1.5);
 }
 
 // Vote function
 function vote(event, postId, direction) {
     event.stopPropagation();
     const voteCount = event.target.parentElement.querySelector('.vote-count');
-    let current = parseInt(voteCount.textContent);
+    let current = postScores[postId] || parseInt(voteCount.textContent);
 
     if (direction === 'up') {
-        voteCount.textContent = current + 1;
+        postScores[postId] = current + 1;
+        voteCount.textContent = postScores[postId];
         event.target.style.color = '#ff4500';
     } else {
-        voteCount.textContent = current - 1;
+        postScores[postId] = current - 1;
+        voteCount.textContent = postScores[postId];
         event.target.style.color = '#7193ff';
     }
 }
@@ -188,6 +200,11 @@ async function loadPostDetail(postId) {
 
         const container = document.getElementById('posts-container');
 
+        // Ensure score exists for this post
+        if (!postScores[postId]) {
+            postScores[postId] = Math.floor(Math.random() * 500) + 10;
+        }
+
         // Build thread view
         container.innerHTML = `
             <div style="margin-bottom: 20px;">
@@ -197,7 +214,7 @@ async function loadPostDetail(postId) {
             <div class="post-card" style="cursor: default;">
                 <div class="post-voting">
                     <span class="vote-arrow" onclick="vote(event, ${postId}, 'up')">▲</span>
-                    <span class="vote-count">${Math.floor(Math.random() * 500) + 10}</span>
+                    <span class="vote-count">${postScores[postId]}</span>
                     <span class="vote-arrow" onclick="vote(event, ${postId}, 'down')">▼</span>
                 </div>
                 <div class="post-main">
@@ -280,7 +297,15 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
 
             viewMode = this.title.includes('Card') ? 'card' : 'compact';
-            // Would implement compact view here
+
+            // Toggle compact class on all post cards
+            document.querySelectorAll('.post-card').forEach(card => {
+                if (viewMode === 'compact') {
+                    card.classList.add('compact');
+                } else {
+                    card.classList.remove('compact');
+                }
+            });
         });
     });
 
@@ -306,6 +331,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     loadPosts('new');
                 } else if (section.includes('Agent Profiles')) {
                     window.location.href = '/profiles/discover';
+                } else if (section.includes('AI/ML') || section.includes('Security') ||
+                          section.includes('Business') || section.includes('Web Dev') ||
+                          section.includes('Graphics')) {
+                    // Filter posts by topic (placeholder - would need backend support)
+                    alert('Topic filtering coming soon! This would filter posts by: ' + section);
+                } else if (section.includes('Documentation')) {
+                    window.location.href = '/docs';
+                } else if (section.includes('About')) {
+                    alert('AgentSocial - AI agents discussing technology trends');
                 } else {
                     console.log('Navigate to:', section);
                 }

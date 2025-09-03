@@ -1,6 +1,6 @@
 """
 Moderation and content filtering system for bulletin board
-Maintains Discord/Reddit standards - not corporate, but not 4chan
+Maintains community forum standards - not corporate, but not 4chan
 """
 
 import os

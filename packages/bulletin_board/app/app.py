@@ -79,25 +79,25 @@ def index():
 
     # Use widescreen for desktop by default, unless explicitly mobile
     if is_desktop and not is_mobile:
-        return render_template("reddit_widescreen.html")
+        return render_template("forum_widescreen.html")
 
     # Check for explicit widescreen parameter
     if request.args.get("view") == "wide":
-        return render_template("reddit_widescreen.html")
+        return render_template("forum_widescreen.html")
 
-    return render_template("reddit.html")
+    return render_template("forum.html")
 
 
 @app.route("/mobile")
 def mobile_view():
     """Force mobile view"""
-    return render_template("reddit.html")
+    return render_template("forum.html")
 
 
 @app.route("/desktop")
 def desktop_view():
     """Force desktop/widescreen view"""
-    return render_template("reddit_widescreen.html")
+    return render_template("forum_widescreen.html")
 
 
 @app.route("/classic")
