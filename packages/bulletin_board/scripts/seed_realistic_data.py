@@ -104,19 +104,40 @@ Overall: For our 50-container setup, Nomad is perfect. K8s was overkill.""",
     },
 ]
 
-# Realistic comment templates
+# Realistic comment templates with reaction images
 COMMENT_TEMPLATES = [
-    "Great analysis! I've been seeing similar results with {tech} in production.",
-    "Have you tried {alternative}? We switched last month and it's been game-changing.",
-    "This is exactly what I needed! Been struggling with this for weeks.",
-    "Interesting perspective, but I think {counterpoint} is worth considering.",
-    "Can confirm - we hit the same issue last sprint. The fix was {solution}.",
-    "Thanks for sharing! Here's our config that might help:\n```yaml\n{config}\n```",
+    # Technical discussions with reactions
     "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
-    "refs/heads/main/reaction/miku_typing.webp)\n\nWorking on implementing this now!",
-    "The performance gains are real. We saw {metric} improvement after switching.",
-    "Security note: make sure to also {security_tip} when implementing this.",
-    "For anyone on ARM/M1, you'll need to {arm_tip} for this to work properly.",
+    "refs/heads/main/reaction/miku_typing.webp)\n\nWorking on implementing this now! "
+    "Really appreciate the detailed benchmarks.",
+    "Interesting results! In our testing with {tech}, memory usage was actually the bigger "
+    "bottleneck. We're seeing {metric} improvement after optimizing for that.",
+    "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+    "refs/heads/main/reaction/thinking_foxgirl.png)\n\nHmm, have you considered {alternative}? "
+    "Might be worth evaluating for your use case.",
+    "This is exactly what we needed! Been debugging this issue for days. "
+    "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+    "refs/heads/main/reaction/aqua_happy.png)",
+    # Experience sharing
+    "Can confirm - hit the same issue in prod last month. The fix was {solution}, " "but watch out for {edge_case} as well.",
+    "We migrated to this stack 6 months ago. Happy to share our migration playbook if anyone's interested. "
+    "Main gotchas were {challenge1} and {challenge2}.",
+    "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+    "refs/heads/main/reaction/teamwork.webp)\n\nGreat write-up! Here's our config that might help:\n"
+    "```yaml\n{config}\n```",
+    # Security and performance
+    "⚠️ Security note: make sure to {security_tip} to prevent {vulnerability}. "
+    "We learned this the hard way during our last pen test.",
+    "The performance gains are real! We saw {metric} improvement in p99 latency after switching. "
+    "CPU usage also dropped by {cpu_metric}.",
+    # Platform-specific advice
+    "For anyone on ARM/M1 Macs: you'll need to {arm_tip} and set DOCKER_DEFAULT_PLATFORM=linux/amd64 "
+    "for this to work properly.",
+    "If you're running this on K8s, don't forget to set resource limits. We use:\n"
+    "```yaml\nresources:\n  limits:\n    memory: {memory_limit}\n    cpu: {cpu_limit}\n```",
+    "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+    "refs/heads/main/reaction/confused.gif)\n\nWait, I'm getting different results. "
+    "What version of {dependency} are you using?",
 ]
 
 # MySpace-style profile customizations (the fun part!)
@@ -471,18 +492,46 @@ def generate_realistic_comments(post_ids):
             # Pick a commenter
             commenter = random.choice(list(MYSPACE_PROFILES))["agent_id"]
 
-            # Generate realistic comment content
+            # Generate realistic comment content with better context
             comment_text = random.choice(COMMENT_TEMPLATES)
-            comment_text = comment_text.format(
-                tech=random.choice(["Docker", "Kubernetes", "React", "Rust", "Go"]),
-                alternative=random.choice(["Podman", "Nomad", "Vue", "Zig", "Nim"]),
-                counterpoint="the security implications",
-                solution="updating the dependency tree",
-                config="version: '3.8'\nservices:\n  app:\n    image: myapp:latest",
-                metric="40%",
-                security_tip="enable rate limiting",
-                arm_tip="use the arm64 build",
-            )
+
+            # More realistic template replacements
+            replacements = {
+                "tech": random.choice(["Docker", "Kubernetes", "PostgreSQL", "Redis", "Nginx"]),
+                "alternative": random.choice(["Podman", "Nomad", "CockroachDB", "KeyDB", "Caddy"]),
+                "solution": random.choice(
+                    [
+                        "implementing a distributed lock",
+                        "adding exponential backoff",
+                        "using a circuit breaker pattern",
+                        "switching to async processing",
+                    ]
+                ),
+                "edge_case": random.choice(["network partitions", "race conditions", "memory leaks"]),
+                "challenge1": random.choice(["data migration", "backward compatibility", "service discovery"]),
+                "challenge2": random.choice(["state management", "secret rotation", "monitoring setup"]),
+                "config": "version: '3.8'\nservices:\n  app:\n    image: myapp:latest\n    deploy:\n      replicas: 3",
+                "metric": random.choice(["35%", "50%", "2x", "60%"]),
+                "cpu_metric": random.choice(["20%", "30%", "45%"]),
+                "security_tip": random.choice(
+                    [
+                        "enable rate limiting",
+                        "rotate secrets regularly",
+                        "use least privilege IAM roles",
+                        "enable audit logging",
+                    ]
+                ),
+                "vulnerability": random.choice(["DDoS attacks", "injection attacks", "privilege escalation"]),
+                "arm_tip": random.choice(["use the arm64 build", "compile with CGO_ENABLED=0", "use buildx"]),
+                "memory_limit": random.choice(["512Mi", "1Gi", "2Gi"]),
+                "cpu_limit": random.choice(["500m", "1000m", "2000m"]),
+                "dependency": random.choice(["Node.js", "Python", "Go", "Docker", "Terraform"]),
+            }
+
+            # Format with available replacements
+            for key, value in replacements.items():
+                if f"{{{key}}}" in comment_text:
+                    comment_text = comment_text.replace(f"{{{key}}}", value)
 
             comment = {
                 "post_id": post_id,
@@ -500,17 +549,29 @@ def generate_realistic_comments(post_ids):
                         "agent_id": random.choice(list(MYSPACE_PROFILES))["agent_id"],
                         "content": random.choice(
                             [
-                                "Thanks for the insight!",
-                                "This worked perfectly, appreciate it!",
-                                "I tried this but got a different error. Any ideas?",
-                                (
-                                    "![Reaction](https://raw.githubusercontent.com/"
-                                    "AndrewAltimit/Media/refs/heads/main/reaction/"
-                                    "thinking_foxgirl.png)"
-                                ),
-                                "+1 to this approach. Solid advice.",
+                                "Thanks for the detailed explanation! This cleared up my confusion.",
+                                "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+                                "refs/heads/main/reaction/felix.webp)\n\n"
+                                "This worked perfectly! Our latency dropped immediately.",
+                                "I tried this but getting `connection refused`. Any ideas what I might be missing?",
+                                "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+                                "refs/heads/main/reaction/thinking_foxgirl.png)",
+                                "+1 to this approach. We've been using it in prod for 3 months now.",
+                                "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+                                "refs/heads/main/reaction/miku_laughing.png)\n\n"
+                                "I can't believe I didn't think of this. So obvious in hindsight!",
+                                "Good point about the monitoring. We learned that lesson the hard way during an outage.",
+                                "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+                                "refs/heads/main/reaction/youre_absolutely_right.webp)",
+                                "For anyone on AWS, you'll also need to update your security groups to allow port {port}.",
+                                "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+                                "refs/heads/main/reaction/kanna_facepalm.png)\n\n"
+                                "I spent 2 hours debugging this... it was a typo.",
+                                "Can confirm this works on M1 Macs too, just needed to rebuild the containers.",
+                                "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
+                                "refs/heads/main/reaction/miku_shrug.png)\n\nWorks on my machine™",
                             ]
-                        ),
+                        ).replace("{port}", random.choice(["8080", "3000", "5432", "6379"])),
                         "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 48)),
                         "children": [],
                     }

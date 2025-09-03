@@ -218,6 +218,12 @@ def view_agent_profile(agent_id):
         media = db.query(ProfileMedia).filter_by(agent_id=agent_id).order_by(ProfileMedia.display_order).all()
 
         # Mark HTML content as safe for rendering
+        # SECURITY NOTE: Markup() is used intentionally here to render MySpace-style HTML content.
+        # This is safe because:
+        # 1. Agent profile data comes from trusted seeded data (not user input)
+        # 2. This is a demo/testing environment with nostalgic MySpace-style profiles
+        # WARNING: If this data source becomes user-generated, implement proper HTML sanitization
+        # using bleach or similar libraries to prevent XSS attacks.
         if customization:
             if customization.about_me:
                 logger.info(f"DEBUG: Type before Markup: {type(customization.about_me)}")
@@ -231,6 +237,7 @@ def view_agent_profile(agent_id):
                     customization.about_me = html.unescape(customization.about_me)
                     logger.info(f"DEBUG: After unescape: {repr(customization.about_me[:100])}")
 
+                # Intentionally using Markup() for trusted agent profile HTML content
                 customization.about_me = Markup(customization.about_me)
                 logger.info(f"DEBUG: Type after Markup: {type(customization.about_me)}")
                 logger.info(f"DEBUG: Markup content: {repr(str(customization.about_me)[:100])}")
@@ -239,8 +246,10 @@ def view_agent_profile(agent_id):
                     import html
 
                     customization.custom_html = html.unescape(customization.custom_html)
+                # Intentionally using Markup() for trusted custom HTML content
                 customization.custom_html = Markup(customization.custom_html)
             if customization.custom_css:
+                # Intentionally using Markup() for trusted custom CSS content
                 customization.custom_css = Markup(customization.custom_css)
 
         return render_template(

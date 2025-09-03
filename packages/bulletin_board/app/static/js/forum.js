@@ -177,60 +177,12 @@ function renderComments(comments, depth = 0) {
     `).join('');
 }
 
+// Wrapper function that uses the shared formatContent with forum-specific options
 function formatAndEnhanceContent(text) {
-    // Escape HTML first
-    let content = escapeHtml(text);
-
-    // Parse code blocks first (triple backticks with optional language)
-    const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
-    content = content.replace(codeBlockPattern, (match, lang, code) => {
-        const language = lang || 'plaintext';
-        // Remove the escaping for code content
-        const unescapedCode = code.replace(/&lt;/g, '<')
-                                  .replace(/&gt;/g, '>')
-                                  .replace(/&amp;/g, '&')
-                                  .replace(/&quot;/g, '"')
-                                  .replace(/&#039;/g, "'");
-        return `<pre><code class="language-${language}">${unescapedCode}</code></pre>`;
+    return formatContent(text, {
+        reactionBaseUrl: reactionBaseUrl,
+        enableReactionPattern: true
     });
-
-    // Parse inline code (single backticks)
-    const inlineCodePattern = /`([^`]+)`/g;
-    content = content.replace(inlineCodePattern, (match, code) => {
-        // Remove the escaping for inline code
-        const unescapedCode = code.replace(/&lt;/g, '<')
-                                  .replace(/&gt;/g, '>')
-                                  .replace(/&amp;/g, '&')
-                                  .replace(/&quot;/g, '"')
-                                  .replace(/&#039;/g, "'");
-        return `<code class="inline-code">${unescapedCode}</code>`;
-    });
-
-    // Check for reaction image patterns - old format [reaction:filename]
-    const reactionPattern = /\[reaction:([^\]]+)\]/gi;
-    content = content.replace(reactionPattern, (match, filename) => {
-        return `<img src="${reactionBaseUrl}${filename}" class="reaction-img" alt="Reaction" />`;
-    });
-
-    // Check for markdown image syntax ![alt](url)
-    const markdownImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/gi;
-    content = content.replace(markdownImagePattern, (match, altText, url) => {
-        // Check if this is a reaction image from the AndrewAltimit/Media repo
-        if (url.includes('AndrewAltimit/Media') && url.includes('/reaction/')) {
-            return `<img src="${url}" class="reaction-img" alt="${altText || 'Reaction'}" style="max-height: 200px; vertical-align: middle; margin: 10px 0;" />`;
-        }
-        // Handle regular images
-        return `<img src="${url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
-    });
-
-    // Convert line breaks to <br> for better formatting (but not inside pre tags)
-    content = content.replace(/\n/g, '<br>');
-    // Fix line breaks inside pre tags (they shouldn't be converted to <br>)
-    content = content.replace(/<pre>([\s\S]*?)<\/pre>/g, (match, preContent) => {
-        return '<pre>' + preContent.replace(/<br>/g, '\n') + '</pre>';
-    });
-
-    return content;
 }
 
 function toggleReply(commentId) {
@@ -385,28 +337,7 @@ async function addReaction(commentId, reactionFile, reactionName) {
 }
 
 // Utility functions
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-}
-
-function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-    if (diffHours < 1) {
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        return `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
-        return `${diffHours} hours ago`;
-    } else {
-        const diffDays = Math.floor(diffHours / 24);
-        return `${diffDays} days ago`;
-    }
-}
+// escapeHtml and formatDate functions are now imported from utils.js
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', async () => {
