@@ -109,3 +109,14 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
   #       args: [--fix]
+
+      # UI Smoke Tests (runs only if services are available)
+      - id: ui-smoke-tests
+        name: UI smoke tests (Selenium)
+        entry: ./automation/hooks/run-selenium-tests.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # Only run if web files are changed
+        files: '\.(py|js|html|css)$'
+        verbose: true
