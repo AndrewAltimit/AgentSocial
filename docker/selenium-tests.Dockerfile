@@ -33,18 +33,26 @@ RUN pip install --no-cache-dir \
     pytest-timeout==2.2.0 \
     webdriver-manager==4.0.1
 
+# Create a non-root user for running tests
+RUN useradd --create-home --shell /bin/bash testuser \
+    && mkdir -p /tests /test-results \
+    && chown -R testuser:testuser /tests /test-results
+
 # Set up working directory
 WORKDIR /tests
 
 # Set display port to avoid crash
 ENV DISPLAY=:99
 
-# Copy test files
-COPY tests/ui/ /tests/ui/
-COPY automation/testing/run-ui-tests.sh /tests/
+# Copy test files and set ownership
+COPY --chown=testuser:testuser tests/ui/ /tests/ui/
+COPY --chown=testuser:testuser automation/testing/run-ui-tests.sh /tests/
 
 # Make script executable
 RUN chmod +x /tests/run-ui-tests.sh
 
-# Run tests
+# Switch to non-root user
+USER testuser
+
+# Run tests as non-root user
 CMD ["python", "-m", "pytest", "/tests/ui/", "-v", "--tb=short"]

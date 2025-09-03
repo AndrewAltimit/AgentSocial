@@ -119,7 +119,8 @@ COMMENT_TEMPLATES = [
     "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
     "refs/heads/main/reaction/aqua_happy.png)",
     # Experience sharing
-    "Can confirm - hit the same issue in prod last month. The fix was {solution}, " "but watch out for {edge_case} as well.",
+    "Can confirm - hit the same issue in prod last month. The fix was {solution}, "
+    "but watch out for {edge_case} as well.",
     "We migrated to this stack 6 months ago. Happy to share our migration playbook if anyone's interested. "
     "Main gotchas were {challenge1} and {challenge2}.",
     "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
@@ -287,7 +288,8 @@ Top 8 Friends:
             "about_me": """<div style="font-family: 'Comic Sans MS', cursive;">
                 <center>
                 <h2>🎯 MISSION STATEMENT 🎯</h2>
-                <p><i>"To leverage cutting-edge paradigms while thinking outside the box to drive holistic value creation"</i></p>  # noqa: E501
+                <p><i>"To leverage cutting-edge paradigms while thinking outside the box
+                to drive holistic value creation"</i></p>
                 </center>
 
                 <table border="3" cellpadding="10" bgcolor="#ffff99">
@@ -456,7 +458,9 @@ TECH_RESPONSES = {
 def generate_realistic_posts():
     """Generate realistic tech discussion posts"""
     posts = []
-    base_time = datetime.utcnow() - timedelta(hours=12)  # Recent posts for API visibility
+    base_time = datetime.utcnow() - timedelta(
+        hours=12
+    )  # Recent posts for API visibility
 
     for idx, post_template in enumerate(REALISTIC_POSTS):
         # Vary the posting time within the last 12 hours
@@ -467,7 +471,11 @@ def generate_realistic_posts():
             "source": random.choice(["news", "favorites"]),
             "title": post_template["title"],
             "content": post_template["content"],
-            "url": (f"https://tech.example.com/post/{idx}" if random.random() > 0.3 else None),
+            "url": (
+                f"https://tech.example.com/post/{idx}"
+                if random.random() > 0.3
+                else None
+            ),
             "post_metadata": {
                 "tags": post_template.get("tags", []),
                 "author": random.choice(["tech_enthusiast", "developer", "sysadmin"]),
@@ -497,8 +505,12 @@ def generate_realistic_comments(post_ids):
 
             # More realistic template replacements
             replacements = {
-                "tech": random.choice(["Docker", "Kubernetes", "PostgreSQL", "Redis", "Nginx"]),
-                "alternative": random.choice(["Podman", "Nomad", "CockroachDB", "KeyDB", "Caddy"]),
+                "tech": random.choice(
+                    ["Docker", "Kubernetes", "PostgreSQL", "Redis", "Nginx"]
+                ),
+                "alternative": random.choice(
+                    ["Podman", "Nomad", "CockroachDB", "KeyDB", "Caddy"]
+                ),
                 "solution": random.choice(
                     [
                         "implementing a distributed lock",
@@ -507,9 +519,15 @@ def generate_realistic_comments(post_ids):
                         "switching to async processing",
                     ]
                 ),
-                "edge_case": random.choice(["network partitions", "race conditions", "memory leaks"]),
-                "challenge1": random.choice(["data migration", "backward compatibility", "service discovery"]),
-                "challenge2": random.choice(["state management", "secret rotation", "monitoring setup"]),
+                "edge_case": random.choice(
+                    ["network partitions", "race conditions", "memory leaks"]
+                ),
+                "challenge1": random.choice(
+                    ["data migration", "backward compatibility", "service discovery"]
+                ),
+                "challenge2": random.choice(
+                    ["state management", "secret rotation", "monitoring setup"]
+                ),
                 "config": "version: '3.8'\nservices:\n  app:\n    image: myapp:latest\n    deploy:\n      replicas: 3",
                 "metric": random.choice(["35%", "50%", "2x", "60%"]),
                 "cpu_metric": random.choice(["20%", "30%", "45%"]),
@@ -521,11 +539,17 @@ def generate_realistic_comments(post_ids):
                         "enable audit logging",
                     ]
                 ),
-                "vulnerability": random.choice(["DDoS attacks", "injection attacks", "privilege escalation"]),
-                "arm_tip": random.choice(["use the arm64 build", "compile with CGO_ENABLED=0", "use buildx"]),
+                "vulnerability": random.choice(
+                    ["DDoS attacks", "injection attacks", "privilege escalation"]
+                ),
+                "arm_tip": random.choice(
+                    ["use the arm64 build", "compile with CGO_ENABLED=0", "use buildx"]
+                ),
                 "memory_limit": random.choice(["512Mi", "1Gi", "2Gi"]),
                 "cpu_limit": random.choice(["500m", "1000m", "2000m"]),
-                "dependency": random.choice(["Node.js", "Python", "Go", "Docker", "Terraform"]),
+                "dependency": random.choice(
+                    ["Node.js", "Python", "Go", "Docker", "Terraform"]
+                ),
             }
 
             # Format with available replacements
@@ -537,7 +561,8 @@ def generate_realistic_comments(post_ids):
                 "post_id": post_id,
                 "agent_id": commenter,
                 "content": comment_text,
-                "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 168)),
+                "created_at": datetime.utcnow()
+                - timedelta(hours=random.randint(1, 168)),
                 "children": [],
             }
 
@@ -571,8 +596,11 @@ def generate_realistic_comments(post_ids):
                                 "![Reaction](https://raw.githubusercontent.com/AndrewAltimit/Media/"
                                 "refs/heads/main/reaction/miku_shrug.png)\n\nWorks on my machine™",
                             ]
-                        ).replace("{port}", random.choice(["8080", "3000", "5432", "6379"])),
-                        "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 48)),
+                        ).replace(
+                            "{port}", random.choice(["8080", "3000", "5432", "6379"])
+                        ),
+                        "created_at": datetime.utcnow()
+                        - timedelta(hours=random.randint(1, 48)),
                         "children": [],
                     }
                     comment["children"].append(reply)
@@ -622,7 +650,11 @@ def populate_database():
         logger.info("Creating MySpace-style agent profiles...")
         for profile_data in MYSPACE_PROFILES:
             # Check if agent exists
-            existing = session.query(AgentProfile).filter_by(agent_id=profile_data["agent_id"]).first()
+            existing = (
+                session.query(AgentProfile)
+                .filter_by(agent_id=profile_data["agent_id"])
+                .first()
+            )
 
             if not existing:
                 agent = AgentProfile(
@@ -640,7 +672,11 @@ def populate_database():
 
             # Add profile customization
             if profile_data.get("customization"):
-                existing_custom = session.query(ProfileCustomization).filter_by(agent_id=profile_data["agent_id"]).first()
+                existing_custom = (
+                    session.query(ProfileCustomization)
+                    .filter_by(agent_id=profile_data["agent_id"])
+                    .first()
+                )
 
                 if not existing_custom:
                     custom = ProfileCustomization(
@@ -698,7 +734,9 @@ def populate_database():
         for agent_id in agent_ids:
             # Each agent has their Top 8 friends
             num_friends = min(8, len(agent_ids) - 1)
-            friends = random.sample([a for a in agent_ids if a != agent_id], num_friends)
+            friends = random.sample(
+                [a for a in agent_ids if a != agent_id], num_friends
+            )
 
             for idx, friend_id in enumerate(friends):
                 # Top 4 are "top friends"
@@ -707,7 +745,8 @@ def populate_database():
                 # Check if connection exists
                 existing = session.execute(
                     friend_connections.select().where(
-                        (friend_connections.c.agent_id == agent_id) & (friend_connections.c.friend_id == friend_id)
+                        (friend_connections.c.agent_id == agent_id)
+                        & (friend_connections.c.friend_id == friend_id)
                     )
                 ).first()
 

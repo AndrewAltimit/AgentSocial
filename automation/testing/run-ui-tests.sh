@@ -29,41 +29,34 @@ check_services() {
     fi
 }
 
-# Function to check if ChromeDriver is installed
-check_chromedriver() {
-    if command -v chromedriver &> /dev/null; then
+# Function to check if Docker is available
+check_docker() {
+    if command -v docker &> /dev/null; then
         return 0
     else
         return 1
     fi
 }
 
-# Function to install dependencies
-install_dependencies() {
-    echo -e "${YELLOW}Installing test dependencies...${NC}"
-    pip install --user selenium pytest pytest-html pytest-timeout
-}
-
 # Step 1: Check prerequisites
 echo -e "${YELLOW}Step 1: Checking prerequisites...${NC}"
 
-if ! check_chromedriver; then
-    echo -e "${RED}ChromeDriver not found!${NC}"
-    echo "Please install ChromeDriver:"
-    echo "  Ubuntu/Debian: sudo apt-get install chromium-chromedriver"
-    echo "  Mac: brew install chromedriver"
-    echo "  Or download from: https://chromedriver.chromium.org/"
+if ! check_docker; then
+    echo -e "${RED}Docker not found!${NC}"
+    echo "Docker is required to run tests in containers"
+    echo "Please install Docker: https://docs.docker.com/get-docker/"
     exit 1
 fi
 
-# Check if Chrome/Chromium is installed
-if ! command -v google-chrome &> /dev/null && ! command -v chromium-browser &> /dev/null; then
-    echo -e "${RED}Chrome/Chromium browser not found!${NC}"
-    echo "Please install Chrome or Chromium browser"
-    exit 1
+echo -e "${GREEN}✓ Docker found${NC}"
+
+# Build selenium-tests container if needed
+if ! docker images | grep -q selenium-tests; then
+    echo -e "${YELLOW}Building selenium-tests container...${NC}"
+    docker-compose build selenium-tests
 fi
 
-echo -e "${GREEN}✓ ChromeDriver and browser found${NC}"
+echo -e "${GREEN}✓ Selenium test container ready${NC}"
 
 # Step 2: Check if services are running
 echo -e "${YELLOW}Step 2: Checking if bulletin board is running...${NC}"
@@ -78,14 +71,9 @@ fi
 
 echo -e "${GREEN}✓ Services are running${NC}"
 
-# Step 3: Install Python dependencies
-echo -e "${YELLOW}Step 3: Checking Python dependencies...${NC}"
-
-if ! python3 -c "import selenium" 2>/dev/null; then
-    install_dependencies
-fi
-
-echo -e "${GREEN}✓ Dependencies installed${NC}"
+# Step 3: Dependencies are handled in container
+echo -e "${YELLOW}Step 3: Container dependencies...${NC}"
+echo -e "${GREEN}✓ All dependencies are managed in the selenium-tests container${NC}"
 
 # Step 4: Run the tests
 echo -e "${YELLOW}Step 4: Running UI tests...${NC}"
@@ -106,14 +94,18 @@ fi
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REPORT_FILE="$RESULTS_DIR/ui_test_report_${TIMESTAMP}.html"
 
-# Run the Selenium tests
-echo -e "${BLUE}Executing test suite...${NC}"
+# Run the Selenium tests in container
+echo -e "${BLUE}Executing test suite in container...${NC}"
 echo ""
 
-python3 -m pytest \
-    "$PROJECT_ROOT/tests/ui/test_bulletin_board_ui.py" \
+# Mount the report directory and run tests
+docker-compose run --rm \
+    -v "$RESULTS_DIR:/test-results" \
+    selenium-tests \
+    python -m pytest \
+    "/tests/ui/test_bulletin_board_ui.py" \
     -v \
-    --html="$REPORT_FILE" \
+    --html="/test-results/ui_test_report_${TIMESTAMP}.html" \
     --self-contained-html \
     --tb=short \
     --timeout=60 \

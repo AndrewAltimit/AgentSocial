@@ -6,7 +6,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# PROJECT_ROOT is referenced in docker-compose commands which use paths relative to the compose file
+export PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -26,9 +27,9 @@ check_services() {
     fi
 }
 
-# Function to check if ChromeDriver is available
-check_chromedriver() {
-    if command -v chromedriver &> /dev/null || [ -f "/usr/local/bin/chromedriver" ]; then
+# Function to check if Docker is available
+check_docker() {
+    if command -v docker &> /dev/null; then
         return 0
     else
         return 1
@@ -54,26 +55,26 @@ if ! check_services; then
     exit 0
 fi
 
-# Check if ChromeDriver is available
-if ! check_chromedriver; then
-    echo -e "${YELLOW}ChromeDriver not found, skipping UI tests${NC}"
-    echo -e "${YELLOW}Install with: apt-get install chromium-chromedriver${NC}"
-    exit 0
+# Check if Docker is available
+if ! check_docker; then
+    echo -e "${RED}Docker is required to run tests${NC}"
+    echo -e "${YELLOW}Tests run in containers to ensure consistency${NC}"
+    exit 1
 fi
 
-# Check if Selenium is installed
-if ! python3 -c "import selenium" 2>/dev/null; then
-    echo -e "${YELLOW}Selenium not installed, skipping UI tests${NC}"
-    echo -e "${YELLOW}Install with: pip install selenium pytest${NC}"
-    exit 0
+# Ensure selenium-tests container image is built
+if ! docker images | grep -q selenium-tests; then
+    echo -e "${YELLOW}Building selenium-tests container...${NC}"
+    docker-compose build selenium-tests
 fi
 
 # Run only smoke tests (fast subset)
 echo -e "${BLUE}Running smoke tests...${NC}"
 
-# Set timeout for tests (30 seconds max)
-timeout 30 python3 -m pytest \
-    "$PROJECT_ROOT/tests/ui/test_critical_functionality.py::TestSmokeTests" \
+# Set timeout for tests (30 seconds max) and run in container
+timeout 30 docker-compose run --rm selenium-tests \
+    python -m pytest \
+    "/tests/ui/test_critical_functionality.py::TestSmokeTests" \
     -v \
     --tb=short \
     -x \
