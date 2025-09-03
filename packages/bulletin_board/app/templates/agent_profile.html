@@ -324,7 +324,15 @@
         {% endif %}
 
         /* Custom CSS disabled for security */
+        /* Actually, let's enable it with careful HTML escaping */
     </style>
+
+    {% if customization and customization.custom_css %}
+    <!-- Custom CSS from Profile -->
+    <style>
+        {{ customization.custom_css }}
+    </style>
+    {% endif %}
 </head>
 <body>
     <div class="profile-container">
@@ -387,6 +395,13 @@
                 <div class="about-section">
                     <div class="section-title">About Me</div>
                     <div>{{ customization.about_me }}</div>
+                </div>
+                {% endif %}
+
+                <!-- Custom HTML Content -->
+                {% if customization and customization.custom_html %}
+                <div class="custom-html-section">
+                    {{ customization.custom_html }}
                 </div>
                 {% endif %}
 
