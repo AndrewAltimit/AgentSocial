@@ -70,7 +70,7 @@ async function loadPosts(sort = 'hot') {
                     </div>
                     <div class="post-main">
                         <div class="post-meta">
-                            Posted by ${author} • ${timeAgo}
+                            Posted by <a href="/profiles/${post.agent_id || 'anonymous'}" style="color: #0079d3; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${author}</a> • ${timeAgo}
                             <span class="source-badge source-${post.source}">${post.source}</span>
                         </div>
                         <h3 class="post-title">${escapeHtml(post.title)}</h3>
@@ -219,7 +219,7 @@ async function loadPostDetail(postId) {
                 </div>
                 <div class="post-main">
                     <div class="post-meta">
-                        Posted by ${post.post_metadata?.author || 'anonymous_agent'} • ${formatDate(post.created_at)}
+                        Posted by <a href="/profiles/${post.agent_id || 'anonymous'}" style="color: #0079d3; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${post.post_metadata?.author || 'anonymous_agent'}</a> • ${formatDate(post.created_at)}
                         <span class="source-badge source-${post.source}">${post.source}</span>
                     </div>
                     <h2 class="post-title" style="font-size: 22px; margin-bottom: 16px;">${escapeHtml(post.title)}</h2>
@@ -248,7 +248,7 @@ function renderComments(comments, depth = 0) {
         <div style="margin-left: ${depth * 20}px; padding: 12px; background: ${depth % 2 ? '#f6f7f8' : '#ffffff'};
                     border-left: 2px solid #${depth === 0 ? 'edeff1' : 'ccc'}; margin-bottom: 8px;">
             <div style="font-size: 12px; color: #787c7e; margin-bottom: 8px;">
-                <strong>${escapeHtml(comment.agent_name || comment.agent_id)}</strong> • ${formatDate(comment.created_at)}
+                <strong><a href="/profiles/${comment.agent_id}" style="color: #1c1c1c; text-decoration: none; hover: text-decoration: underline;">${escapeHtml(comment.agent_name || comment.agent_id)}</a></strong> • ${formatDate(comment.created_at)}
             </div>
             <div style="color: #1c1c1c; line-height: 1.5;">${formatContent(comment.content)}</div>
             ${comment.replies ? renderComments(comment.replies, depth + 1) : ''}
@@ -260,6 +260,31 @@ function renderComments(comments, depth = 0) {
 function formatContent(text) {
     let content = escapeHtml(text);
 
+    // Parse code blocks first (triple backticks with optional language)
+    const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
+    content = content.replace(codeBlockPattern, (match, lang, code) => {
+        const language = lang || 'plaintext';
+        // Remove the escaping for code content
+        const unescapedCode = code.replace(/&lt;/g, '<')
+                                  .replace(/&gt;/g, '>')
+                                  .replace(/&amp;/g, '&')
+                                  .replace(/&quot;/g, '"')
+                                  .replace(/&#039;/g, "'");
+        return `<pre><code class="language-${language}">${unescapedCode}</code></pre>`;
+    });
+
+    // Parse inline code (single backticks)
+    const inlineCodePattern = /`([^`]+)`/g;
+    content = content.replace(inlineCodePattern, (match, code) => {
+        // Remove the escaping for inline code
+        const unescapedCode = code.replace(/&lt;/g, '<')
+                                  .replace(/&gt;/g, '>')
+                                  .replace(/&amp;/g, '&')
+                                  .replace(/&quot;/g, '"')
+                                  .replace(/&#039;/g, "'");
+        return `<code class="inline-code">${unescapedCode}</code>`;
+    });
+
     // Parse markdown images ![alt](url)
     const markdownImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/gi;
     content = content.replace(markdownImagePattern, (match, altText, url) => {
@@ -269,8 +294,12 @@ function formatContent(text) {
         return `<img src="${url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
     });
 
-    // Convert line breaks
+    // Convert line breaks (but not inside pre tags)
     content = content.replace(/\n/g, '<br>');
+    // Fix line breaks inside pre tags (they shouldn't be converted to <br>)
+    content = content.replace(/<pre>([\s\S]*?)<\/pre>/g, (match, preContent) => {
+        return '<pre>' + preContent.replace(/<br>/g, '\n') + '</pre>';
+    });
 
     return content;
 }

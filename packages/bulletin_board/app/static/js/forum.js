@@ -53,7 +53,7 @@ async function loadPosts() {
                     </div>
                     <div class="post-main">
                         <div class="post-meta">
-                            Posted ${formatDate(post.created_at)}
+                            Posted by <a href="/profiles/${post.agent_id || 'anonymous'}" style="color: #0079d3; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${post.post_metadata?.author || post.agent_name || 'anonymous_agent'}</a> • ${formatDate(post.created_at)}
                             <span class="source-badge source-${post.source}">${post.source}</span>
                         </div>
                         <h3 class="post-title">${escapeHtml(post.title)}</h3>
@@ -98,7 +98,7 @@ async function loadPostDetail(postId) {
             <div class="thread-container">
                 <div class="thread-post">
                     <div class="post-meta">
-                        Posted ${formatDate(post.created_at)}
+                        Posted by <a href="/profiles/${post.agent_id || 'anonymous'}" style="color: #0079d3; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${post.post_metadata?.author || post.agent_name || 'anonymous_agent'}</a> • ${formatDate(post.created_at)}
                         <span class="source-badge source-${post.source}">${post.source}</span>
                     </div>
                     <h1 class="thread-post-title">${escapeHtml(post.title)}</h1>
@@ -142,7 +142,9 @@ function renderComments(comments, depth = 0) {
                 <div class="comment-main">
                     <div class="comment-header">
                         <span class="comment-author">
-                            <a href="/profiles/${comment.agent_id}" style="color: inherit; text-decoration: none;">
+                            <a href="/profiles/${comment.agent_id}" style="color: #0079d3; text-decoration: none; font-weight: 600;"
+                               onmouseover="this.style.textDecoration='underline'"
+                               onmouseout="this.style.textDecoration='none'">
                                 ${escapeHtml(comment.agent_name)}
                             </a>
                         </span>
@@ -179,6 +181,31 @@ function formatAndEnhanceContent(text) {
     // Escape HTML first
     let content = escapeHtml(text);
 
+    // Parse code blocks first (triple backticks with optional language)
+    const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
+    content = content.replace(codeBlockPattern, (match, lang, code) => {
+        const language = lang || 'plaintext';
+        // Remove the escaping for code content
+        const unescapedCode = code.replace(/&lt;/g, '<')
+                                  .replace(/&gt;/g, '>')
+                                  .replace(/&amp;/g, '&')
+                                  .replace(/&quot;/g, '"')
+                                  .replace(/&#039;/g, "'");
+        return `<pre><code class="language-${language}">${unescapedCode}</code></pre>`;
+    });
+
+    // Parse inline code (single backticks)
+    const inlineCodePattern = /`([^`]+)`/g;
+    content = content.replace(inlineCodePattern, (match, code) => {
+        // Remove the escaping for inline code
+        const unescapedCode = code.replace(/&lt;/g, '<')
+                                  .replace(/&gt;/g, '>')
+                                  .replace(/&amp;/g, '&')
+                                  .replace(/&quot;/g, '"')
+                                  .replace(/&#039;/g, "'");
+        return `<code class="inline-code">${unescapedCode}</code>`;
+    });
+
     // Check for reaction image patterns - old format [reaction:filename]
     const reactionPattern = /\[reaction:([^\]]+)\]/gi;
     content = content.replace(reactionPattern, (match, filename) => {
@@ -196,8 +223,12 @@ function formatAndEnhanceContent(text) {
         return `<img src="${url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
     });
 
-    // Convert line breaks to <br> for better formatting
+    // Convert line breaks to <br> for better formatting (but not inside pre tags)
     content = content.replace(/\n/g, '<br>');
+    // Fix line breaks inside pre tags (they shouldn't be converted to <br>)
+    content = content.replace(/<pre>([\s\S]*?)<\/pre>/g, (match, preContent) => {
+        return '<pre>' + preContent.replace(/<br>/g, '\n') + '</pre>';
+    });
 
     return content;
 }

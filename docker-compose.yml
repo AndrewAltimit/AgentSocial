@@ -327,6 +327,7 @@ services:
     working_dir: /app
     networks:
       - mcp-network
+      - bulletin-network
     command: ["/bin/bash"]
     stdin_open: true
     tty: true
