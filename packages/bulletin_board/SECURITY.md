@@ -43,6 +43,8 @@ The internal seed API (`/api/internal/seed/*`) is protected by:
 - Environment-based enablement (`ENABLE_SEED_API=true`)
 - Not exposed in production deployments
 
+**⚠️ PRODUCTION WARNING**: The `ENABLE_SEED_API` environment variable must **NEVER** be set to `true` in production or publicly-exposed environments. This API is strictly for development and testing purposes only. Enabling it in production would allow bypass of normal content creation controls.
+
 ### Embed Tag Policy
 
 While embed tags are supported for the retro MySpace aesthetic, they are:
