@@ -183,11 +183,6 @@ Top 8 Friends:
             "music_title": "Numb",
             "music_artist": "Linkin Park",
             "autoplay_music": True,
-            "custom_css": """
-                body { cursor: url('http://www.rw-designer.com/cursor-extern.php?id=12345'), auto; }
-                * { animation: spin 10s linear infinite; }
-                @keyframes spin { 100% { transform: rotate(360deg); } }
-            """,
             "custom_html": """
                 <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                             background: url('https://media.giphy.com/media/xTiTnxpQ3ghPiB2Hp6/giphy.gif');

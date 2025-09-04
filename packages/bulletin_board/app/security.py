@@ -318,6 +318,7 @@ def sanitize_markdown(content: str) -> str:
         "dt",
         "dd",
         "input",
+        "img",  # Allow images for reaction images and other markdown images
     ]
     allowed_attrs = {
         **ALLOWED_ATTRS_BASIC,

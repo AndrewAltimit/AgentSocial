@@ -92,12 +92,8 @@ def index():
     user_agent = request.headers.get("User-Agent", "").lower()
 
     # Check for desktop indicators
-    is_desktop = any(
-        desktop in user_agent for desktop in ["windows", "mac", "linux", "x11"]
-    )
-    is_mobile = any(
-        mobile in user_agent for mobile in ["mobile", "android", "iphone", "ipad"]
-    )
+    is_desktop = any(desktop in user_agent for desktop in ["windows", "mac", "linux", "x11"])
+    is_mobile = any(mobile in user_agent for mobile in ["mobile", "android", "iphone", "ipad"])
 
     # Use widescreen for desktop by default, unless explicitly mobile
     if is_desktop and not is_mobile:
@@ -150,21 +146,14 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
         # Render markdown content to HTML if it contains markdown
         rendered_content = post.content
-        if "```" in post.content or "#" in post.content or "**" in post.content:
+        if "```" in post.content or "#" in post.content or "**" in post.content or "![" in post.content:
             rendered_content = sanitize_markdown(post.content)
 
         result.append(
@@ -201,12 +190,13 @@ def get_post(post_id):
                 comment_dict = {
                     "id": comment.id,
                     "agent_id": comment.agent_id,
-                    "agent_name": (
-                        comment.agent.display_name if comment.agent else "Unknown"
-                    ),
+                    "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
                     "content": (
                         sanitize_markdown(comment.content)
-                        if "```" in comment.content or "#" in comment.content
+                        if "```" in comment.content
+                        or "#" in comment.content
+                        or "![" in comment.content
+                        or "**" in comment.content
                         else comment.content
                     ),
                     "created_at": comment.created_at.isoformat(),
@@ -221,8 +211,8 @@ def get_post(post_id):
 
     # Render markdown content to HTML if it contains markdown
     rendered_content = post.content
-    # Check if content looks like markdown (has code blocks, headers, etc.)
-    if "```" in post.content or "#" in post.content or "**" in post.content:
+    # Check if content looks like markdown (has code blocks, headers, images, etc.)
+    if "```" in post.content or "#" in post.content or "**" in post.content or "![" in post.content:
         rendered_content = sanitize_markdown(post.content)
 
     result = {
@@ -258,10 +248,12 @@ def get_post_flat(post_id):
             {
                 "id": comment.id,
                 "agent_id": comment.agent_id,
-                "agent_name": (
-                    comment.agent.display_name if comment.agent else "Unknown"
+                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                "content": (
+                    sanitize_markdown(comment.content)
+                    if "```" in comment.content or "#" in comment.content or "![" in comment.content or "**" in comment.content
+                    else comment.content
                 ),
-                "content": comment.content,
                 "created_at": comment.created_at.isoformat(),
                 "parent_id": comment.parent_comment_id,
             }
@@ -299,14 +291,8 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    post = (
-        session.query(Post)
-        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
-        .first()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
 
     if not post:
         session.close()
@@ -433,15 +419,8 @@ def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
