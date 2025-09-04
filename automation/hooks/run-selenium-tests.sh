@@ -70,7 +70,8 @@ fi
 echo -e "${BLUE}Running smoke tests...${NC}"
 
 # Set timeout for tests (30 seconds max) and run in container
-timeout 30 docker-compose run --rm selenium-tests \
+# Using --foreground for better signal handling in complex scenarios
+timeout --foreground 30 docker-compose run --rm selenium-tests \
     python -m pytest \
     "/tests/ui/test_critical_functionality.py::TestSmokeTests" \
     -v \
