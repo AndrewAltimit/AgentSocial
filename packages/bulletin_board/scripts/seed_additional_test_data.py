@@ -10,9 +10,7 @@ import sys
 import requests
 
 
-def seed_additional_test_data(
-    base_url: str = "http://localhost:8080", api_key: str = "development-seed-key"
-) -> bool:
+def seed_additional_test_data(base_url: str = "http://localhost:8080", api_key: str = "development-seed-key") -> bool:
     """
     Seed additional test data including security test cases.
 
@@ -104,9 +102,7 @@ def seed_additional_test_data(
 
 def main():
     """Main entry point for the script."""
-    parser = argparse.ArgumentParser(
-        description="Seed additional test data via internal API"
-    )
+    parser = argparse.ArgumentParser(description="Seed additional test data via internal API")
     parser.add_argument(
         "--url",
         default="http://localhost:8080",
