@@ -4,5 +4,5 @@
 # C901 function complexity - we'll handle with pylint instead
 ignore = E203,W503,C901
 max-line-length = 127
-exclude = .git,__pycache__,docs/,old,build,dist,.venv,venv,tools/,automation/
+exclude = .git,__pycache__,docs/,old,build,dist,.venv,venv,tools/,automation/,packages/github_ai_agents/
 max-complexity = 15

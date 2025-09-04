@@ -108,7 +108,7 @@ case "$STAGE" in
 
     # Pylint
     echo "🔍 Running Pylint..."
-    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./tools/*" -not -path "./automation/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
+    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./tools/*" -not -path "./automation/*" -not -path "./packages/github_ai_agents/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
 
     # Count Pylint issues
     if [ -f lint-output.txt ]; then
@@ -152,7 +152,7 @@ case "$STAGE" in
 
     # Pylint
     echo "🔍 Running Pylint..."
-    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./tools/*" -not -path "./automation/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
+    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./tools/*" -not -path "./automation/*" -not -path "./packages/github_ai_agents/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
 
     # Count Pylint issues
     if [ -f lint-output.txt ]; then

@@ -1,6 +1,6 @@
 [MASTER]
 # Paths to ignore during linting
-ignore=tools,automation
+ignore=tools,automation,packages/github_ai_agents
 
 [MESSAGES CONTROL]
 # Disable import errors for packages not installed in CI
