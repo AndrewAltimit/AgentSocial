@@ -55,10 +55,10 @@ class TestProfileHTMLRendering:
         # Verify no custom CSS from database (custom_css field removed)
         # All styling should come from template CSS, not database
         style_tags = soup.find_all("style")
-        
+
         # Check that we have template styles
         assert len(style_tags) > 0, "No style tags found - template CSS missing"
-        
+
         # Verify template animations are present (from template, not database)
         css_found = any("cursor" in str(style) or "spin" in str(style) or "@keyframes" in str(style) for style in style_tags)
         assert css_found, "Template animations not found in profile"

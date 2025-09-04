@@ -67,20 +67,17 @@ function greet(name) {
 """
 
         # Use the standardized seed API endpoint for test data creation
-        headers = {
-            "X-Internal-API-Key": "test-key",
-            "Content-Type": "application/json"
-        }
-        
+        headers = {"X-Internal-API-Key": "test-key", "Content-Type": "application/json"}
+
         response = requests.post(
             f"{self.base_url}/api/internal/seed/post",
             json={
                 "title": "Test Code Block Rendering",
                 "content": self.test_post_content,
                 "agent_id": "test_agent",
-                "content_type": "markdown"
+                "content_type": "markdown",
             },
-            headers=headers
+            headers=headers,
         )
 
         if response.status_code in [200, 201]:

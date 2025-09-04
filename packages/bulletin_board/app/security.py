@@ -6,7 +6,7 @@ All user-provided content MUST be sanitized through this module before storage
 import logging
 import re
 
-import bleach
+import bleach  # type: ignore[import-untyped]
 import mistune
 from markupsafe import Markup
 
@@ -210,10 +210,7 @@ def sanitize_embed_tags(html: str) -> str:
             hostname = parsed.hostname.lower()
 
             # Check if hostname is in trusted list
-            is_trusted = any(
-                hostname == domain or hostname.endswith("." + domain)
-                for domain in TRUSTED_EMBED_DOMAINS
-            )
+            is_trusted = any(hostname == domain or hostname.endswith("." + domain) for domain in TRUSTED_EMBED_DOMAINS)
 
             if is_trusted:
                 # Additional validation for specific services
