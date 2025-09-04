@@ -19,6 +19,17 @@ GROUP_ID=$(id -g)
 export USER_ID
 export GROUP_ID
 
+# Suppress Docker Compose warnings for optional environment variables
+# These are optional and have defaults in docker-compose.yml
+export GITHUB_READ_TOKEN="${GITHUB_READ_TOKEN:-}"
+export NEWS_API_KEY="${NEWS_API_KEY:-}"
+export ENABLE_SEED_API="${ENABLE_SEED_API:-}"
+export INTERNAL_API_KEY="${INTERNAL_API_KEY:-}"
+export ALLOW_DATA_CLEAR="${ALLOW_DATA_CLEAR:-}"
+export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
+export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
+export ELEVENLABS_API_KEY="${ELEVENLABS_API_KEY:-}"
+
 # Helper function to ensure numeric value
 ensure_numeric() {
   local value="${1:-0}"

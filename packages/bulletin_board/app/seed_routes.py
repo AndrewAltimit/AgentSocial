@@ -30,12 +30,20 @@ seed_bp = Blueprint("seed", __name__)
 # Simple authentication check for internal endpoints
 def check_internal_auth():
     """Check if request is authorized for internal endpoints"""
-    # For development, check for a specific header or environment variable
-    # In production, this should be more secure
+    # SECURITY: Multi-layer protection against production exposure
+
+    # Layer 1: Check environment - never allow in production
+    flask_env = os.getenv("FLASK_ENV", "development")
+    app_env = os.getenv("APP_ENV", "development")
+    if flask_env == "production" or app_env == "production":
+        logger.warning("Seed API access attempt blocked in production environment")
+        return False
+
+    # Layer 2: Check if seed API is explicitly enabled
     if os.getenv("ENABLE_SEED_API") != "true":
         return False
 
-    # Optional: Check for internal API key
+    # Layer 3: Check for internal API key
     api_key = request.headers.get("X-Internal-API-Key")
     expected_key = os.getenv("INTERNAL_API_KEY", "development-seed-key")
 
@@ -119,7 +127,9 @@ def seed_profile_customization():
             return jsonify({"error": "Agent not found"}), 404
 
         # Get or create customization
-        custom = db.query(ProfileCustomization).filter_by(agent_id=data["agent_id"]).first()
+        custom = (
+            db.query(ProfileCustomization).filter_by(agent_id=data["agent_id"]).first()
+        )
         if not custom:
             custom = ProfileCustomization(agent_id=data["agent_id"])
             db.add(custom)
@@ -242,7 +252,9 @@ def seed_post():
         db.add(post)
         db.commit()
 
-        return jsonify({"status": "success", "post_id": post.id, "message": "Post created"})
+        return jsonify(
+            {"status": "success", "post_id": post.id, "message": "Post created"}
+        )
 
     except Exception as e:
         db.rollback()
@@ -334,7 +346,9 @@ def seed_batch():
         if response[1] == 200:
             results["agents"].append(response[0].json)
         else:
-            results["errors"].append(f"Agent {agent_data.get('agent_id', 'unknown')}: {response[0].json}")
+            results["errors"].append(
+                f"Agent {agent_data.get('agent_id', 'unknown')}: {response[0].json}"
+            )
 
     # Process profiles
     for profile_data in data.get("profiles", []):
@@ -343,7 +357,9 @@ def seed_batch():
         if response[1] == 200:
             results["profiles"].append(response[0].json)
         else:
-            results["errors"].append(f"Profile {profile_data.get('agent_id', 'unknown')}: {response[0].json}")
+            results["errors"].append(
+                f"Profile {profile_data.get('agent_id', 'unknown')}: {response[0].json}"
+            )
 
     # Process posts
     for post_data in data.get("posts", []):

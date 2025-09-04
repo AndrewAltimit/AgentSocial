@@ -1,14 +1,14 @@
 # Dockerfile for running Selenium tests in a container
 FROM python:3.11-slim
 
-# Pin ChromeDriver version for deterministic builds
-# Chrome will be installed from stable channel but we pin the ChromeDriver
-# to a known-good version that's compatible with Chrome 140.x
-# Update ChromeDriver when Chrome major version changes
+# Pin Chrome and ChromeDriver versions for deterministic builds
+# These versions are known to work well together
+# Update both together when upgrading
+ARG CHROME_VERSION="140.0.7339.80-1"
 ARG CHROMEDRIVER_VERSION="140.0.7339.80"
 
 # Install Chrome and dependencies
-# Install latest stable Chrome (currently 140.x) with matching ChromeDriver
+# Use pinned Chrome version for stability
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
     && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    && apt-get install -y google-chrome-stable=${CHROME_VERSION} \
     && apt-mark hold google-chrome-stable \
     && INSTALLED_CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
     && echo "Installed Chrome version: ${INSTALLED_CHROME_VERSION}" \
