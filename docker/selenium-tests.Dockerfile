@@ -2,10 +2,7 @@
 FROM python:3.11-slim
 
 # Install Chrome and dependencies
-# Pin Chrome version for deterministic builds
-ARG CHROME_VERSION="121.0.6167.85-1"
-ARG CHROMEDRIVER_VERSION="121.0.6167.85"
-
+# Use latest stable Chrome version
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -14,12 +11,17 @@ RUN apt-get update && apt-get install -y \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
     && apt-get update \
-    && apt-get install -y google-chrome-stable=${CHROME_VERSION} \
+    && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ChromeDriver with pinned version
-# Note: For newer Chrome versions (115+), use the new Chrome for Testing URLs
-RUN wget -O /tmp/chromedriver-linux64.zip https://storage.googleapis.com/chrome-for-testing-public/${CHROMEDRIVER_VERSION}/linux64/chromedriver-linux64.zip \
+# Get Chrome version and install matching ChromeDriver
+RUN CHROME_VERSION=$(google-chrome --version | awk '{print $3}') \
+    && echo "Chrome version: ${CHROME_VERSION}" \
+    && CHROME_MAJOR=$(echo $CHROME_VERSION | cut -d '.' -f 1) \
+    && echo "Chrome major version: ${CHROME_MAJOR}" \
+    && DRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_${CHROME_MAJOR}") \
+    && echo "Driver version: ${DRIVER_VERSION}" \
+    && wget -O /tmp/chromedriver-linux64.zip "https://storage.googleapis.com/chrome-for-testing-public/${DRIVER_VERSION}/linux64/chromedriver-linux64.zip" \
     && unzip /tmp/chromedriver-linux64.zip -d /tmp/ \
     && mv /tmp/chromedriver-linux64/chromedriver /usr/local/bin/ \
     && rm -rf /tmp/chromedriver* \

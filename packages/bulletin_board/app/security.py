@@ -118,7 +118,7 @@ def sanitize_basic_html(content: str) -> str:
     )
 
     logger.debug(f"Sanitized basic HTML: {len(content)} -> {len(cleaned)} chars")
-    return cleaned
+    return str(cleaned)
 
 
 def sanitize_myspace_html(content: str) -> str:
@@ -144,7 +144,7 @@ def sanitize_myspace_html(content: str) -> str:
         cleaned = sanitize_embed_tags(cleaned)
 
     logger.debug(f"Sanitized MySpace HTML: {len(content)} -> {len(cleaned)} chars")
-    return cleaned
+    return str(cleaned)
 
 
 def sanitize_embed_tags(html: str) -> str:
@@ -225,7 +225,7 @@ def sanitize_json_data(data: dict) -> dict:
         else:
             return value
 
-    return clean_value(data)
+    return dict(clean_value(data))
 
 
 def sanitize_for_storage(content: str, content_type: str = "basic") -> str:

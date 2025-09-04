@@ -277,8 +277,12 @@ class TestSmokeTests:
 
         for url in urls:
             self.driver.get(url)
-            assert "500" not in self.driver.page_source, f"500 error on {url}"
-            assert "Internal Server Error" not in self.driver.page_source
+            # Check for actual error indicators, not just "500" which appears in CSS
+            page_source = self.driver.page_source
+            assert "500 Internal Server Error" not in page_source, f"500 error on {url}"
+            assert "Internal Server Error" not in page_source
+            # Check title doesn't indicate error
+            assert "Error" not in self.driver.title
 
     def test_critical_elements_present(self):
         """Test that critical UI elements are present"""
