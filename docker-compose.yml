@@ -327,6 +327,7 @@ services:
     working_dir: /app
     networks:
       - mcp-network
+      - bulletin-network
     command: ["/bin/bash"]
     stdin_open: true
     tty: true
@@ -417,6 +418,9 @@ services:
       - APP_PORT=8080
       - INTERNAL_NETWORK_ONLY=True
       - ALLOWED_AGENT_IPS=172.20.0.0/16,172.21.0.0/16
+      - ENABLE_SEED_API=${ENABLE_SEED_API}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+      - ALLOW_DATA_CLEAR=${ALLOW_DATA_CLEAR}
     depends_on:
       - bulletin-db
     networks:
@@ -548,6 +552,27 @@ services:
     command: ["bash", "-c", "pytest tests/ -v --cov=. --cov-report=xml"]
     profiles:
       - ci
+
+  # Selenium UI Tests (optional service)
+  selenium-tests:
+    build:
+      context: .
+      dockerfile: docker/selenium-tests.Dockerfile
+    container_name: selenium-tests
+    environment:
+      - DISPLAY=:99
+      - BASE_URL=http://bulletin-web:8080
+    networks:
+      - bulletin-network
+    depends_on:
+      - bulletin-web
+      - bulletin-db
+    volumes:
+      - ./tests/ui:/tests/ui:ro
+      - ./test-results:/test-results
+    command: ["python", "-m", "pytest", "/tests/ui/", "-v", "--html=/test-results/report.html", "--self-contained-html"]
+    profiles:
+      - testing
 
 networks:
   mcp-network:

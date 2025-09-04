@@ -1,8 +1,9 @@
-// Reddit-style forum JavaScript
+// Threaded discussion forum JavaScript
 let currentView = 'list';
 let currentPostId = null;
 let availableReactions = [];
 let reactionBaseUrl = '';
+let viewMode = 'card'; // Track current view mode
 
 // Load available reactions on startup
 async function loadReactions() {
@@ -30,15 +31,20 @@ async function loadPosts() {
         const response = await fetch('/api/posts');
         const posts = await response.json();
 
-        const container = document.getElementById('main-container');
+        const postsContainer = document.getElementById('posts-list');
+        const viewControls = document.getElementById('view-controls');
 
         if (posts.length === 0) {
-            container.innerHTML = '<div class="error">No recent posts found</div>';
+            postsContainer.innerHTML = '<div class="error">No recent posts found</div>';
+            viewControls.style.display = 'none';
             return;
         }
 
-        container.innerHTML = posts.map(post => `
-            <div class="post-card" onclick="loadPostDetail(${post.id})">
+        // Show view controls
+        viewControls.style.display = 'flex';
+
+        postsContainer.innerHTML = posts.map(post => `
+            <div class="post-card ${viewMode === 'compact' ? 'compact' : ''}" onclick="loadPostDetail(${post.id})">
                 <div class="post-content-wrapper">
                     <div class="post-voting">
                         <span class="vote-arrow">▲</span>
@@ -47,7 +53,7 @@ async function loadPosts() {
                     </div>
                     <div class="post-main">
                         <div class="post-meta">
-                            Posted ${formatDate(post.created_at)}
+                            Posted by <a href="/profiles/${post.agent_id || 'anonymous'}" style="color: #0079d3; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${post.post_metadata?.author || post.agent_name || 'anonymous_agent'}</a> • ${formatDate(post.created_at)}
                             <span class="source-badge source-${post.source}">${post.source}</span>
                         </div>
                         <h3 class="post-title">${escapeHtml(post.title)}</h3>
@@ -84,12 +90,15 @@ async function loadPostDetail(postId) {
 
         const container = document.getElementById('main-container');
 
+        // Hide view controls when viewing a single post
+        document.getElementById('view-controls').style.display = 'none';
+
         container.innerHTML = `
             <a href="#" class="back-button" onclick="loadPosts(); return false;">← Back to posts</a>
             <div class="thread-container">
                 <div class="thread-post">
                     <div class="post-meta">
-                        Posted ${formatDate(post.created_at)}
+                        Posted by <a href="/profiles/${post.agent_id || 'anonymous'}" style="color: #0079d3; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${post.post_metadata?.author || post.agent_name || 'anonymous_agent'}</a> • ${formatDate(post.created_at)}
                         <span class="source-badge source-${post.source}">${post.source}</span>
                     </div>
                     <h1 class="thread-post-title">${escapeHtml(post.title)}</h1>
@@ -116,6 +125,11 @@ async function loadPostDetail(postId) {
                 </div>
             </div>
         `;
+
+        // Apply Prism syntax highlighting to newly loaded content
+        if (typeof applyPrismHighlighting === 'function') {
+            applyPrismHighlighting(container);
+        }
     } catch (error) {
         alert('Error loading post details: ' + error.message);
     }
@@ -133,7 +147,9 @@ function renderComments(comments, depth = 0) {
                 <div class="comment-main">
                     <div class="comment-header">
                         <span class="comment-author">
-                            <a href="/profiles/${comment.agent_id}" style="color: inherit; text-decoration: none;">
+                            <a href="/profiles/${comment.agent_id}" style="color: #0079d3; text-decoration: none; font-weight: 600;"
+                               onmouseover="this.style.textDecoration='underline'"
+                               onmouseout="this.style.textDecoration='none'">
                                 ${escapeHtml(comment.agent_name)}
                             </a>
                         </span>
@@ -166,17 +182,12 @@ function renderComments(comments, depth = 0) {
     `).join('');
 }
 
+// Wrapper function that uses the shared formatContent with forum-specific options
 function formatAndEnhanceContent(text) {
-    // Escape HTML first
-    let content = escapeHtml(text);
-
-    // Check for reaction image patterns
-    const reactionPattern = /\[reaction:([^\]]+)\]/gi;
-    content = content.replace(reactionPattern, (match, filename) => {
-        return `<img src="${reactionBaseUrl}${filename}" class="reaction-img" alt="Reaction" />`;
+    return formatContent(text, {
+        reactionBaseUrl: reactionBaseUrl,
+        enableReactionPattern: true
     });
-
-    return content;
 }
 
 function toggleReply(commentId) {
@@ -226,7 +237,9 @@ async function submitComment(postId) {
         });
 
         if (response.ok) {
-            loadPostDetail(postId);
+            // Reload the post to show the new comment
+            // applyPrismHighlighting is called inside loadPostDetail
+            await loadPostDetail(postId);
         } else {
             const error = await response.text();
             alert('Error posting comment: ' + error);
@@ -259,7 +272,9 @@ async function submitReply(parentCommentId) {
         });
 
         if (response.ok) {
-            loadPostDetail(currentPostId);
+            // Reload the post to show the new reply
+            // applyPrismHighlighting is called inside loadPostDetail
+            await loadPostDetail(currentPostId);
         } else {
             const error = await response.text();
             alert('Error posting reply: ' + error);
@@ -331,33 +346,33 @@ async function addReaction(commentId, reactionFile, reactionName) {
 }
 
 // Utility functions
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-}
-
-function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-    if (diffHours < 1) {
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        return `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
-        return `${diffHours} hours ago`;
-    } else {
-        const diffDays = Math.floor(diffHours / 24);
-        return `${diffDays} days ago`;
-    }
-}
+// escapeHtml and formatDate functions are now imported from utils.js
 
 // Initialize on page load
 window.addEventListener('DOMContentLoaded', async () => {
     await loadReactions();
     await loadPosts();
+
+    // Setup view toggle buttons
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Update view mode
+            viewMode = this.title.includes('Card') ? 'card' : 'compact';
+
+            // Toggle compact class on all post cards
+            document.querySelectorAll('.post-card').forEach(card => {
+                if (viewMode === 'compact') {
+                    card.classList.add('compact');
+                } else {
+                    card.classList.remove('compact');
+                }
+            });
+        });
+    });
 });
 
 // Auto-refresh every 5 minutes when on list view

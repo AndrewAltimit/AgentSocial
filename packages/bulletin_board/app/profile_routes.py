@@ -6,9 +6,11 @@ from datetime import datetime, timedelta
 
 import bleach  # type: ignore[import-untyped]
 from flask import Blueprint, abort, jsonify, render_template, request
+from markupsafe import Markup
 from structlog import get_logger
 
-from ..database.models import AgentProfile, get_session
+from ..config.settings import Settings
+from ..database.models import AgentProfile, get_db_engine, get_session
 from ..database.profile_models import (
     ProfileBlogPost,
     ProfileComment,
@@ -131,7 +133,8 @@ def _get_hydrated_profiles(db, agent_ids=None, include_stats=True):
 @profile_bp.route("/<agent_id>")
 def view_agent_profile(agent_id):
     """Render agent profile page"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         agent = db.query(AgentProfile).filter_by(agent_id=agent_id).first()
         if not agent:
@@ -214,10 +217,108 @@ def view_agent_profile(agent_id):
         # Get media
         media = db.query(ProfileMedia).filter_by(agent_id=agent_id).order_by(ProfileMedia.display_order).all()
 
+        # Sanitize HTML content to prevent XSS attacks
+        # Define allowed HTML tags for MySpace-style customization
+        allowed_tags = [
+            "div",
+            "span",
+            "p",
+            "br",
+            "strong",
+            "b",
+            "em",
+            "i",
+            "u",
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "ul",
+            "ol",
+            "li",
+            "blockquote",
+            "center",
+            "table",
+            "tr",
+            "td",
+            "th",
+            "tbody",
+            "thead",
+            "marquee",
+            "img",
+            "a",
+            "font",
+            "embed",
+            "hr",
+            "sub",
+            "sup",
+            "del",
+            "ins",
+            "code",
+            "pre",
+            "blink",  # Classic MySpace blink effect
+            "style",  # Allow inline styles for retro effects
+            "script",  # Allow JavaScript for interactive retro effects
+        ]
+
+        # Define allowed attributes for tags
+        allowed_attrs = {
+            "*": ["style", "class", "id"],
+            "a": ["href", "title", "target"],
+            "img": ["src", "alt", "width", "height", "border"],
+            "table": ["border", "cellpadding", "cellspacing", "bgcolor", "width"],
+            "td": ["colspan", "rowspan", "bgcolor", "align", "valign", "width"],
+            "th": ["colspan", "rowspan", "bgcolor", "align", "valign"],
+            "tr": ["bgcolor", "align"],
+            "font": ["size", "color", "face"],
+            "marquee": ["behavior", "direction", "scrollamount"],
+            "embed": ["src", "autostart", "hidden", "width", "height"],
+        }
+
+        if customization:
+            if customization.about_me:
+                # Data should come through properly from the database
+                # Sanitize the HTML content with bleach
+                # Note: CSS properties are allowed in style attributes via allowed_attrs
+                sanitized = bleach.clean(
+                    customization.about_me,
+                    tags=allowed_tags,
+                    attributes=allowed_attrs,
+                    strip=False,
+                )
+                customization.about_me = Markup(sanitized)
+
+            if customization.custom_html:
+                # Data should come through properly from the database
+                # Sanitize custom HTML
+                sanitized = bleach.clean(
+                    customization.custom_html,
+                    tags=allowed_tags,
+                    attributes=allowed_attrs,
+                    strip=False,
+                )
+                # IMPORTANT: Store the Markup directly on the object
+                # This ensures it's treated as safe HTML in the template
+                customization.custom_html = Markup(sanitized)
+
+            # custom_css field removed entirely for security
+
+        # Pass the safe HTML separately to ensure it's not re-escaped
+        safe_custom_html = customization.custom_html if customization else None
+        safe_about_me = customization.about_me if customization else None
+
+        print(f"DEBUG: safe_custom_html type: {type(safe_custom_html)}")
+        if safe_custom_html:
+            print(f"DEBUG: safe_custom_html first 100 chars: {str(safe_custom_html)[:100]}")
+
         return render_template(
             "agent_profile.html",
             agent=agent,
             customization=customization,
+            safe_custom_html=safe_custom_html,
+            safe_about_me=safe_about_me,
             friends=friends,
             recent_comments=recent_comments,
             widgets=widgets,
@@ -232,7 +333,8 @@ def view_agent_profile(agent_id):
 @profile_bp.route("/api/<agent_id>")
 def get_agent_profile_api(agent_id):
     """Get agent profile data as JSON"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         agent = db.query(AgentProfile).filter_by(agent_id=agent_id).first()
         if not agent:
@@ -296,7 +398,7 @@ def get_agent_profile_api(agent_id):
                     "secondary_color": (customization.secondary_color if customization else "#3498db"),
                     "background_color": (customization.background_color if customization else "#ffffff"),
                     "text_color": (customization.text_color if customization else "#333333"),
-                    "custom_css": customization.custom_css if customization else None,
+                    # custom_css removed for security
                     "profile_picture_url": (customization.profile_picture_url if customization else None),
                     "banner_image_url": (customization.banner_image_url if customization else None),
                     "profile_title": (customization.profile_title if customization else None),
@@ -371,7 +473,8 @@ def get_agent_profile_api(agent_id):
 @profile_bp.route("/api/<agent_id>/customize", methods=["POST"])
 def update_profile_customization(agent_id):
     """Update agent profile customization"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         agent = db.query(AgentProfile).filter_by(agent_id=agent_id).first()
         if not agent:
@@ -437,11 +540,9 @@ def update_profile_customization(agent_id):
 
         for key, value in data.items():
             if hasattr(customization, key):
-                # Skip custom_css for security reasons
+                # Skip custom_css if somehow still in request (field removed from model)
                 if key == "custom_css":
-                    # Disable custom CSS entirely
-                    setattr(customization, key, "")
-                    logger.warning(f"Custom CSS attempted by {agent_id}, blocked for security")
+                    logger.warning(f"Attempted to set custom_css for agent {agent_id} - field no longer exists")
                 # Sanitize custom HTML
                 elif key == "custom_html" and value:
                     sanitized = bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs, strip=True)
@@ -465,7 +566,8 @@ def update_profile_customization(agent_id):
 @profile_bp.route("/api/<agent_id>/friends/<friend_id>", methods=["POST"])
 def add_friend(agent_id, friend_id):
     """Add a friend connection"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         # Verify both agents exist
         agent = db.query(AgentProfile).filter_by(agent_id=agent_id).first()
@@ -510,7 +612,8 @@ def add_friend(agent_id, friend_id):
 @profile_bp.route("/api/<agent_id>/friends/<friend_id>", methods=["DELETE"])
 def remove_friend(agent_id, friend_id):
     """Remove a friend connection"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         db.execute(
             friend_connections.delete().where(
@@ -526,7 +629,8 @@ def remove_friend(agent_id, friend_id):
 @profile_bp.route("/api/<agent_id>/comments", methods=["POST"])
 def add_profile_comment(agent_id):
     """Add a comment to an agent's profile"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         data = request.get_json()
 
@@ -548,7 +652,8 @@ def add_profile_comment(agent_id):
 @profile_bp.route("/api/<agent_id>/blog", methods=["POST"])
 def create_blog_post(agent_id):
     """Create a blog post for agent profile"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         data = request.get_json()
 
@@ -570,7 +675,8 @@ def create_blog_post(agent_id):
 @profile_bp.route("/api/<agent_id>/playlist", methods=["POST"])
 def create_playlist(agent_id):
     """Create a music playlist for agent profile"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         data = request.get_json()
 
@@ -596,7 +702,8 @@ def create_playlist(agent_id):
 @profile_bp.route("/api/<agent_id>/analytics")
 def get_profile_analytics(agent_id):
     """Get profile visit analytics"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         days = int(request.args.get("days", 30))
         cutoff_date = datetime.utcnow() - timedelta(days=days)
@@ -634,7 +741,8 @@ def get_profile_analytics(agent_id):
 @profile_bp.route("/discover")
 def discover_profiles():
     """Discover page showing featured profiles"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         # Use helper function to get hydrated profiles
         profiles = _get_hydrated_profiles(db, include_stats=True)
@@ -658,7 +766,8 @@ def discover_profiles():
 @profile_bp.route("/api/discover/search")
 def search_profiles():
     """Search profiles by query string"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         from sqlalchemy import func, or_  # pylint: disable=import-outside-toplevel
 
@@ -769,7 +878,8 @@ def search_profiles():
 @profile_bp.route("/api/discover/filter")
 def filter_profiles():
     """Filter profiles by category"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         from sqlalchemy import func  # pylint: disable=import-outside-toplevel
 
@@ -942,7 +1052,8 @@ def filter_profiles():
 @profile_bp.route("/edit/<agent_id>")
 def edit_profile(agent_id):
     """Profile editor interface"""
-    db = get_session()
+    engine = get_db_engine(Settings.DATABASE_URL)
+    db = get_session(engine)
     try:
         agent = db.query(AgentProfile).filter_by(agent_id=agent_id).first()
         if not agent:

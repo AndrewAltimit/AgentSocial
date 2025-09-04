@@ -1,4 +1,5 @@
 import ipaddress
+import os
 import random
 from datetime import datetime, timedelta
 
@@ -9,6 +10,8 @@ from flask_cors import CORS
 from sqlalchemy import and_
 
 from packages.bulletin_board.app.profile_routes import profile_bp
+from packages.bulletin_board.app.security import sanitize_markdown
+from packages.bulletin_board.app.seed_routes import seed_bp
 from packages.bulletin_board.config.settings import Settings
 from packages.bulletin_board.database.models import (
     AgentProfile,
@@ -24,6 +27,21 @@ CORS(app)
 
 # Register profile blueprint
 app.register_blueprint(profile_bp)
+
+# Register seed blueprint (internal API for test data)
+# SECURITY: Only register seed API if explicitly enabled AND not in production
+FLASK_ENV = os.getenv("FLASK_ENV", "development")
+APP_ENV = os.getenv("APP_ENV", "development")
+ENABLE_SEED_API = os.getenv("ENABLE_SEED_API", "false") == "true"
+
+# Prevent seed API from being registered in production environments
+if ENABLE_SEED_API:
+    if FLASK_ENV == "production" or APP_ENV == "production":
+        print("WARNING: Seed API cannot be enabled in production environments")
+        print("Skipping seed API registration for security reasons")
+    else:
+        app.register_blueprint(seed_bp)
+        print(f"Seed API registered (environment: {FLASK_ENV}/{APP_ENV})")
 
 # Database setup - will be initialized on first request
 engine = None
@@ -70,8 +88,34 @@ def limit_remote_addr():
 
 @app.route("/")
 def index():
-    """Main bulletin board page"""
-    return render_template("reddit.html")
+    """Main bulletin board page - auto-detects desktop vs mobile"""
+    user_agent = request.headers.get("User-Agent", "").lower()
+
+    # Check for desktop indicators
+    is_desktop = any(desktop in user_agent for desktop in ["windows", "mac", "linux", "x11"])
+    is_mobile = any(mobile in user_agent for mobile in ["mobile", "android", "iphone", "ipad"])
+
+    # Use widescreen for desktop by default, unless explicitly mobile
+    if is_desktop and not is_mobile:
+        return render_template("forum_widescreen.html")
+
+    # Check for explicit widescreen parameter
+    if request.args.get("view") == "wide":
+        return render_template("forum_widescreen.html")
+
+    return render_template("forum.html")
+
+
+@app.route("/mobile")
+def mobile_view():
+    """Force mobile view"""
+    return render_template("forum.html")
+
+
+@app.route("/desktop")
+def desktop_view():
+    """Force desktop/widescreen view"""
+    return render_template("forum_widescreen.html")
 
 
 @app.route("/classic")
@@ -102,23 +146,21 @@ def get_posts():
     """Get recent posts (within 24 hours)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:
+        # Render markdown content to HTML if it contains markdown
+        rendered_content = post.content
+        if "```" in post.content or "#" in post.content or "**" in post.content or "![" in post.content:
+            rendered_content = sanitize_markdown(post.content)
+
         result.append(
             {
                 "id": post.id,
                 "title": post.title,
-                "content": post.content,
+                "content": rendered_content,
                 "source": post.source,
                 "url": post.url,
                 "created_at": post.created_at.isoformat(),
@@ -148,10 +190,15 @@ def get_post(post_id):
                 comment_dict = {
                     "id": comment.id,
                     "agent_id": comment.agent_id,
-                    "agent_name": (
-                        comment.agent.display_name if comment.agent else "Unknown"
+                    "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                    "content": (
+                        sanitize_markdown(comment.content)
+                        if "```" in comment.content
+                        or "#" in comment.content
+                        or "![" in comment.content
+                        or "**" in comment.content
+                        else comment.content
                     ),
-                    "content": comment.content,
                     "created_at": comment.created_at.isoformat(),
                     "parent_id": comment.parent_comment_id,
                     "replies": build_comment_tree(comments, comment.id),
@@ -162,10 +209,17 @@ def get_post(post_id):
     # Build nested comment structure
     comments_tree = build_comment_tree(post.comments)
 
+    # Render markdown content to HTML if it contains markdown
+    rendered_content = post.content
+    # Check if content looks like markdown (has code blocks, headers, images, etc.)
+    if "```" in post.content or "#" in post.content or "**" in post.content or "![" in post.content:
+        rendered_content = sanitize_markdown(post.content)
+
     result = {
         "id": post.id,
         "title": post.title,
-        "content": post.content,
+        "content": rendered_content,  # Return rendered HTML for markdown
+        "raw_content": post.content,  # Keep raw for editing
         "source": post.source,
         "url": post.url,
         "created_at": post.created_at.isoformat(),
@@ -194,10 +248,12 @@ def get_post_flat(post_id):
             {
                 "id": comment.id,
                 "agent_id": comment.agent_id,
-                "agent_name": (
-                    comment.agent.display_name if comment.agent else "Unknown"
+                "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
+                "content": (
+                    sanitize_markdown(comment.content)
+                    if "```" in comment.content or "#" in comment.content or "![" in comment.content or "**" in comment.content
+                    else comment.content
                 ),
-                "content": comment.content,
                 "created_at": comment.created_at.isoformat(),
                 "parent_id": comment.parent_comment_id,
             }
@@ -235,14 +291,8 @@ def create_comment():
         abort(403, "Invalid or inactive agent")
 
     # Verify post exists and is recent
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    post = (
-        session.query(Post)
-        .filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time))
-        .first()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    post = session.query(Post).filter(and_(Post.id == data["post_id"], Post.created_at > cutoff_time)).first()
 
     if not post:
         session.close()
@@ -369,15 +419,8 @@ def get_recent_posts_for_agents():
     """Get posts for agent analysis (internal network only)"""
     session = get_session(get_engine())
 
-    cutoff_time = datetime.utcnow() - timedelta(
-        hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS
-    )
-    posts = (
-        session.query(Post)
-        .filter(Post.created_at > cutoff_time)
-        .order_by(Post.created_at.desc())
-        .all()
-    )
+    cutoff_time = datetime.utcnow() - timedelta(hours=Settings.AGENT_ANALYSIS_CUTOFF_HOURS)
+    posts = session.query(Post).filter(Post.created_at > cutoff_time).order_by(Post.created_at.desc()).all()
 
     result = []
     for post in posts:

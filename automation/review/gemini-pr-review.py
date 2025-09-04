@@ -64,7 +64,7 @@ def _call_gemini_with_fallback(prompt: str) -> Tuple[str, str]:
         else:
             # No stderr, return the error
             return f"❌ Pro model failed with error: {str(e)}", NO_MODEL
-    except Exception as e:
+    except (OSError, ValueError, RuntimeError) as e:
         # Unexpected error
         return f"❌ Unexpected error with Pro model: {str(e)}", NO_MODEL
 
@@ -89,7 +89,7 @@ def _call_gemini_with_fallback(prompt: str) -> Tuple[str, str]:
         err_msg = e.stderr if hasattr(e, "stderr") and e.stderr else str(e)
         print(f"❌ Flash model failed: {err_msg}")
         return f"❌ Both Pro and Flash models failed. Flash error: {err_msg}", NO_MODEL
-    except Exception as e:
+    except (OSError, ValueError, RuntimeError) as e:
         err_msg = f"Unexpected error: {str(e)}"
         print(f"❌ {err_msg}")
         return f"❌ Both Pro and Flash models failed. {err_msg}", NO_MODEL
@@ -98,9 +98,9 @@ def _call_gemini_with_fallback(prompt: str) -> Tuple[str, str]:
 def check_gemini_cli() -> bool:
     """Check if Gemini CLI is available"""
     try:
-        result = subprocess.run(["which", "gemini"], capture_output=True, text=True)
+        result = subprocess.run(["which", "gemini"], capture_output=True, text=True, check=False)
         return result.returncode == 0
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         return False
 
 
@@ -142,7 +142,7 @@ def get_pr_info() -> Dict[str, Any]:
             print(f"⚠️ Could not fetch PR details: {e}")
         except json.JSONDecodeError as e:
             print(f"⚠️ Could not parse PR JSON: {e}")
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             print(f"⚠️ Unexpected error fetching PR info: {e}")
 
     return {
@@ -158,7 +158,7 @@ def get_pr_info() -> Dict[str, Any]:
 def get_changed_files() -> List[str]:
     """Get list of changed files in the PR"""
     if os.path.exists("changed_files.txt"):
-        with open("changed_files.txt", "r") as f:
+        with open("changed_files.txt", "r", encoding="utf-8") as f:
             return [line.strip() for line in f if line.strip()]
     return []
 
@@ -186,7 +186,7 @@ def get_file_stats() -> Dict[str, int]:
                     elif "file" in part:
                         stats["files"] = int(part.strip().split()[0])
         return stats
-    except Exception:
+    except (subprocess.CalledProcessError, ValueError, OSError):
         return {"additions": 0, "deletions": 0, "files": 0}
 
 
@@ -215,7 +215,7 @@ def get_file_content(filepath: str) -> str:
             check=True,
         )
         return result.stdout
-    except Exception:
+    except (subprocess.CalledProcessError, OSError):
         return f"Could not read {filepath}"
 
 
@@ -256,8 +256,8 @@ def get_project_context() -> str:
 
     if project_context_file.exists():
         try:
-            combined_context.append(project_context_file.read_text())
-        except Exception as e:
+            combined_context.append(project_context_file.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError) as e:
             print(f"Warning: Could not read project context: {e}")
 
     # If no project context found, use fallback
@@ -274,10 +274,10 @@ def get_project_context() -> str:
     if gemini_expression_file.exists():
         try:
             print("📝 Including Gemini expression philosophy in review context...")
-            expression_content = gemini_expression_file.read_text()
+            expression_content = gemini_expression_file.read_text(encoding="utf-8")
             combined_context.append("\n\n---\n\n")
             combined_context.append(expression_content)
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             print(f"Warning: Could not read Gemini expression file: {e}")
     else:
         print("Note: Gemini expression file not found at .context/GEMINI_EXPRESSION.md")
@@ -574,7 +574,7 @@ def post_pr_comment(comment: str, pr_info: Dict[str, Any]):
     try:
         # Save comment to temporary file
         comment_file = f"/tmp/gemini_comment_{pr_info['number']}.md"
-        with open(comment_file, "w") as f:
+        with open(comment_file, "w", encoding="utf-8") as f:
             f.write(comment)
 
         # Use gh CLI to post comment
@@ -597,7 +597,7 @@ def post_pr_comment(comment: str, pr_info: Dict[str, Any]):
     except subprocess.CalledProcessError as e:
         print(f"❌ Failed to post comment: {e}")
         # Save locally as backup
-        with open("gemini-review.md", "w") as f:
+        with open("gemini-review.md", "w", encoding="utf-8") as f:
             f.write(comment)
         print("💾 Review saved to gemini-review.md")
 
@@ -643,7 +643,7 @@ def main():
     post_pr_comment(comment, pr_info)
 
     # Save to step summary
-    with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null"), "a") as f:
+    with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null"), "a", encoding="utf-8") as f:
         f.write("\n\n" + comment)
 
     print("✅ Gemini PR review complete!")

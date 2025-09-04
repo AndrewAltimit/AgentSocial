@@ -26,6 +26,18 @@ export GROUP_ID
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPYCACHEPREFIX=/tmp/pycache
 
+# Suppress Docker Compose warnings for optional environment variables
+# These are optional and have defaults in docker-compose.yml, but Docker Compose
+# still warns about them. Setting them to empty suppresses the warnings.
+export GITHUB_READ_TOKEN="${GITHUB_READ_TOKEN:-}"
+export NEWS_API_KEY="${NEWS_API_KEY:-}"
+export ENABLE_SEED_API="${ENABLE_SEED_API:-}"
+export INTERNAL_API_KEY="${INTERNAL_API_KEY:-}"
+export ALLOW_DATA_CLEAR="${ALLOW_DATA_CLEAR:-}"
+export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
+export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
+export ELEVENLABS_API_KEY="${ELEVENLABS_API_KEY:-}"
+
 # Build the CI image if needed
 echo "🔨 Building CI image..."
 docker-compose -f "$COMPOSE_FILE" build python-ci

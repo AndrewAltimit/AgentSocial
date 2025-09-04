@@ -1,0 +1,1410 @@
+🔨 Building CI image...
+#1 [internal] load local bake definitions
+#1 reading from stdin 409B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from python-ci.Dockerfile
+#2 transferring dockerfile: 2.35kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.10-slim
+#3 DONE 0.1s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 442B done
+#4 DONE 0.0s
+
+#5 [ 1/16] FROM docker.io/library/python:3.10-slim@sha256:420fbb0e468d3eaf0f7e93ea6f7a48792cbcadc39d43ac95b96bee2afe4367da
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 1.08kB done
+#6 DONE 0.0s
+
+#7 [11/16] RUN mkdir -p packages/github_ai_agents /app/packages/github_ai_agents
+#7 CACHED
+
+#8 [12/16] COPY packages/github_ai_agents/pyproject.toml ./packages/github_ai_agents/
+#8 CACHED
+
+#9 [ 3/16] WORKDIR /workspace
+#9 CACHED
+
+#10 [13/16] COPY packages/github_ai_agents/pyproject.toml /app/packages/github_ai_agents/
+#10 CACHED
+
+#11 [ 8/16] COPY .flake8 .pylintrc /app/
+#11 CACHED
+
+#12 [ 6/16] RUN pip install --no-cache-dir -r requirements.txt
+#12 CACHED
+
+#13 [ 4/16] RUN pip install --no-cache-dir --upgrade pip>=23.3 setuptools>=78.1.1
+#13 CACHED
+
+#14 [ 7/16] COPY .flake8 .pylintrc ./
+#14 CACHED
+
+#15 [ 5/16] COPY config/python/requirements.txt ./
+#15 CACHED
+
+#16 [ 9/16] COPY pyproject.toml ./pyproject.toml
+#16 CACHED
+
+#17 [14/16] RUN useradd -m -u 1000 ciuser
+#17 CACHED
+
+#18 [ 2/16] RUN apt-get update && apt-get install -y     git     curl     build-essential     libpng-dev     libfreetype6-dev     pkg-config     python3-tk     && rm -rf /var/lib/apt/lists/*
+#18 CACHED
+
+#19 [15/16] COPY automation/security /app/security
+#19 CACHED
+
+#20 [10/16] COPY pyproject.toml /app/pyproject.toml
+#20 CACHED
+
+#21 [16/16] RUN chmod +x /app/security/*.sh &&     echo 'alias gh="/app/security/gh-wrapper.sh"' >> /etc/bash.bashrc
+#21 CACHED
+
+#22 exporting to image
+#22 exporting layers done
+#22 writing image sha256:c0cb885a7eaeabbee519041f9a24b71a579477a9fad4e82e968338ad7707bb25 done
+#22 naming to docker.io/library/agentsocial-python-ci done
+#22 DONE 0.0s
+
+#23 resolving provenance for metadata file
+#23 DONE 0.0s
+ python-ci  Built
+=== Running basic linting ===
+🔍 Checking formatting...
+would reformat /app/packages/bulletin_board/app/app.py
+would reformat /app/packages/bulletin_board/app/seed_routes.py
+
+Oh no! 💥 💔 💥
+2 files would be reformatted, 186 files would be left unchanged.
+
+Skipped 3 files
+🔍 Running Flake8 critical errors check (E9,F63,F7,F82)...
+0
+🔍 Running Flake8 full check...
+0
+🔍 Running Pylint...
+************* Module gemini-pr-review
+automation/review/gemini-pr-review.py:327: [W0718(broad-exception-caught), get_recent_pr_comments] Catching too general exception Exception
+automation/review/gemini-pr-review.py:421: [W0613(unused-argument), analyze_file_group] Unused argument 'project_context'
+************* Module gh-comment-validator
+automation/security/gh-comment-validator.py:97: [W0718(broad-exception-caught), is_safe_url] Catching too general exception Exception
+automation/security/gh-comment-validator.py:157: [W0718(broad-exception-caught), validate_reaction_url] Catching too general exception Exception
+automation/security/gh-comment-validator.py:161: [W1203(logging-fstring-interpolation), validate_reaction_url] Use lazy % formatting in logging functions
+automation/security/gh-comment-validator.py:209: [W0718(broad-exception-caught), check_reaction_urls_in_file] Catching too general exception Exception
+automation/security/gh-comment-validator.py:196: [W1514(unspecified-encoding), check_reaction_urls_in_file] Using open without explicitly specifying an encoding
+automation/security/gh-comment-validator.py:201: [W0612(unused-variable), check_reaction_urls_in_file] Unused variable 'full_match'
+************* Module github-secrets-masker
+automation/security/github-secrets-masker.py:35: [W1514(unspecified-encoding), SecretMasker._load_config] Using open without explicitly specifying an encoding
+automation/security/github-secrets-masker.py:170: [W0640(cell-var-from-loop), SecretMasker.mask_text.replace_with_mask] Cell variable name defined in loop
+automation/security/github-secrets-masker.py:169: [W0613(unused-argument), SecretMasker.mask_text.replace_with_mask] Unused argument 'match'
+************* Module check-markdown-links
+automation/analysis/check-markdown-links.py:14: [C0413(wrong-import-position), ] Import "from tools.cli.utilities.markdown_link_checker import MarkdownLinkChecker" should be placed at the top of the module
+automation/analysis/check-markdown-links.py:30: [R1702(too-many-nested-blocks), format_results_text] Too many nested blocks (6/5)
+automation/analysis/check-markdown-links.py:62: [R1702(too-many-nested-blocks), format_results_github] Too many nested blocks (6/5)
+automation/analysis/check-markdown-links.py:88: [W1514(unspecified-encoding), write_github_outputs] Using open without explicitly specifying an encoding
+automation/analysis/check-markdown-links.py:133: [W1514(unspecified-encoding), main] Using open without explicitly specifying an encoding
+************* Module pr_monitor_agent
+automation/monitoring/pr/pr_monitor_agent.py:52: [W0718(broad-exception-caught), run_monitor] Catching too general exception Exception
+automation/monitoring/pr/pr_monitor_agent.py:39: [W1510(subprocess-run-check), run_monitor] 'subprocess.run' used without explicitly defining the value for 'check'.
+************* Module tools.gemini.gemini_integration
+tools/gemini/gemini_integration.py:133: [W0718(broad-exception-caught), GeminiIntegration.consult_gemini] Catching too general exception Exception
+tools/gemini/gemini_integration.py:134: [W1203(logging-fstring-interpolation), GeminiIntegration.consult_gemini] Use lazy % formatting in logging functions
+tools/gemini/gemini_integration.py:271: [W0719(broad-exception-raised), GeminiIntegration._execute_gemini_cli] Raising too general exception: Exception
+tools/gemini/gemini_integration.py:276: [W0707(raise-missing-from), GeminiIntegration._execute_gemini_cli] Consider explicitly re-raising using 'except Exception as exc' and 'raise Exception(f'Gemini CLI timed out after {self.timeout} seconds') from exc'
+tools/gemini/gemini_integration.py:276: [W0719(broad-exception-raised), GeminiIntegration._execute_gemini_cli] Raising too general exception: Exception
+tools/gemini/gemini_integration.py:297: [W0603(global-statement), get_integration] Using the global statement
+************* Module tools.mcp.mcp_server
+tools/mcp/mcp_server.py:67: [W0718(broad-exception-caught), MCPTools.format_check] Catching too general exception Exception
+tools/mcp/mcp_server.py:62: [W1510(subprocess-run-check), MCPTools.format_check] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/mcp_server.py:83: [W0718(broad-exception-caught), MCPTools.lint] Catching too general exception Exception
+tools/mcp/mcp_server.py:78: [W1510(subprocess-run-check), MCPTools.lint] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/mcp_server.py:129: [W0718(broad-exception-caught), MCPTools.create_manim_animation] Catching too general exception Exception
+tools/mcp/mcp_server.py:110: [W1510(subprocess-run-check), MCPTools.create_manim_animation] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/mcp_server.py:183: [W0718(broad-exception-caught), MCPTools.compile_latex] Catching too general exception Exception
+tools/mcp/mcp_server.py:155: [W1510(subprocess-run-check), MCPTools.compile_latex] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/mcp_server.py:161: [W1510(subprocess-run-check), MCPTools.compile_latex] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/mcp_server.py:217: [W0718(broad-exception-caught), execute_tool] Catching too general exception Exception
+tools/mcp/mcp_server.py:218: [W1203(logging-fstring-interpolation), execute_tool] Use lazy % formatting in logging functions
+tools/mcp/mcp_server.py:264: [W0718(broad-exception-caught), serve_mcp.handle_call_tool] Catching too general exception Exception
+************* Module tools.mcp.crush.server
+tools/mcp/crush/server.py:47: [W0718(broad-exception-caught), CrushMCPServer._load_crush_config] Catching too general exception Exception
+tools/mcp/crush/server.py:39: [W1514(unspecified-encoding), CrushMCPServer._load_crush_config] Using open without explicitly specifying an encoding
+tools/mcp/crush/server.py:48: [W1203(logging-fstring-interpolation), CrushMCPServer._load_crush_config] Use lazy % formatting in logging functions
+tools/mcp/crush/server.py:71: [W0718(broad-exception-caught), CrushMCPServer._load_crush_config] Catching too general exception Exception
+tools/mcp/crush/server.py:68: [W1514(unspecified-encoding), CrushMCPServer._load_crush_config] Using open without explicitly specifying an encoding
+tools/mcp/crush/server.py:72: [W1203(logging-fstring-interpolation), CrushMCPServer._load_crush_config] Use lazy % formatting in logging functions
+tools/mcp/crush/server.py:88: [W1203(logging-fstring-interpolation), CrushMCPServer._initialize_crush] Use lazy % formatting in logging functions
+tools/mcp/crush/server.py:96: [W0613(unused-argument), CrushMCPServer._initialize_crush.MockCrush.consult_crush] Unused argument 'kwargs'
+************* Module tools.mcp.crush.crush_integration
+tools/mcp/crush/crush_integration.py:91: [W0718(broad-exception-caught), CrushIntegration.generate_response] Catching too general exception Exception
+tools/mcp/crush/crush_integration.py:92: [W1203(logging-fstring-interpolation), CrushIntegration.generate_response] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:112: [W0613(unused-argument), CrushIntegration.consult_crush] Unused argument 'context'
+tools/mcp/crush/crush_integration.py:113: [W0613(unused-argument), CrushIntegration.consult_crush] Unused argument 'comparison_mode'
+tools/mcp/crush/crush_integration.py:158: [W0612(unused-variable), CrushIntegration._prepare_prompt] Unused variable 'i'
+tools/mcp/crush/crush_integration.py:182: [W1514(unspecified-encoding), CrushIntegration._is_running_in_container] Using open without explicitly specifying an encoding
+tools/mcp/crush/crush_integration.py:190: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_direct] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:202: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_direct] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:230: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_direct] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:236: [W0719(broad-exception-raised), CrushIntegration._execute_crush_direct] Raising too general exception: Exception
+tools/mcp/crush/crush_integration.py:239: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_direct] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:245: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_direct] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:250: [W0707(raise-missing-from), CrushIntegration._execute_crush_direct] Consider explicitly re-raising using 'except Exception as exc' and 'raise Exception(f'Crush timed out after {self.timeout} seconds') from exc'
+tools/mcp/crush/crush_integration.py:250: [W0719(broad-exception-raised), CrushIntegration._execute_crush_direct] Raising too general exception: Exception
+tools/mcp/crush/crush_integration.py:255: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_local] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:267: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_local] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:293: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_local] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:299: [W0719(broad-exception-raised), CrushIntegration._execute_crush_local] Raising too general exception: Exception
+tools/mcp/crush/crush_integration.py:302: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_local] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:308: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_local] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:313: [W0707(raise-missing-from), CrushIntegration._execute_crush_local] Consider explicitly re-raising using 'except Exception as exc' and 'raise Exception(f'Crush timed out after {self.timeout} seconds') from exc'
+tools/mcp/crush/crush_integration.py:313: [W0719(broad-exception-raised), CrushIntegration._execute_crush_local] Raising too general exception: Exception
+tools/mcp/crush/crush_integration.py:334: [W0718(broad-exception-caught), CrushIntegration._execute_crush_docker] Catching too general exception Exception
+tools/mcp/crush/crush_integration.py:381: [W0719(broad-exception-raised), CrushIntegration._execute_crush_docker] Raising too general exception: Exception
+tools/mcp/crush/crush_integration.py:389: [W1203(logging-fstring-interpolation), CrushIntegration._execute_crush_docker] Use lazy % formatting in logging functions
+tools/mcp/crush/crush_integration.py:394: [W0707(raise-missing-from), CrushIntegration._execute_crush_docker] Consider explicitly re-raising using 'except Exception as exc' and 'raise Exception(f'Crush timed out after {self.timeout} seconds') from exc'
+tools/mcp/crush/crush_integration.py:394: [W0719(broad-exception-raised), CrushIntegration._execute_crush_docker] Raising too general exception: Exception
+tools/mcp/crush/crush_integration.py:414: [W0603(global-statement), get_integration] Using the global statement
+************* Module test_server
+tools/mcp/crush/scripts/test_server.py:39: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:53: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:81: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:114: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:141: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:160: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:182: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:198: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+tools/mcp/crush/scripts/test_server.py:228: [W0718(broad-exception-caught), test_crush_server] Catching too general exception Exception
+************* Module tools.mcp.core.client
+tools/mcp/core/client.py:51: [W0718(broad-exception-caught), MCPClient.execute_tool] Catching too general exception Exception
+tools/mcp/core/client.py:46: [W3101(missing-timeout), MCPClient.execute_tool] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tools/mcp/core/client.py:52: [W1203(logging-fstring-interpolation), MCPClient.execute_tool] Use lazy % formatting in logging functions
+tools/mcp/core/client.py:65: [W0718(broad-exception-caught), MCPClient.list_tools] Catching too general exception Exception
+tools/mcp/core/client.py:60: [W3101(missing-timeout), MCPClient.list_tools] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tools/mcp/core/client.py:66: [W1203(logging-fstring-interpolation), MCPClient.list_tools] Use lazy % formatting in logging functions
+tools/mcp/core/client.py:76: [W0718(broad-exception-caught), MCPClient.health_check] Catching too general exception Exception
+************* Module tools.mcp.core.utils
+tools/mcp/core/utils.py:100: [W1514(unspecified-encoding), load_config] Using open without explicitly specifying an encoding
+tools/mcp/core/utils.py:122: [W0718(broad-exception-caught), check_container_environment] Catching too general exception Exception
+tools/mcp/core/utils.py:120: [W1514(unspecified-encoding), check_container_environment] Using open without explicitly specifying an encoding
+************* Module tools.mcp.core.client_registry
+tools/mcp/core/client_registry.py:28: [W0718(broad-exception-caught), ClientRegistry._load_clients] Catching too general exception Exception
+tools/mcp/core/client_registry.py:25: [W1514(unspecified-encoding), ClientRegistry._load_clients] Using open without explicitly specifying an encoding
+tools/mcp/core/client_registry.py:27: [W1203(logging-fstring-interpolation), ClientRegistry._load_clients] Use lazy % formatting in logging functions
+tools/mcp/core/client_registry.py:29: [W1203(logging-fstring-interpolation), ClientRegistry._load_clients] Use lazy % formatting in logging functions
+tools/mcp/core/client_registry.py:38: [W0718(broad-exception-caught), ClientRegistry._save_clients] Catching too general exception Exception
+tools/mcp/core/client_registry.py:36: [W1514(unspecified-encoding), ClientRegistry._save_clients] Using open without explicitly specifying an encoding
+tools/mcp/core/client_registry.py:39: [W1203(logging-fstring-interpolation), ClientRegistry._save_clients] Use lazy % formatting in logging functions
+************* Module tools.mcp.core.base_server
+tools/mcp/core/base_server.py:12: [R0402(consider-using-from-import), ] Use 'from mcp import types' instead
+tools/mcp/core/base_server.py:61: [W1203(logging-fstring-interpolation), BaseMCPServer._setup_events.startup_event] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:62: [W1203(logging-fstring-interpolation), BaseMCPServer._setup_events.startup_event] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:113: [W1203(logging-fstring-interpolation), BaseMCPServer.register_client] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:138: [W1203(logging-fstring-interpolation), BaseMCPServer.register_client_oauth] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:181: [W0718(broad-exception-caught), BaseMCPServer.oauth_token_bypass] Catching too general exception Exception
+tools/mcp/core/base_server.py:185: [W1203(logging-fstring-interpolation), BaseMCPServer.oauth_token_bypass] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:239: [W0621(redefined-outer-name), BaseMCPServer.handle_mcp_get.event_generator] Redefining name 'asyncio' from outer scope (line 3)
+tools/mcp/core/base_server.py:239: [W0404(reimported), BaseMCPServer.handle_mcp_get.event_generator] Reimport 'asyncio' (imported line 3)
+tools/mcp/core/base_server.py:259: [W0621(redefined-outer-name), BaseMCPServer.handle_mcp_sse] Redefining name 'asyncio' from outer scope (line 3)
+tools/mcp/core/base_server.py:259: [W0404(reimported), BaseMCPServer.handle_mcp_sse] Reimport 'asyncio' (imported line 3)
+tools/mcp/core/base_server.py:287: [W0613(unused-argument), BaseMCPServer.handle_messages_get] Unused argument 'request'
+tools/mcp/core/base_server.py:320: [W1203(logging-fstring-interpolation), BaseMCPServer.handle_messages] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:321: [W1203(logging-fstring-interpolation), BaseMCPServer.handle_messages] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:428: [W0718(broad-exception-caught), BaseMCPServer.handle_messages] Catching too general exception Exception
+tools/mcp/core/base_server.py:326: [W1203(logging-fstring-interpolation), BaseMCPServer.handle_messages] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:337: [W1203(logging-fstring-interpolation), BaseMCPServer.handle_messages] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:419: [W1203(logging-fstring-interpolation), BaseMCPServer.handle_messages] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:429: [W1203(logging-fstring-interpolation), BaseMCPServer.handle_messages] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:448: [W0613(unused-argument), BaseMCPServer.handle_options] Unused argument 'request'
+tools/mcp/core/base_server.py:468: [W1203(logging-fstring-interpolation), BaseMCPServer._process_jsonrpc_request] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:519: [W0718(broad-exception-caught), BaseMCPServer._process_jsonrpc_request] Catching too general exception Exception
+tools/mcp/core/base_server.py:508: [W1203(logging-fstring-interpolation), BaseMCPServer._process_jsonrpc_request] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:520: [W1203(logging-fstring-interpolation), BaseMCPServer._process_jsonrpc_request] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:539: [W1203(logging-fstring-interpolation), BaseMCPServer._jsonrpc_initialize] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:557: [W1203(logging-fstring-interpolation), BaseMCPServer._jsonrpc_list_tools] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:570: [W1203(logging-fstring-interpolation), BaseMCPServer._jsonrpc_list_tools] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:554: [W0613(unused-argument), BaseMCPServer._jsonrpc_list_tools] Unused argument 'params'
+tools/mcp/core/base_server.py:602: [W0718(broad-exception-caught), BaseMCPServer._jsonrpc_call_tool] Catching too general exception Exception
+tools/mcp/core/base_server.py:603: [W1203(logging-fstring-interpolation), BaseMCPServer._jsonrpc_call_tool] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:711: [W0718(broad-exception-caught), BaseMCPServer.execute_tool] Catching too general exception Exception
+tools/mcp/core/base_server.py:712: [W1203(logging-fstring-interpolation), BaseMCPServer.execute_tool] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:748: [W0107(unnecessary-pass), BaseMCPServer.get_tools] Unnecessary pass statement
+tools/mcp/core/base_server.py:790: [W0718(broad-exception-caught), BaseMCPServer.run_stdio.call_tool] Catching too general exception Exception
+tools/mcp/core/base_server.py:791: [W1203(logging-fstring-interpolation), BaseMCPServer.run_stdio.call_tool] Use lazy % formatting in logging functions
+tools/mcp/core/base_server.py:757: [W0612(unused-variable), BaseMCPServer.run_stdio] Unused variable 'tool_info'
+tools/mcp/core/base_server.py:542: [W0201(attribute-defined-outside-init), BaseMCPServer._jsonrpc_initialize] Attribute '_protocol_version' defined outside __init__
+tools/mcp/core/base_server.py:755: [W0201(attribute-defined-outside-init), BaseMCPServer.run_stdio] Attribute '_tools' defined outside __init__
+tools/mcp/core/base_server.py:756: [W0201(attribute-defined-outside-init), BaseMCPServer.run_stdio] Attribute '_tool_funcs' defined outside __init__
+tools/mcp/core/base_server.py:6: [W0611(unused-import), ] Unused import os
+************* Module tools.mcp.core.http_bridge
+tools/mcp/core/http_bridge.py:90: [W0718(broad-exception-caught), HTTPBridge.health] Catching too general exception Exception
+tools/mcp/core/http_bridge.py:127: [W0718(broad-exception-caught), HTTPBridge.handle_mcp_request] Catching too general exception Exception
+tools/mcp/core/http_bridge.py:108: [W1203(logging-fstring-interpolation), HTTPBridge.handle_mcp_request] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:118: [W1203(logging-fstring-interpolation), HTTPBridge.handle_mcp_request] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:128: [W1203(logging-fstring-interpolation), HTTPBridge.handle_mcp_request] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:149: [W1203(logging-fstring-interpolation), HTTPBridge.list_tools] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:150: [W0707(raise-missing-from), HTTPBridge.list_tools] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+tools/mcp/core/http_bridge.py:166: [W1203(logging-fstring-interpolation), HTTPBridge.execute_tool] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:167: [W0707(raise-missing-from), HTTPBridge.execute_tool] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+tools/mcp/core/http_bridge.py:173: [W1203(logging-fstring-interpolation), HTTPBridge.run] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:174: [W1203(logging-fstring-interpolation), HTTPBridge.run] Use lazy % formatting in logging functions
+tools/mcp/core/http_bridge.py:175: [W1203(logging-fstring-interpolation), HTTPBridge.run] Use lazy % formatting in logging functions
+************* Module tools.mcp.gemini.server
+tools/mcp/gemini/server.py:62: [W0718(broad-exception-caught), GeminiMCPServer._load_gemini_config] Catching too general exception Exception
+tools/mcp/gemini/server.py:54: [W1514(unspecified-encoding), GeminiMCPServer._load_gemini_config] Using open without explicitly specifying an encoding
+tools/mcp/gemini/server.py:63: [W1203(logging-fstring-interpolation), GeminiMCPServer._load_gemini_config] Use lazy % formatting in logging functions
+tools/mcp/gemini/server.py:87: [W0718(broad-exception-caught), GeminiMCPServer._load_gemini_config] Catching too general exception Exception
+tools/mcp/gemini/server.py:84: [W1514(unspecified-encoding), GeminiMCPServer._load_gemini_config] Using open without explicitly specifying an encoding
+tools/mcp/gemini/server.py:88: [W1203(logging-fstring-interpolation), GeminiMCPServer._load_gemini_config] Use lazy % formatting in logging functions
+tools/mcp/gemini/server.py:104: [W1203(logging-fstring-interpolation), GeminiMCPServer._initialize_gemini] Use lazy % formatting in logging functions
+tools/mcp/gemini/server.py:112: [W0613(unused-argument), GeminiMCPServer._initialize_gemini.MockGemini.consult_gemini] Unused argument 'kwargs'
+tools/mcp/gemini/server.py:3: [W0611(unused-import), ] Unused import asyncio
+************* Module tools.mcp.gemini.gemini_integration
+tools/mcp/gemini/gemini_integration.py:133: [W0718(broad-exception-caught), GeminiIntegration.consult_gemini] Catching too general exception Exception
+tools/mcp/gemini/gemini_integration.py:134: [W1203(logging-fstring-interpolation), GeminiIntegration.consult_gemini] Use lazy % formatting in logging functions
+tools/mcp/gemini/gemini_integration.py:271: [W0719(broad-exception-raised), GeminiIntegration._execute_gemini_cli] Raising too general exception: Exception
+tools/mcp/gemini/gemini_integration.py:276: [W0707(raise-missing-from), GeminiIntegration._execute_gemini_cli] Consider explicitly re-raising using 'except Exception as exc' and 'raise Exception(f'Gemini CLI timed out after {self.timeout} seconds') from exc'
+tools/mcp/gemini/gemini_integration.py:276: [W0719(broad-exception-raised), GeminiIntegration._execute_gemini_cli] Raising too general exception: Exception
+tools/mcp/gemini/gemini_integration.py:297: [W0603(global-statement), get_integration] Using the global statement
+tools/mcp/gemini/scripts/test_server.py:13: [W0621(redefined-outer-name), test_gemini_server] Redefining name 'base_url' from outer scope (line 140)
+tools/mcp/gemini/scripts/test_server.py:30: [W0718(broad-exception-caught), test_gemini_server] Catching too general exception Exception
+tools/mcp/gemini/scripts/test_server.py:41: [W0718(broad-exception-caught), test_gemini_server] Catching too general exception Exception
+tools/mcp/gemini/scripts/test_server.py:60: [W0718(broad-exception-caught), test_gemini_server] Catching too general exception Exception
+tools/mcp/gemini/scripts/test_server.py:75: [W0718(broad-exception-caught), test_gemini_server] Catching too general exception Exception
+tools/mcp/gemini/scripts/test_server.py:102: [W0718(broad-exception-caught), test_gemini_server] Catching too general exception Exception
+tools/mcp/gemini/scripts/test_server.py:131: [W0718(broad-exception-caught), test_gemini_server] Catching too general exception Exception
+tools/mcp/gemini/scripts/test_server.py:5: [W0611(unused-import), ] Unused import json
+tools/mcp/gemini/scripts/test_server.py:8: [W0611(unused-import), ] Unused Path imported from pathlib
+************* Module tools.mcp.content_creation.server
+tools/mcp/content_creation/server.py:47: [W0621(redefined-outer-name), ContentCreationMCPServer.__init__] Redefining name 'tempfile' from outer scope (line 8)
+tools/mcp/content_creation/server.py:37: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:44: [W0718(broad-exception-caught), ContentCreationMCPServer.__init__] Catching too general exception Exception
+tools/mcp/content_creation/server.py:45: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:47: [W0404(reimported), ContentCreationMCPServer.__init__] Reimport 'tempfile' (imported line 8)
+tools/mcp/content_creation/server.py:53: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:100: [W0718(broad-exception-caught), ContentCreationMCPServer._process_image_for_feedback] Catching too general exception Exception
+tools/mcp/content_creation/server.py:101: [W1203(logging-fstring-interpolation), ContentCreationMCPServer._process_image_for_feedback] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:117: [W1203(logging-fstring-interpolation), ContentCreationMCPServer._run_subprocess_with_logging] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:121: [W1203(logging-fstring-interpolation), ContentCreationMCPServer._run_subprocess_with_logging] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:124: [W1203(logging-fstring-interpolation), ContentCreationMCPServer._run_subprocess_with_logging] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:127: [W1203(logging-fstring-interpolation), ContentCreationMCPServer._run_subprocess_with_logging] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:308: [W0718(broad-exception-caught), ContentCreationMCPServer.create_manim_animation] Catching too general exception Exception
+tools/mcp/content_creation/server.py:309: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.create_manim_animation] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:273: [W0612(unused-variable), ContentCreationMCPServer.create_manim_animation] Unused variable 'dirs'
+tools/mcp/content_creation/server.py:315: [W0622(redefined-builtin), ContentCreationMCPServer.compile_latex] Redefining built-in 'format'
+tools/mcp/content_creation/server.py:445: [W0718(broad-exception-caught), ContentCreationMCPServer.compile_latex] Catching too general exception Exception
+tools/mcp/content_creation/server.py:232: [R1702(too-many-nested-blocks), ContentCreationMCPServer.create_manim_animation] Too many nested blocks (7/5)
+tools/mcp/content_creation/server.py:346: [W1514(unspecified-encoding), ContentCreationMCPServer.compile_latex] Using open without explicitly specifying an encoding
+tools/mcp/content_creation/server.py:420: [W0718(broad-exception-caught), ContentCreationMCPServer.compile_latex] Catching too general exception Exception
+tools/mcp/content_creation/server.py:421: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.compile_latex] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:430: [W1514(unspecified-encoding), ContentCreationMCPServer.compile_latex] Using open without explicitly specifying an encoding
+tools/mcp/content_creation/server.py:446: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.compile_latex] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:531: [W0718(broad-exception-caught), ContentCreationMCPServer.render_tikz] Catching too general exception Exception
+tools/mcp/content_creation/server.py:520: [W0718(broad-exception-caught), ContentCreationMCPServer.render_tikz] Catching too general exception Exception
+tools/mcp/content_creation/server.py:513: [W1514(unspecified-encoding), ContentCreationMCPServer.render_tikz] Using open without explicitly specifying an encoding
+tools/mcp/content_creation/server.py:521: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.render_tikz] Use lazy % formatting in logging functions
+tools/mcp/content_creation/server.py:562: [W0718(broad-exception-caught), ContentCreationMCPServer.render_tikz] Catching too general exception Exception
+tools/mcp/content_creation/server.py:563: [W1203(logging-fstring-interpolation), ContentCreationMCPServer.render_tikz] Use lazy % formatting in logging functions
+************* Module tools.mcp.content_creation.tools
+tools/mcp/content_creation/tools.py:71: [W0718(broad-exception-caught), create_manim_animation] Catching too general exception Exception
+tools/mcp/content_creation/tools.py:47: [W1510(subprocess-run-check), create_manim_animation] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/content_creation/tools.py:27: [W0613(unused-argument), create_manim_animation] Unused argument 'quality'
+tools/mcp/content_creation/tools.py:28: [W0613(unused-argument), create_manim_animation] Unused argument 'preview'
+tools/mcp/content_creation/tools.py:78: [W0622(redefined-builtin), compile_latex] Redefining built-in 'format'
+tools/mcp/content_creation/tools.py:124: [W0718(broad-exception-caught), compile_latex] Catching too general exception Exception
+tools/mcp/content_creation/tools.py:92: [W1514(unspecified-encoding), compile_latex] Using open without explicitly specifying an encoding
+tools/mcp/content_creation/tools.py:104: [W1510(subprocess-run-check), compile_latex] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/content_creation/tools.py:79: [W0613(unused-argument), compile_latex] Unused argument 'template'
+tools/mcp/content_creation/scripts/test_server.py:12: [W0621(redefined-outer-name), test_content_creation_server] Redefining name 'base_url' from outer scope (line 172)
+tools/mcp/content_creation/scripts/test_server.py:23: [W0718(broad-exception-caught), test_content_creation_server] Catching too general exception Exception
+tools/mcp/content_creation/scripts/test_server.py:34: [W0718(broad-exception-caught), test_content_creation_server] Catching too general exception Exception
+tools/mcp/content_creation/scripts/test_server.py:73: [W0718(broad-exception-caught), test_content_creation_server] Catching too general exception Exception
+tools/mcp/content_creation/scripts/test_server.py:100: [W0718(broad-exception-caught), test_content_creation_server] Catching too general exception Exception
+tools/mcp/content_creation/scripts/test_server.py:145: [W0718(broad-exception-caught), test_content_creation_server] Catching too general exception Exception
+tools/mcp/content_creation/scripts/test_server.py:164: [W0718(broad-exception-caught), test_content_creation_server] Catching too general exception Exception
+tools/mcp/content_creation/scripts/test_server.py:5: [W0611(unused-import), ] Unused import json
+tools/mcp/content_creation/scripts/test_server.py:7: [W0611(unused-import), ] Unused Path imported from pathlib
+************* Module tools.mcp.opencode.server
+tools/mcp/opencode/server.py:47: [W0718(broad-exception-caught), OpenCodeMCPServer._load_opencode_config] Catching too general exception Exception
+tools/mcp/opencode/server.py:39: [W1514(unspecified-encoding), OpenCodeMCPServer._load_opencode_config] Using open without explicitly specifying an encoding
+tools/mcp/opencode/server.py:48: [W1203(logging-fstring-interpolation), OpenCodeMCPServer._load_opencode_config] Use lazy % formatting in logging functions
+tools/mcp/opencode/server.py:71: [W0718(broad-exception-caught), OpenCodeMCPServer._load_opencode_config] Catching too general exception Exception
+tools/mcp/opencode/server.py:68: [W1514(unspecified-encoding), OpenCodeMCPServer._load_opencode_config] Using open without explicitly specifying an encoding
+tools/mcp/opencode/server.py:72: [W1203(logging-fstring-interpolation), OpenCodeMCPServer._load_opencode_config] Use lazy % formatting in logging functions
+tools/mcp/opencode/server.py:88: [W1203(logging-fstring-interpolation), OpenCodeMCPServer._initialize_opencode] Use lazy % formatting in logging functions
+tools/mcp/opencode/server.py:96: [W0613(unused-argument), OpenCodeMCPServer._initialize_opencode.MockOpenCode.consult_opencode] Unused argument 'kwargs'
+************* Module tools.mcp.opencode.opencode_integration
+tools/mcp/opencode/opencode_integration.py:94: [W0718(broad-exception-caught), OpenCodeIntegration.generate_code] Catching too general exception Exception
+tools/mcp/opencode/opencode_integration.py:95: [W1203(logging-fstring-interpolation), OpenCodeIntegration.generate_code] Use lazy % formatting in logging functions
+tools/mcp/opencode/opencode_integration.py:116: [W0613(unused-argument), OpenCodeIntegration.consult_opencode] Unused argument 'comparison_mode'
+tools/mcp/opencode/opencode_integration.py:254: [W0706(try-except-raise), OpenCodeIntegration._execute_opencode_docker] The except handler raises immediately
+tools/mcp/opencode/opencode_integration.py:243: [W0719(broad-exception-raised), OpenCodeIntegration._execute_opencode_docker] Raising too general exception: Exception
+tools/mcp/opencode/opencode_integration.py:253: [W0707(raise-missing-from), OpenCodeIntegration._execute_opencode_docker] Consider explicitly re-raising using 'except Exception as exc' and 'raise Exception(f'OpenCode API request timed out after {self.timeout} seconds') from exc'
+tools/mcp/opencode/opencode_integration.py:253: [W0719(broad-exception-raised), OpenCodeIntegration._execute_opencode_docker] Raising too general exception: Exception
+tools/mcp/opencode/opencode_integration.py:275: [W0603(global-statement), get_integration] Using the global statement
+tools/mcp/opencode/scripts/test_server.py:39: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:53: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:84: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:112: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:135: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:154: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:176: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+tools/mcp/opencode/scripts/test_server.py:192: [W0718(broad-exception-caught), test_opencode_server] Catching too general exception Exception
+************* Module tools.mcp.gemini_mcp_server_http
+tools/mcp/gemini_mcp_server_http.py:40: [C0413(wrong-import-position), ] Import "from tools.gemini.gemini_integration import GeminiIntegration" should be placed at the top of the module
+tools/mcp/gemini_mcp_server_http.py:114: [W0707(raise-missing-from), consult_gemini] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=f"Gemini CLI command failed: {e.stderr if hasattr(e, 'stderr') else str(e)}") from e'
+tools/mcp/gemini_mcp_server_http.py:119: [W0707(raise-missing-from), consult_gemini] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+tools/mcp/gemini_mcp_server_http.py:139: [W0707(raise-missing-from), clear_gemini_history] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+tools/mcp/gemini_mcp_server_http.py:161: [W0621(redefined-outer-name), run_http_server] Redefining name 'port' from outer scope (line 174)
+************* Module tools.mcp.comfyui.stubs
+tools/mcp/comfyui/stubs.py:11: [W0613(unused-argument), generate_image] Unused argument 'prompt'
+tools/mcp/comfyui/stubs.py:12: [W0613(unused-argument), generate_image] Unused argument 'workflow'
+tools/mcp/comfyui/stubs.py:13: [W0613(unused-argument), generate_image] Unused argument 'negative_prompt'
+tools/mcp/comfyui/stubs.py:14: [W0613(unused-argument), generate_image] Unused argument 'width'
+tools/mcp/comfyui/stubs.py:15: [W0613(unused-argument), generate_image] Unused argument 'height'
+tools/mcp/comfyui/stubs.py:16: [W0613(unused-argument), generate_image] Unused argument 'seed'
+tools/mcp/comfyui/stubs.py:17: [W0613(unused-argument), generate_image] Unused argument 'steps'
+tools/mcp/comfyui/stubs.py:18: [W0613(unused-argument), generate_image] Unused argument 'cfg_scale'
+tools/mcp/comfyui/stubs.py:47: [W0613(unused-argument), get_workflow] Unused argument 'name'
+tools/mcp/comfyui/stubs.py:59: [W0622(redefined-builtin), list_models] Redefining built-in 'type'
+tools/mcp/comfyui/stubs.py:59: [W0613(unused-argument), list_models] Unused argument 'type'
+tools/mcp/comfyui/stubs.py:71: [W0613(unused-argument), upload_lora] Unused argument 'filename'
+tools/mcp/comfyui/stubs.py:71: [W0613(unused-argument), upload_lora] Unused argument 'data'
+tools/mcp/comfyui/stubs.py:71: [W0613(unused-argument), upload_lora] Unused argument 'metadata'
+tools/mcp/comfyui/stubs.py:86: [W0613(unused-argument), upload_lora_chunked_init] Unused argument 'filename'
+tools/mcp/comfyui/stubs.py:86: [W0613(unused-argument), upload_lora_chunked_init] Unused argument 'total_size'
+tools/mcp/comfyui/stubs.py:86: [W0613(unused-argument), upload_lora_chunked_init] Unused argument 'metadata'
+tools/mcp/comfyui/stubs.py:101: [W0613(unused-argument), upload_lora_chunk] Unused argument 'upload_id'
+tools/mcp/comfyui/stubs.py:101: [W0613(unused-argument), upload_lora_chunk] Unused argument 'chunk_index'
+tools/mcp/comfyui/stubs.py:101: [W0613(unused-argument), upload_lora_chunk] Unused argument 'chunk'
+tools/mcp/comfyui/stubs.py:101: [W0613(unused-argument), upload_lora_chunk] Unused argument 'total_chunks'
+tools/mcp/comfyui/stubs.py:116: [W0613(unused-argument), upload_lora_chunked_complete] Unused argument 'upload_id'
+tools/mcp/comfyui/stubs.py:137: [W0613(unused-argument), download_lora] Unused argument 'filename'
+tools/mcp/comfyui/stubs.py:137: [W0613(unused-argument), download_lora] Unused argument 'encoding'
+tools/mcp/comfyui/stubs.py:168: [W0613(unused-argument), transfer_lora_from_ai_toolkit] Unused argument 'model_name'
+tools/mcp/comfyui/stubs.py:168: [W0613(unused-argument), transfer_lora_from_ai_toolkit] Unused argument 'filename'
+tools/mcp/comfyui/stubs.py:181: [W0613(unused-argument), execute_workflow] Unused argument 'workflow'
+tools/mcp/comfyui/stubs.py:181: [W0613(unused-argument), execute_workflow] Unused argument 'client_id'
+************* Module tools.mcp.comfyui.server
+tools/mcp/comfyui/server.py:259: [W0718(broad-exception-caught), ComfyUIMCPServer._queue_prompt] Catching too general exception Exception
+tools/mcp/comfyui/server.py:257: [W1203(logging-fstring-interpolation), ComfyUIMCPServer._queue_prompt] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:260: [W1203(logging-fstring-interpolation), ComfyUIMCPServer._queue_prompt] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:272: [W0718(broad-exception-caught), ComfyUIMCPServer._get_history] Catching too general exception Exception
+tools/mcp/comfyui/server.py:273: [W1203(logging-fstring-interpolation), ComfyUIMCPServer._get_history] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:311: [W0612(unused-variable), ComfyUIMCPServer.generate_image] Unused variable 'node_id'
+tools/mcp/comfyui/server.py:359: [W0613(unused-argument), ComfyUIMCPServer.list_workflows] Unused argument 'kwargs'
+tools/mcp/comfyui/server.py:428: [W0718(broad-exception-caught), ComfyUIMCPServer.list_models] Catching too general exception Exception
+tools/mcp/comfyui/server.py:423: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.list_models] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:426: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.list_models] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:429: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.list_models] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:468: [W0718(broad-exception-caught), ComfyUIMCPServer.upload_lora] Catching too general exception Exception
+tools/mcp/comfyui/server.py:455: [W1514(unspecified-encoding), ComfyUIMCPServer.upload_lora] Using open without explicitly specifying an encoding
+tools/mcp/comfyui/server.py:460: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.upload_lora] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:463: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.upload_lora] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:466: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.upload_lora] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:469: [W1203(logging-fstring-interpolation), ComfyUIMCPServer.upload_lora] Use lazy % formatting in logging functions
+tools/mcp/comfyui/server.py:472: [W0613(unused-argument), ComfyUIMCPServer.list_loras] Unused argument 'kwargs'
+tools/mcp/comfyui/server.py:509: [W0718(broad-exception-caught), ComfyUIMCPServer.download_lora] Catching too general exception Exception
+tools/mcp/comfyui/server.py:523: [W0718(broad-exception-caught), ComfyUIMCPServer.get_object_info] Catching too general exception Exception
+tools/mcp/comfyui/server.py:514: [W0613(unused-argument), ComfyUIMCPServer.get_object_info] Unused argument 'kwargs'
+tools/mcp/comfyui/server.py:535: [W0718(broad-exception-caught), ComfyUIMCPServer.get_system_info] Catching too general exception Exception
+tools/mcp/comfyui/server.py:526: [W0613(unused-argument), ComfyUIMCPServer.get_system_info] Unused argument 'kwargs'
+tools/mcp/comfyui/scripts/test_server.py:35: [W0718(broad-exception-caught), test_tools_list] Catching too general exception Exception
+tools/mcp/comfyui/scripts/test_server.py:61: [W0718(broad-exception-caught), test_list_models] Catching too general exception Exception
+tools/mcp/comfyui/scripts/test_server.py:88: [W0718(broad-exception-caught), test_list_loras] Catching too general exception Exception
+tools/mcp/comfyui/scripts/test_server.py:116: [W0718(broad-exception-caught), test_system_info] Catching too general exception Exception
+tools/mcp/comfyui/scripts/test_server.py:135: [W0718(broad-exception-caught), test_health_check] Catching too general exception Exception
+************* Module tools.mcp.gemini_mcp_server
+tools/mcp/gemini_mcp_server.py:15: [R0402(consider-using-from-import), ] Use 'from mcp import types' instead
+tools/mcp/gemini_mcp_server.py:38: [C0413(wrong-import-position), ] Import "from tools.gemini.gemini_integration import get_integration" should be placed at the top of the module
+tools/mcp/gemini_mcp_server.py:70: [W0718(broad-exception-caught), MCPServer._load_gemini_config] Catching too general exception Exception
+tools/mcp/gemini_mcp_server.py:62: [W1514(unspecified-encoding), MCPServer._load_gemini_config] Using open without explicitly specifying an encoding
+tools/mcp/gemini_mcp_server.py:95: [W0718(broad-exception-caught), MCPServer._load_gemini_config] Catching too general exception Exception
+tools/mcp/gemini_mcp_server.py:92: [W1514(unspecified-encoding), MCPServer._load_gemini_config] Using open without explicitly specifying an encoding
+tools/mcp/gemini_mcp_server.py:132: [W0613(unused-argument), MCPServer._setup_tools.gemini_status] Unused argument 'arguments'
+tools/mcp/gemini_mcp_server.py:154: [W0613(unused-argument), MCPServer._setup_tools.clear_gemini_history] Unused argument 'arguments'
+tools/mcp/gemini_mcp_server.py:269: [W0718(broad-exception-caught), MCPServer._get_gemini_status] Catching too general exception Exception
+tools/mcp/gemini_mcp_server.py:243: [W0718(broad-exception-caught), MCPServer._get_gemini_status] Catching too general exception Exception
+tools/mcp/gemini_mcp_server.py:213: [R1702(too-many-nested-blocks), MCPServer._get_gemini_status] Too many nested blocks (6/5)
+tools/mcp/gemini_mcp_server.py:223: [W0612(unused-variable), MCPServer._get_gemini_status] Unused variable 'stdout'
+tools/mcp/gemini_mcp_server.py:377: [W1404(implicit-str-concat), ] Implicit string concatenation found in call
+tools/mcp/gemini_mcp_server.py:383: [C0412(ungrouped-imports), ] Imports from package tools are not grouped
+************* Module tools.mcp.ai_toolkit.stubs
+tools/mcp/ai_toolkit/stubs.py:11: [W0613(unused-argument), create_training_config] Unused argument 'name'
+tools/mcp/ai_toolkit/stubs.py:12: [W0613(unused-argument), create_training_config] Unused argument 'model_name'
+tools/mcp/ai_toolkit/stubs.py:13: [W0613(unused-argument), create_training_config] Unused argument 'dataset_path'
+tools/mcp/ai_toolkit/stubs.py:14: [W0613(unused-argument), create_training_config] Unused argument 'resolution'
+tools/mcp/ai_toolkit/stubs.py:15: [W0613(unused-argument), create_training_config] Unused argument 'steps'
+tools/mcp/ai_toolkit/stubs.py:16: [W0613(unused-argument), create_training_config] Unused argument 'rank'
+tools/mcp/ai_toolkit/stubs.py:17: [W0613(unused-argument), create_training_config] Unused argument 'alpha'
+tools/mcp/ai_toolkit/stubs.py:18: [W0613(unused-argument), create_training_config] Unused argument 'low_vram'
+tools/mcp/ai_toolkit/stubs.py:19: [W0613(unused-argument), create_training_config] Unused argument 'trigger_word'
+tools/mcp/ai_toolkit/stubs.py:20: [W0613(unused-argument), create_training_config] Unused argument 'test_prompts'
+tools/mcp/ai_toolkit/stubs.py:51: [W0613(unused-argument), get_config] Unused argument 'name'
+tools/mcp/ai_toolkit/stubs.py:63: [W0613(unused-argument), upload_dataset] Unused argument 'dataset_name'
+tools/mcp/ai_toolkit/stubs.py:63: [W0613(unused-argument), upload_dataset] Unused argument 'images'
+tools/mcp/ai_toolkit/stubs.py:88: [W0613(unused-argument), start_training] Unused argument 'config_name'
+tools/mcp/ai_toolkit/stubs.py:100: [W0613(unused-argument), get_training_status] Unused argument 'job_id'
+tools/mcp/ai_toolkit/stubs.py:112: [W0613(unused-argument), stop_training] Unused argument 'job_id'
+tools/mcp/ai_toolkit/stubs.py:133: [W0613(unused-argument), export_model] Unused argument 'model_name'
+tools/mcp/ai_toolkit/stubs.py:133: [W0613(unused-argument), export_model] Unused argument 'output_path'
+tools/mcp/ai_toolkit/stubs.py:155: [W0613(unused-argument), download_model] Unused argument 'model_name'
+tools/mcp/ai_toolkit/stubs.py:155: [W0613(unused-argument), download_model] Unused argument 'encoding'
+tools/mcp/ai_toolkit/stubs.py:177: [W0613(unused-argument), get_training_logs] Unused argument 'job_id'
+tools/mcp/ai_toolkit/stubs.py:177: [W0613(unused-argument), get_training_logs] Unused argument 'lines'
+************* Module tools.mcp.ai_toolkit.server
+tools/mcp/ai_toolkit/server.py:319: [W0718(broad-exception-caught), AIToolkitMCPServer.create_training_config] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:308: [W1514(unspecified-encoding), AIToolkitMCPServer.create_training_config] Using open without explicitly specifying an encoding
+tools/mcp/ai_toolkit/server.py:311: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.create_training_config] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:314: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.create_training_config] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:317: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.create_training_config] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:320: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.create_training_config] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:323: [W0613(unused-argument), AIToolkitMCPServer.list_configs] Unused argument 'kwargs'
+tools/mcp/ai_toolkit/server.py:346: [W0718(broad-exception-caught), AIToolkitMCPServer.get_config] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:339: [W1514(unspecified-encoding), AIToolkitMCPServer.get_config] Using open without explicitly specifying an encoding
+tools/mcp/ai_toolkit/server.py:385: [W0718(broad-exception-caught), AIToolkitMCPServer.upload_dataset] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:375: [W1514(unspecified-encoding), AIToolkitMCPServer.upload_dataset] Using open without explicitly specifying an encoding
+tools/mcp/ai_toolkit/server.py:380: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.upload_dataset] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:382: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.upload_dataset] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:384: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.upload_dataset] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:386: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.upload_dataset] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:395: [W0613(unused-argument), AIToolkitMCPServer.list_datasets] Unused argument 'kwargs'
+tools/mcp/ai_toolkit/server.py:453: [W0718(broad-exception-caught), AIToolkitMCPServer.start_training] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:425: [W1514(unspecified-encoding), AIToolkitMCPServer.start_training] Using open without explicitly specifying an encoding
+tools/mcp/ai_toolkit/server.py:444: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.start_training] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:448: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.start_training] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:451: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.start_training] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:454: [W1203(logging-fstring-interpolation), AIToolkitMCPServer.start_training] Use lazy % formatting in logging functions
+tools/mcp/ai_toolkit/server.py:521: [W0718(broad-exception-caught), AIToolkitMCPServer.get_training_status] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:509: [W1514(unspecified-encoding), AIToolkitMCPServer.get_training_status] Using open without explicitly specifying an encoding
+tools/mcp/ai_toolkit/server.py:533: [W0613(unused-argument), AIToolkitMCPServer.list_training_jobs] Unused argument 'kwargs'
+tools/mcp/ai_toolkit/server.py:572: [W0718(broad-exception-caught), AIToolkitMCPServer.export_model] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:577: [W0613(unused-argument), AIToolkitMCPServer.list_exported_models] Unused argument 'kwargs'
+tools/mcp/ai_toolkit/server.py:629: [W0718(broad-exception-caught), AIToolkitMCPServer.download_model] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:652: [W0718(broad-exception-caught), AIToolkitMCPServer.get_system_stats] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:634: [W0613(unused-argument), AIToolkitMCPServer.get_system_stats] Unused argument 'kwargs'
+tools/mcp/ai_toolkit/server.py:680: [W0718(broad-exception-caught), AIToolkitMCPServer.get_training_logs] Catching too general exception Exception
+tools/mcp/ai_toolkit/server.py:673: [W1514(unspecified-encoding), AIToolkitMCPServer.get_training_logs] Using open without explicitly specifying an encoding
+tools/mcp/ai_toolkit/server.py:685: [W0613(unused-argument), AIToolkitMCPServer.get_training_info] Unused argument 'kwargs'
+tools/mcp/ai_toolkit/server.py:425: [R1732(consider-using-with), AIToolkitMCPServer.start_training] Consider using 'with' for resource-allocating operations
+tools/mcp/ai_toolkit/scripts/test_server.py:35: [W0718(broad-exception-caught), test_tools_list] Catching too general exception Exception
+tools/mcp/ai_toolkit/scripts/test_server.py:61: [W0718(broad-exception-caught), test_list_configs] Catching too general exception Exception
+tools/mcp/ai_toolkit/scripts/test_server.py:89: [W0718(broad-exception-caught), test_system_stats] Catching too general exception Exception
+tools/mcp/ai_toolkit/scripts/test_server.py:108: [W0718(broad-exception-caught), test_health_check] Catching too general exception Exception
+************* Module tools.mcp.elevenlabs_speech.client
+tools/mcp/elevenlabs_speech/client.py:139: [W0718(broad-exception-caught), ElevenLabsClient.synthesize_speech] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/client.py:93: [W1203(logging-fstring-interpolation), ElevenLabsClient.synthesize_speech] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:101: [W1203(logging-fstring-interpolation), ElevenLabsClient.synthesize_speech] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:141: [W1203(logging-fstring-interpolation), ElevenLabsClient.synthesize_speech] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:245: [W0718(broad-exception-caught), ElevenLabsClient.generate_sound_effect] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/client.py:223: [W1203(logging-fstring-interpolation), ElevenLabsClient.generate_sound_effect] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:226: [W1203(logging-fstring-interpolation), ElevenLabsClient.generate_sound_effect] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:247: [W1203(logging-fstring-interpolation), ElevenLabsClient.generate_sound_effect] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:268: [W0718(broad-exception-caught), ElevenLabsClient.get_voices] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/client.py:263: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_voices] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:266: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_voices] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:269: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_voices] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:292: [W0718(broad-exception-caught), ElevenLabsClient.get_voice_by_id] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/client.py:287: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_voice_by_id] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:290: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_voice_by_id] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:293: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_voice_by_id] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:313: [W0718(broad-exception-caught), ElevenLabsClient.get_user_info] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/client.py:308: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_user_info] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:311: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_user_info] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:314: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_user_info] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:334: [W0718(broad-exception-caught), ElevenLabsClient.get_models] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/client.py:329: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_models] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:332: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_models] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:335: [W1203(logging-fstring-interpolation), ElevenLabsClient.get_models] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:385: [W1203(logging-fstring-interpolation), ElevenLabsClient._save_audio] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:401: [W1203(logging-fstring-interpolation), ElevenLabsClient._save_audio] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/client.py:419: [W1514(unspecified-encoding), ElevenLabsClient._save_audio] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/client.py:474: [W1203(logging-fstring-interpolation), quick_synthesize] Use lazy % formatting in logging functions
+************* Module tools.mcp.elevenlabs_speech.voice_registry
+tools/mcp/elevenlabs_speech/voice_registry.py:61: [R0902(too-many-instance-attributes), CharacterProfile] Too many instance attributes (20/15)
+************* Module tools.mcp.elevenlabs_speech.models.synthesis_config
+tools/mcp/elevenlabs_speech/models/synthesis_config.py:107: [R1730(consider-using-min-builtin), SoundEffectConfig.validate] Consider using 'self.duration_seconds = min(self.duration_seconds, 22)' instead of unnecessary if block
+tools/mcp/elevenlabs_speech/models/synthesis_config.py:109: [R1731(consider-using-max-builtin), SoundEffectConfig.validate] Consider using 'self.duration_seconds = max(self.duration_seconds, 0.5)' instead of unnecessary if block
+************* Module tools.mcp.elevenlabs_speech.upload
+tools/mcp/elevenlabs_speech/upload.py:66: [W0718(broad-exception-caught), AudioUploader.upload_to_0x0st] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/upload.py:140: [W0718(broad-exception-caught), AudioUploader.upload_to_tmpfiles] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/upload.py:84: [R1702(too-many-nested-blocks), AudioUploader.upload_to_tmpfiles] Too many nested blocks (6/5)
+tools/mcp/elevenlabs_speech/upload.py:195: [W0718(broad-exception-caught), AudioUploader.upload_to_fileio] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/upload.py:223: [W1203(logging-fstring-interpolation), AudioUploader.upload] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/upload.py:199: [W0613(unused-argument), AudioUploader.upload] Unused argument 'preferred_format'
+tools/mcp/elevenlabs_speech/upload.py:289: [W1203(logging-fstring-interpolation), upload_audio] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/upload.py:290: [W1203(logging-fstring-interpolation), upload_audio] Use lazy % formatting in logging functions
+tools/mcp/elevenlabs_speech/upload.py:293: [W1203(logging-fstring-interpolation), upload_audio] Use lazy % formatting in logging functions
+************* Module tools.mcp.elevenlabs_speech.server
+tools/mcp/elevenlabs_speech/server.py:14: [C0413(wrong-import-position), ] Import "from core.base_server import BaseMCPServer" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:15: [C0413(wrong-import-position), ] Import "from core.utils import setup_logging" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:17: [C0413(wrong-import-position), ] Import "from .client import ElevenLabsClient" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:18: [C0413(wrong-import-position), ] Import "from .models import AUDIO_TAGS, VOICE_PRESETS, AudioTagCategory, GitHubAudioConfig, OutputFormat, SynthesisConfig, VoiceModel, VoiceSettings, create_expressive_text, parse_audio_tags, suggest_tags, validate_tag_compatibility" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:32: [C0413(wrong-import-position), ] Import "from .upload import upload_audio" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:33: [C0413(wrong-import-position), ] Import "from .utils.model_aware_prompting import ModelAwarePrompter" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:34: [C0413(wrong-import-position), ] Import "from .utils.prompting import EmotionalEnhancer, NaturalSpeechEnhancer, PromptOptimizer, VoiceDirector" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:35: [C0413(wrong-import-position), ] Import "from .voice_registry import VOICE_IDS" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/server.py:88: [W0718(broad-exception-caught), ElevenLabsSpeechMCPServer._load_config] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/server.py:80: [W1514(unspecified-encoding), ElevenLabsSpeechMCPServer._load_config] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/server.py:217: [W0613(unused-argument), ElevenLabsSpeechMCPServer.synthesize_dialogue] Unused argument 'mix_audio'
+tools/mcp/elevenlabs_speech/server.py:395: [W0718(broad-exception-caught), ElevenLabsSpeechMCPServer.clear_audio_cache] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/server.py:419: [W0718(broad-exception-caught), ElevenLabsSpeechMCPServer._initialize_voice_cache] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/server.py:416: [W0718(broad-exception-caught), ElevenLabsSpeechMCPServer._initialize_voice_cache] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/server.py:702: [W0621(redefined-outer-name), main] Redefining name 'sys' from outer scope (line 5)
+tools/mcp/elevenlabs_speech/server.py:702: [W0404(reimported), main] Reimport 'sys' (imported line 5)
+************* Module tools.mcp.elevenlabs_speech.utils.prompting
+tools/mcp/elevenlabs_speech/utils/prompting.py:9: [R0903(too-few-public-methods), PromptOptimizer] Too few public methods (1/2)
+tools/mcp/elevenlabs_speech/utils/prompting.py:324: [R0903(too-few-public-methods), TagCombiner] Too few public methods (1/2)
+************* Module test_final_synthesis
+tools/mcp/elevenlabs_speech/scripts/test_final_synthesis.py:18: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_final_synthesis.py:25: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.server import ElevenLabsSpeechMCPServer" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_final_synthesis.py:101: [W0621(redefined-outer-name), main] Redefining name 'f' from outer scope (line 18)
+tools/mcp/elevenlabs_speech/scripts/test_final_synthesis.py:101: [W1514(unspecified-encoding), main] Using open without explicitly specifying an encoding
+************* Module test_synthesis_simple
+tools/mcp/elevenlabs_speech/scripts/test_synthesis_simple.py:18: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_synthesis_simple.py:27: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.client import ElevenLabsClient" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_synthesis_simple.py:28: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.models import OutputFormat, SynthesisConfig, VoiceModel, VoiceSettings" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_synthesis_simple.py:29: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.utils.prompting import NaturalSpeechEnhancer, PromptOptimizer" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_server.py:15: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_server.py:24: [C0413(wrong-import-position), ] Import "import httpx" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_server.py:56: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_server.py:75: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_server.py:103: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_server.py:127: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_server.py:149: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_server.py:174: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_server.py:201: [W0718(broad-exception-caught), test_server] Catching too general exception Exception
+************* Module save_v3_prompts
+tools/mcp/elevenlabs_speech/scripts/save_v3_prompts.py:13: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.voice_registry import VOICE_IDS" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/save_v3_prompts.py:23: [W0621(redefined-outer-name), save_v3_examples] Redefining name 'output_dir' from outer scope (line 321)
+tools/mcp/elevenlabs_speech/scripts/save_v3_prompts.py:248: [W1514(unspecified-encoding), save_v3_examples] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/save_v3_prompts.py:260: [W1514(unspecified-encoding), save_v3_examples] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/save_v3_prompts.py:276: [W1514(unspecified-encoding), save_v3_examples] Using open without explicitly specifying an encoding
+************* Module v3_creative_examples
+tools/mcp/elevenlabs_speech/scripts/v3_creative_examples.py:16: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/v3_creative_examples.py:23: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.server import ElevenLabsSpeechMCPServer" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/v3_creative_examples.py:24: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.voice_registry import VOICE_IDS" should be placed at the top of the module
+************* Module test_stdio_mode
+tools/mcp/elevenlabs_speech/scripts/test_stdio_mode.py:57: [W0718(broad-exception-caught), test_stdio_mode] Catching too general exception Exception
+tools/mcp/elevenlabs_speech/scripts/test_stdio_mode.py:25: [R1732(consider-using-with), test_stdio_mode] Consider using 'with' for resource-allocating operations
+tools/mcp/elevenlabs_speech/scripts/test_stdio_mode.py:67: [W1514(unspecified-encoding), test_mcp_json_config] Using open without explicitly specifying an encoding
+************* Module creative_synthesis
+tools/mcp/elevenlabs_speech/scripts/creative_synthesis.py:17: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/creative_synthesis.py:24: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.server import ElevenLabsSpeechMCPServer" should be placed at the top of the module
+************* Module show_creative_results
+tools/mcp/elevenlabs_speech/scripts/show_creative_results.py:31: [W1514(unspecified-encoding), show_creative_results] Using open without explicitly specifying an encoding
+************* Module test_mcp_tools
+tools/mcp/elevenlabs_speech/scripts/test_mcp_tools.py:16: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_mcp_tools.py:23: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.server import ElevenLabsSpeechMCPServer" should be placed at the top of the module
+************* Module ultra_creative_showcase
+tools/mcp/elevenlabs_speech/scripts/ultra_creative_showcase.py:16: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/ultra_creative_showcase.py:23: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.server import ElevenLabsSpeechMCPServer" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/ultra_creative_showcase.py:24: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.voice_registry import VOICE_IDS" should be placed at the top of the module
+************* Module test_metadata_fix
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:18: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:25: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.client import ElevenLabsClient" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:26: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.models import OutputFormat, SynthesisConfig, VoiceModel, VoiceSettings" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:27: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.utils.model_aware_prompting import ModelAwarePrompter" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:28: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.utils.prompting import PromptOptimizer" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:101: [W0621(redefined-outer-name), test_synthesis_with_metadata] Redefining name 'f' from outer scope (line 18)
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:120: [W0621(redefined-outer-name), test_synthesis_with_metadata] Redefining name 'key' from outer scope (line 22)
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:120: [W0621(redefined-outer-name), test_synthesis_with_metadata] Redefining name 'value' from outer scope (line 22)
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:101: [W1514(unspecified-encoding), test_synthesis_with_metadata] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_metadata_fix.py:64: [R1702(too-many-nested-blocks), test_synthesis_with_metadata] Too many nested blocks (6/5)
+************* Module test_advanced_features
+tools/mcp/elevenlabs_speech/scripts/test_advanced_features.py:15: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.client import ElevenLabsClient" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_advanced_features.py:16: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.models import OutputFormat, SynthesisConfig, VoiceModel, VoiceSettings" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_advanced_features.py:17: [C0413(wrong-import-position), ] Import "from elevenlabs_speech.utils.prompting import EmotionalEnhancer, NaturalSpeechEnhancer, PromptOptimizer, VoiceDirector" should be placed at the top of the module
+tools/mcp/elevenlabs_speech/scripts/test_advanced_features.py:27: [W1514(unspecified-encoding), ] Using open without explicitly specifying an encoding
+tools/mcp/elevenlabs_speech/scripts/test_advanced_features.py:161: [W0621(redefined-outer-name), test_synthesis_with_optimization] Redefining name 'f' from outer scope (line 27)
+tools/mcp/elevenlabs_speech/scripts/test_advanced_features.py:161: [W1514(unspecified-encoding), test_synthesis_with_optimization] Using open without explicitly specifying an encoding
+************* Module tools.mcp.code_quality.server
+tools/mcp/code_quality/server.py:11: [C0413(wrong-import-position), ] Import "from tools.cli.utilities.markdown_link_checker import MarkdownLinkChecker" should be placed at the top of the module
+tools/mcp/code_quality/server.py:13: [C0413(wrong-import-position), ] Import "from ..core.base_server import BaseMCPServer" should be placed at the top of the module
+tools/mcp/code_quality/server.py:14: [C0413(wrong-import-position), ] Import "from ..core.utils import setup_logging" should be placed at the top of the module
+tools/mcp/code_quality/server.py:181: [W0718(broad-exception-caught), CodeQualityMCPServer.format_check] Catching too general exception Exception
+tools/mcp/code_quality/server.py:167: [W1203(logging-fstring-interpolation), CodeQualityMCPServer.format_check] Use lazy % formatting in logging functions
+tools/mcp/code_quality/server.py:182: [W1203(logging-fstring-interpolation), CodeQualityMCPServer.format_check] Use lazy % formatting in logging functions
+tools/mcp/code_quality/server.py:244: [W0718(broad-exception-caught), CodeQualityMCPServer.lint] Catching too general exception Exception
+tools/mcp/code_quality/server.py:224: [W1203(logging-fstring-interpolation), CodeQualityMCPServer.lint] Use lazy % formatting in logging functions
+tools/mcp/code_quality/server.py:245: [W1203(logging-fstring-interpolation), CodeQualityMCPServer.lint] Use lazy % formatting in logging functions
+tools/mcp/code_quality/server.py:288: [W0718(broad-exception-caught), CodeQualityMCPServer.autoformat] Catching too general exception Exception
+tools/mcp/code_quality/server.py:274: [W1203(logging-fstring-interpolation), CodeQualityMCPServer.autoformat] Use lazy % formatting in logging functions
+tools/mcp/code_quality/server.py:289: [W1203(logging-fstring-interpolation), CodeQualityMCPServer.autoformat] Use lazy % formatting in logging functions
+************* Module tools.mcp.code_quality.tools
+tools/mcp/code_quality/tools.py:45: [W0718(broad-exception-caught), format_check] Catching too general exception Exception
+tools/mcp/code_quality/tools.py:40: [W1510(subprocess-run-check), format_check] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/code_quality/tools.py:67: [W0718(broad-exception-caught), lint] Catching too general exception Exception
+tools/mcp/code_quality/tools.py:57: [W1510(subprocess-run-check), lint] 'subprocess.run' used without explicitly defining the value for 'check'.
+tools/mcp/code_quality/tools.py:3: [W0611(unused-import), ] Unused import os
+tools/mcp/code_quality/scripts/test_server.py:12: [W0621(redefined-outer-name), test_code_quality_server] Redefining name 'base_url' from outer scope (line 106)
+tools/mcp/code_quality/scripts/test_server.py:23: [W0718(broad-exception-caught), test_code_quality_server] Catching too general exception Exception
+tools/mcp/code_quality/scripts/test_server.py:34: [W0718(broad-exception-caught), test_code_quality_server] Catching too general exception Exception
+tools/mcp/code_quality/scripts/test_server.py:57: [W0718(broad-exception-caught), test_code_quality_server] Catching too general exception Exception
+tools/mcp/code_quality/scripts/test_server.py:79: [W0718(broad-exception-caught), test_code_quality_server] Catching too general exception Exception
+tools/mcp/code_quality/scripts/test_server.py:98: [W0718(broad-exception-caught), test_code_quality_server] Catching too general exception Exception
+tools/mcp/code_quality/scripts/test_server.py:5: [W0611(unused-import), ] Unused import json
+************* Module tools.mcp.meme_generator.upload
+tools/mcp/meme_generator/upload.py:63: [W0718(broad-exception-caught), MemeUploader.upload_to_0x0st] Catching too general exception Exception
+tools/mcp/meme_generator/upload.py:136: [W0718(broad-exception-caught), MemeUploader.upload_to_tmpfiles] Catching too general exception Exception
+tools/mcp/meme_generator/upload.py:81: [R1702(too-many-nested-blocks), MemeUploader.upload_to_tmpfiles] Too many nested blocks (6/5)
+tools/mcp/meme_generator/upload.py:190: [W0718(broad-exception-caught), MemeUploader.upload_to_fileio] Catching too general exception Exception
+tools/mcp/meme_generator/upload.py:279: [W1203(logging-fstring-interpolation), upload_meme] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/upload.py:282: [W1203(logging-fstring-interpolation), upload_meme] Use lazy % formatting in logging functions
+************* Module tools.mcp.meme_generator.server
+tools/mcp/meme_generator/server.py:55: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/server.py:56: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/server.py:61: [W0718(broad-exception-caught), MemeGeneratorMCPServer.__init__] Catching too general exception Exception
+tools/mcp/meme_generator/server.py:62: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/server.py:66: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.__init__] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/server.py:180: [W0718(broad-exception-caught), MemeGeneratorMCPServer.generate_meme] Catching too general exception Exception
+tools/mcp/meme_generator/server.py:181: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.generate_meme] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/server.py:193: [W0718(broad-exception-caught), MemeGeneratorMCPServer.list_meme_templates] Catching too general exception Exception
+tools/mcp/meme_generator/server.py:194: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.list_meme_templates] Use lazy % formatting in logging functions
+tools/mcp/meme_generator/server.py:209: [W0718(broad-exception-caught), MemeGeneratorMCPServer.get_meme_template_info] Catching too general exception Exception
+tools/mcp/meme_generator/server.py:210: [W1203(logging-fstring-interpolation), MemeGeneratorMCPServer.get_meme_template_info] Use lazy % formatting in logging functions
+************* Module tools.mcp.meme_generator.tools
+tools/mcp/meme_generator/tools.py:40: [W1514(unspecified-encoding), MemeGenerator._load_templates] Using open without explicitly specifying an encoding
+tools/mcp/meme_generator/tools.py:49: [W0718(broad-exception-caught), MemeGenerator._get_font] Catching too general exception Exception
+tools/mcp/meme_generator/tools.py:262: [W0718(broad-exception-caught), MemeGenerator.generate_meme] Catching too general exception Exception
+tools/mcp/meme_generator/tools.py:296: [W0718(broad-exception-caught), MemeGenerator.create_thumbnail_from_image] Catching too general exception Exception
+tools/mcp/meme_generator/tools.py:328: [W0603(global-statement), initialize_generator] Using the global statement
+tools/mcp/meme_generator/tools.py:365: [W0621(redefined-outer-name), generate_meme] Redefining name 'base64' from outer scope (line 3)
+tools/mcp/meme_generator/tools.py:365: [W0404(reimported), generate_meme] Reimport 'base64' (imported line 3)
+tools/mcp/meme_generator/tools.py:401: [W0718(broad-exception-caught), generate_meme] Catching too general exception Exception
+************* Module mcp-http-bridge
+tools/cli/bridges/mcp-http-bridge.py:70: [W0718(broad-exception-caught), health] Catching too general exception Exception
+tools/cli/bridges/mcp-http-bridge.py:112: [W0718(broad-exception-caught), handle_mcp_request] Catching too general exception Exception
+tools/cli/bridges/mcp-http-bridge.py:93: [W1203(logging-fstring-interpolation), handle_mcp_request] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:103: [W1203(logging-fstring-interpolation), handle_mcp_request] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:113: [W1203(logging-fstring-interpolation), handle_mcp_request] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:136: [W1203(logging-fstring-interpolation), list_tools] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:137: [W0707(raise-missing-from), list_tools] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+tools/cli/bridges/mcp-http-bridge.py:141: [W0102(dangerous-default-value), execute_tool] Dangerous default value {} as argument
+tools/cli/bridges/mcp-http-bridge.py:158: [W1203(logging-fstring-interpolation), execute_tool] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:159: [W0707(raise-missing-from), execute_tool] Consider explicitly re-raising using 'raise HTTPException(status_code=500, detail=str(e)) from e'
+tools/cli/bridges/mcp-http-bridge.py:170: [W1203(logging-fstring-interpolation), ] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:171: [W1203(logging-fstring-interpolation), ] Use lazy % formatting in logging functions
+tools/cli/bridges/mcp-http-bridge.py:172: [W1203(logging-fstring-interpolation), ] Use lazy % formatting in logging functions
+************* Module markdown_link_checker
+tools/cli/utilities/markdown_link_checker.py:38: [W0613(unused-argument), LinkExtractorRenderer.autolink] Unused argument 'state'
+tools/cli/utilities/markdown_link_checker.py:141: [W0718(broad-exception-caught), MarkdownLinkChecker.check_markdown_links] Catching too general exception Exception
+tools/cli/utilities/markdown_link_checker.py:184: [W0718(broad-exception-caught), MarkdownLinkChecker._extract_links_from_markdown] Catching too general exception Exception
+tools/cli/utilities/markdown_link_checker.py:248: [W0718(broad-exception-caught), MarkdownLinkChecker._check_single_link] Catching too general exception Exception
+tools/cli/utilities/markdown_link_checker.py:216: [C0207(use-maxsplit-arg), MarkdownLinkChecker._check_single_link] Use str(file_path).split('#', maxsplit=1)[0] instead
+tools/cli/utilities/markdown_link_checker.py:245: [W0718(broad-exception-caught), MarkdownLinkChecker._check_single_link] Catching too general exception Exception
+tools/cli/utilities/markdown_link_checker.py:48: [R0903(too-few-public-methods), MarkdownLinkChecker] Too few public methods (1/2)
+************* Module security.test_xss_prevention
+tests/security/test_xss_prevention.py:86: [W0718(broad-exception-caught), TestXSSPrevention.check_no_xss_execution] Catching too general exception Exception
+tests/security/test_xss_prevention.py:143: [W3101(missing-timeout), TestXSSPrevention.test_profile_xss_prevention] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/security/test_xss_prevention.py:172: [W3101(missing-timeout), TestXSSPrevention.test_post_title_xss_prevention] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/security/test_xss_prevention.py:197: [W3101(missing-timeout), TestXSSPrevention.test_json_field_xss_prevention] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/security/test_xss_prevention.py:235: [W3101(missing-timeout), TestXSSPrevention.test_embed_tag_filtering] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/security/test_xss_prevention.py:262: [W3101(missing-timeout), TestXSSPrevention.test_persistent_xss_prevention] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/security/test_xss_prevention.py:294: [W3101(missing-timeout), TestXSSPrevention.test_markdown_xss_prevention] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+************* Module test_bulletin_board_full
+tests/test_bulletin_board_full.py:16: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.agent_runner import ClaudeAgent" should be placed at the top of the module
+tests/test_bulletin_board_full.py:17: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector" should be placed at the top of the module
+tests/test_bulletin_board_full.py:18: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.database.models import AgentProfile, Comment, Post" should be placed at the top of the module
+tests/test_bulletin_board_full.py:21: [C0413(wrong-import-position), ] Import "from tests.bulletin_board.fixtures import mock_db_functions, test_db_engine, test_db_session" should be placed at the top of the module
+tests/test_bulletin_board_full.py:25: [W0621(redefined-outer-name), test_db] Redefining name 'test_db_engine' from outer scope (line 21)
+tests/test_bulletin_board_full.py:25: [W0621(redefined-outer-name), test_db] Redefining name 'test_db_session' from outer scope (line 21)
+tests/test_bulletin_board_full.py:27: [W0621(redefined-outer-name), test_db] Redefining name 'session' from outer scope (line 59)
+tests/test_bulletin_board_full.py:59: [W0621(redefined-outer-name), session] Redefining name 'test_db' from outer scope (line 25)
+tests/test_bulletin_board_full.py:61: [W0621(redefined-outer-name), session] Redefining name 'session' from outer scope (line 59)
+tests/test_bulletin_board_full.py:61: [W0612(unused-variable), session] Unused variable 'engine'
+tests/test_bulletin_board_full.py:66: [W0621(redefined-outer-name), test_feed_collection] Redefining name 'session' from outer scope (line 59)
+tests/test_bulletin_board_full.py:147: [W0621(redefined-outer-name), test_agent_commenting] Redefining name 'session' from outer scope (line 59)
+tests/test_bulletin_board_full.py:215: [W0612(unused-variable), test_agent_commenting] Unused variable 'i'
+tests/test_bulletin_board_full.py:239: [W0621(redefined-outer-name), test_web_interface] Redefining name 'test_db' from outer scope (line 25)
+tests/test_bulletin_board_full.py:239: [W0621(redefined-outer-name), test_web_interface] Redefining name 'mock_db_functions' from outer scope (line 21)
+tests/test_bulletin_board_full.py:243: [W0621(redefined-outer-name), test_web_interface] Redefining name 'session' from outer scope (line 59)
+tests/test_bulletin_board_full.py:239: [W0613(unused-argument), test_web_interface] Unused argument 'mock_db_functions'
+tests/test_bulletin_board_full.py:243: [W0612(unused-variable), test_web_interface] Unused variable 'engine'
+tests/test_bulletin_board_full.py:21: [W0611(unused-import), ] Unused mock_db_functions imported from tests.bulletin_board.fixtures
+tests/test_bulletin_board_full.py:21: [W0611(unused-import), ] Unused test_db_engine imported from tests.bulletin_board.fixtures
+tests/test_bulletin_board_full.py:21: [W0611(unused-import), ] Unused test_db_session imported from tests.bulletin_board.fixtures
+************* Module test_code_block_rendering
+tests/test_code_block_rendering.py:54: [W3101(missing-timeout), TestCodeBlockRendering.setup_test_data] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:69: [W3101(missing-timeout), TestCodeBlockRendering.setup_test_data] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:73: [W3101(missing-timeout), TestCodeBlockRendering.test_api_returns_code_blocks] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:82: [W3101(missing-timeout), TestCodeBlockRendering.test_api_returns_code_blocks] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:103: [W3101(missing-timeout), TestCodeBlockRendering.test_javascript_file_served] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:116: [W3101(missing-timeout), TestCodeBlockRendering.test_css_styles_present] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:130: [W3101(missing-timeout), TestCodeBlockRendering.test_html_structure] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:143: [W3101(missing-timeout), TestCodeBlockRendering.test_code_block_content_structure] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:149: [W3101(missing-timeout), TestCodeBlockRendering.test_code_block_content_structure] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:173: [W3101(missing-timeout), TestCodeBlockRendering.test_widescreen_javascript_updated] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_code_block_rendering.py:186: [W3101(missing-timeout), TestCodeBlockRendering.test_multiple_language_support] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+************* Module test_profile_html_rendering
+tests/test_profile_html_rendering.py:18: [W3101(missing-timeout), TestProfileHTMLRendering.test_profile_list_accessible] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:33: [W3101(missing-timeout), TestProfileHTMLRendering.test_retro_coder_profile_html] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:68: [W3101(missing-timeout), TestProfileHTMLRendering.test_scene_kid_profile_html] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:88: [W3101(missing-timeout), TestProfileHTMLRendering.test_corporate_synergy_profile_html] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:111: [W3101(missing-timeout), TestProfileHTMLRendering.test_vaporwave_profile_html] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:131: [W3101(missing-timeout), TestProfileHTMLRendering.test_goth_sysadmin_profile_html] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:159: [W3101(missing-timeout), TestProfileHTMLRendering.test_no_xss_in_profiles] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_html_rendering.py:172: [W3101(missing-timeout), TestProfileHTMLRendering.test_custom_html_section_exists] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+************* Module test_profile_links
+tests/test_profile_links.py:25: [W3101(missing-timeout), TestProfileLinks.test_comment_usernames_have_profile_links] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:31: [W3101(missing-timeout), TestProfileLinks.test_comment_usernames_have_profile_links] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:48: [W3101(missing-timeout), TestProfileLinks.test_profile_route_exists] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:54: [W3101(missing-timeout), TestProfileLinks.test_javascript_contains_profile_links] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:67: [W3101(missing-timeout), TestProfileLinks.test_javascript_contains_profile_links] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:82: [W3101(missing-timeout), TestProfileLinks.test_profile_links_in_post_metadata] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:83: [W0104(pointless-statement), TestProfileLinks.test_profile_links_in_post_metadata] Statement seems to have no effect
+tests/test_profile_links.py:86: [W3101(missing-timeout), TestProfileLinks.test_profile_links_in_post_metadata] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:98: [W3101(missing-timeout), TestProfileLinks.test_profile_api_endpoint] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:104: [W3101(missing-timeout), TestProfileLinks.test_profile_api_endpoint] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:112: [W3101(missing-timeout), TestProfileLinks.test_profile_api_endpoint] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:121: [W3101(missing-timeout), TestProfileLinks.test_profile_api_endpoint] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/test_profile_links.py:129: [W3101(missing-timeout), TestProfileLinks.test_discover_page_accessible] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+************* Module ui.test_critical_functionality
+tests/ui/test_critical_functionality.py:270: [W0718(broad-exception-caught), TestSmokeTests.test_app_is_running] Catching too general exception Exception
+************* Module ui.test_profile_rendering
+tests/ui/test_profile_rendering.py:237: [W0718(broad-exception-caught), TestProfileRendering.test_xss_prevention] Catching too general exception Exception
+tests/ui/test_profile_rendering.py:308: [W0621(redefined-outer-name), TestProfileRendering.test_profile_load_performance] Redefining name 'time' from outer scope (line 6)
+tests/ui/test_profile_rendering.py:308: [W0404(reimported), TestProfileRendering.test_profile_load_performance] Reimport 'time' (imported line 6)
+************* Module ui.test_code_block_rendering
+tests/ui/test_code_block_rendering.py:72: [W3101(missing-timeout), TestCodeBlockRendering.setup_method] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+tests/ui/test_code_block_rendering.py:87: [W3101(missing-timeout), TestCodeBlockRendering.setup_method] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+tests/ui/test_code_block_rendering.py:42: [W0201(attribute-defined-outside-init), TestCodeBlockRendering.setup_method] Attribute 'test_post_content' defined outside __init__
+tests/ui/test_code_block_rendering.py:84: [W0201(attribute-defined-outside-init), TestCodeBlockRendering.setup_method] Attribute 'test_post_id' defined outside __init__
+tests/ui/test_code_block_rendering.py:90: [W0201(attribute-defined-outside-init), TestCodeBlockRendering.setup_method] Attribute 'test_post_id' defined outside __init__
+tests/ui/test_code_block_rendering.py:95: [W0201(attribute-defined-outside-init), TestCodeBlockRendering.setup_method] Attribute 'test_post_id' defined outside __init__
+tests/ui/test_code_block_rendering.py:97: [W0201(attribute-defined-outside-init), TestCodeBlockRendering.setup_method] Attribute 'test_post_id' defined outside __init__
+************* Module ui.test_clickable_elements
+tests/ui/test_clickable_elements.py:105: [W0718(broad-exception-caught), TestClickableElements.test_all_navigation_links] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:156: [W0718(broad-exception-caught), TestClickableElements.test_all_buttons] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:149: [W0719(broad-exception-raised), TestClickableElements.test_all_buttons] Raising too general exception: Exception
+tests/ui/test_clickable_elements.py:211: [W0718(broad-exception-caught), TestClickableElements.test_post_interactions] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:250: [W0718(broad-exception-caught), TestClickableElements.test_post_detail_page] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:275: [W0718(broad-exception-caught), TestClickableElements.test_post_detail_page] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:272: [W0718(broad-exception-caught), TestClickableElements.test_post_detail_page] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:338: [W0718(broad-exception-caught), TestClickableElements.test_post_detail_page] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:383: [W0718(broad-exception-caught), TestClickableElements.test_broken_links] Catching too general exception Exception
+tests/ui/test_clickable_elements.py:379: [W0719(broad-exception-raised), TestClickableElements.test_broken_links] Raising too general exception: Exception
+tests/ui/test_clickable_elements.py:445: [W0718(broad-exception-caught), TestClickableElements.test_interactive_elements_no_console_errors] Catching too general exception Exception
+************* Module ui.test_bulletin_board_ui
+tests/ui/test_bulletin_board_ui.py:274: [W0640(cell-var-from-loop), TestReactionImageIntegration.test_reaction_image_loading_performance.<lambda>] Cell variable img defined in loop
+************* Module ui.test_widescreen_layout
+tests/ui/test_widescreen_layout.py:313: [W0107(unnecessary-pass), TestCrossBrowserCompatibility.test_layout_detection] Unnecessary pass statement
+tests/ui/test_widescreen_layout.py:318: [W0107(unnecessary-pass), TestCrossBrowserCompatibility.test_navigation_consistency] Unnecessary pass statement
+************* Module test_memory_analytics
+tests/bulletin_board/test_memory_analytics.py:226: [W0212(protected-access), TestPersonalityDrift.test_time_drift] Access to a protected member _save_state of a client class
+tests/bulletin_board/test_memory_analytics.py:290: [W0212(protected-access), TestPersonalityDrift.test_major_shift_detection] Access to a protected member _is_major_shift of a client class
+tests/bulletin_board/test_memory_analytics.py:428: [W0212(protected-access), TestAnalyticsSystem.test_visualization_generation] Access to a protected member _visualize_heatmap of a client class
+tests/bulletin_board/test_memory_analytics.py:435: [W0212(protected-access), TestAnalyticsSystem.test_visualization_generation] Access to a protected member _visualize_sentiment_trend of a client class
+tests/bulletin_board/test_memory_analytics.py:471: [W0212(protected-access), TestMemoryEnhancedRunner.test_memory_context_building] Access to a protected member _build_memory_context of a client class
+tests/bulletin_board/test_memory_analytics.py:485: [W0212(protected-access), TestMemoryEnhancedRunner.test_sentiment_analysis] Access to a protected member _analyze_sentiment of a client class
+tests/bulletin_board/test_memory_analytics.py:486: [W0212(protected-access), TestMemoryEnhancedRunner.test_sentiment_analysis] Access to a protected member _analyze_sentiment of a client class
+tests/bulletin_board/test_memory_analytics.py:487: [W0212(protected-access), TestMemoryEnhancedRunner.test_sentiment_analysis] Access to a protected member _analyze_sentiment of a client class
+tests/bulletin_board/test_memory_analytics.py:496: [W0212(protected-access), TestMemoryEnhancedRunner.test_importance_calculation] Access to a protected member _calculate_importance of a client class
+tests/bulletin_board/test_memory_analytics.py:503: [W0212(protected-access), TestMemoryEnhancedRunner.test_importance_calculation] Access to a protected member _calculate_importance of a client class
+************* Module conftest
+tests/bulletin_board/conftest.py:9: [W0401(wildcard-import), ] Wildcard import tests.bulletin_board.fixtures
+tests/bulletin_board/conftest.py:62: [W0621(redefined-outer-name), mock_agents] Redefining name 'mock_agent_profiles' from outer scope (line 28)
+tests/bulletin_board/conftest.py:62: [W0613(unused-argument), mock_agents] Unused argument 'mock_agent_profiles'
+************* Module test_agents
+tests/bulletin_board/test_agents.py:7: [C0413(wrong-import-position), ] Import "import asyncio" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:8: [C0413(wrong-import-position), ] Import "from unittest.mock import AsyncMock, Mock, patch" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:10: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:12: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.agent_runner import ClaudeAgent, GeminiAgent, run_agent, run_all_agents" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:13: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.config.settings import Settings" should be placed at the top of the module
+tests/bulletin_board/test_agents.py:23: [W0613(unused-argument), TestAgentRunner.test_get_recent_posts_success] Unused argument 'mock_settings'
+tests/bulletin_board/test_agents.py:23: [W0613(unused-argument), TestAgentRunner.test_get_recent_posts_success] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:23: [W0613(unused-argument), TestAgentRunner.test_get_recent_posts_success] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:53: [W0613(unused-argument), TestAgentRunner.test_post_comment_success] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:53: [W0613(unused-argument), TestAgentRunner.test_post_comment_success] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:76: [W0613(unused-argument), TestAgentRunner.test_post_comment_failure] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:76: [W0613(unused-argument), TestAgentRunner.test_post_comment_failure] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:103: [W0613(unused-argument), TestClaudeAgent.test_analyze_and_comment] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:103: [W0613(unused-argument), TestClaudeAgent.test_analyze_and_comment] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:134: [W0212(protected-access), TestClaudeAgent.test_generate_comment] Access to a protected member _generate_comment of a client class
+tests/bulletin_board/test_agents.py:125: [W0613(unused-argument), TestClaudeAgent.test_generate_comment] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:125: [W0613(unused-argument), TestClaudeAgent.test_generate_comment] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:144: [W0613(unused-argument), TestGeminiAgent.test_analyze_and_comment_with_reply] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:144: [W0613(unused-argument), TestGeminiAgent.test_analyze_and_comment_with_reply] Unused argument 'mock_agents'
+tests/bulletin_board/test_agents.py:177: [W0212(protected-access), TestGeminiAgent.test_generate_reply_comment] Access to a protected member _generate_comment of a client class
+tests/bulletin_board/test_agents.py:168: [W0613(unused-argument), TestGeminiAgent.test_generate_reply_comment] Unused argument 'mock_agent_profiles'
+tests/bulletin_board/test_agents.py:168: [W0613(unused-argument), TestGeminiAgent.test_generate_reply_comment] Unused argument 'mock_agents'
+************* Module test_integration
+tests/bulletin_board/test_integration.py:7: [C0413(wrong-import-position), ] Import "import json" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:8: [C0413(wrong-import-position), ] Import "from datetime import datetime, timedelta" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:9: [C0413(wrong-import-position), ] Import "from unittest.mock import AsyncMock, Mock, patch" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:11: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:13: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.agent_runner import run_all_agents" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:14: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.feed_collector import run_collectors" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:15: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.init_agents import init_agents" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:16: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.database.models import get_session" should be placed at the top of the module
+tests/bulletin_board/test_integration.py:53: [W1404(implicit-str-concat), ] Implicit string concatenation found in call
+tests/bulletin_board/test_integration.py:58: [W0613(unused-argument), TestBulletinBoardIntegration.test_database_initialization] Unused argument 'mock_environment'
+tests/bulletin_board/test_integration.py:58: [W0613(unused-argument), TestBulletinBoardIntegration.test_database_initialization] Unused argument 'mock_db_functions'
+tests/bulletin_board/test_integration.py:167: [W0613(unused-argument), TestBulletinBoardIntegration.test_feed_collection_cycle.get_mock] Unused argument 'kwargs'
+tests/bulletin_board/test_integration.py:115: [W0613(unused-argument), TestBulletinBoardIntegration.test_feed_collection_cycle] Unused argument 'mock_environment'
+tests/bulletin_board/test_integration.py:115: [W0613(unused-argument), TestBulletinBoardIntegration.test_feed_collection_cycle] Unused argument 'mock_db_functions'
+tests/bulletin_board/test_integration.py:192: [W0613(unused-argument), TestBulletinBoardIntegration.test_agent_commenting_cycle] Unused argument 'mock_environment'
+tests/bulletin_board/test_integration.py:192: [W0613(unused-argument), TestBulletinBoardIntegration.test_agent_commenting_cycle] Unused argument 'mock_db_functions'
+tests/bulletin_board/test_integration.py:303: [W0613(unused-argument), TestBulletinBoardIntegration.test_web_interface_integration] Unused argument 'mock_environment'
+tests/bulletin_board/test_integration.py:303: [W0613(unused-argument), TestBulletinBoardIntegration.test_web_interface_integration] Unused argument 'mock_db_functions'
+tests/bulletin_board/test_integration.py:379: [W0613(unused-argument), TestEndToEndScenarios.mock_environment] Unused argument 'test_db_engine'
+tests/bulletin_board/test_integration.py:403: [W0613(unused-argument), TestEndToEndScenarios.test_full_bulletin_board_cycle] Unused argument 'mock_environment'
+tests/bulletin_board/test_integration.py:403: [W0613(unused-argument), TestEndToEndScenarios.test_full_bulletin_board_cycle] Unused argument 'mock_db_functions'
+************* Module test_feed_collectors
+tests/bulletin_board/test_feed_collectors.py:7: [C0413(wrong-import-position), ] Import "import json" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:8: [C0413(wrong-import-position), ] Import "from datetime import datetime" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:9: [C0413(wrong-import-position), ] Import "from unittest.mock import AsyncMock, Mock, patch" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:11: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:13: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.feed_collector import GitHubFavoritesCollector, NewsCollector, run_collectors" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:14: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.database.models import Post" should be placed at the top of the module
+tests/bulletin_board/test_feed_collectors.py:189: [W0613(unused-argument), TestRunCollectors.test_run_all_collectors] Unused argument 'mock_github_response'
+tests/bulletin_board/test_feed_collectors.py:189: [W0613(unused-argument), TestRunCollectors.test_run_all_collectors] Unused argument 'mock_news_response'
+tests/bulletin_board/test_feed_collectors.py:185: [R0903(too-few-public-methods), TestRunCollectors] Too few public methods (1/2)
+************* Module test_bulletin_board_validation
+tests/bulletin_board/test_bulletin_board_validation.py:13: [C0413(wrong-import-position), ] Import "from sqlalchemy.orm import sessionmaker" should be placed at the top of the module
+tests/bulletin_board/test_bulletin_board_validation.py:15: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.agent_profiles import AGENT_PROFILES" should be placed at the top of the module
+tests/bulletin_board/test_bulletin_board_validation.py:16: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.agents.init_agents import init_agents" should be placed at the top of the module
+tests/bulletin_board/test_bulletin_board_validation.py:17: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.config.settings import Settings" should be placed at the top of the module
+tests/bulletin_board/test_bulletin_board_validation.py:18: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session" should be placed at the top of the module
+tests/bulletin_board/test_bulletin_board_validation.py:339: [W0718(broad-exception-caught), run_all_tests] Catching too general exception Exception
+************* Module test_profile_system
+tests/bulletin_board/test_profile_system.py:36: [W0621(redefined-outer-name), sample_agent] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:52: [W0621(redefined-outer-name), sample_customization] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:52: [W0621(redefined-outer-name), sample_customization] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:77: [W0621(redefined-outer-name), TestProfileModels.test_create_profile_customization] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:77: [W0621(redefined-outer-name), TestProfileModels.test_create_profile_customization] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:91: [W0621(redefined-outer-name), TestProfileModels.test_create_friend_connection] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:91: [W0621(redefined-outer-name), TestProfileModels.test_create_friend_connection] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:132: [W0621(redefined-outer-name), TestProfileModels.test_profile_visit_tracking] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:132: [W0621(redefined-outer-name), TestProfileModels.test_profile_visit_tracking] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:146: [W0621(redefined-outer-name), TestProfileModels.test_profile_comment] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:146: [W0621(redefined-outer-name), TestProfileModels.test_profile_comment] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:162: [W0621(redefined-outer-name), TestProfileModels.test_blog_post_creation] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:162: [W0621(redefined-outer-name), TestProfileModels.test_blog_post_creation] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:178: [W0621(redefined-outer-name), TestProfileModels.test_playlist_creation] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:178: [W0621(redefined-outer-name), TestProfileModels.test_playlist_creation] Redefining name 'sample_agent' from outer scope (line 36)
+tests/bulletin_board/test_profile_system.py:281: [W0621(redefined-outer-name), TestProfileRoutes.test_n_plus_one_query_optimization] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:394: [W0621(redefined-outer-name), TestProfileRoutes.test_filter_profiles_endpoint] Redefining name 'datetime' from outer scope (line 5)
+tests/bulletin_board/test_profile_system.py:394: [W0404(reimported), TestProfileRoutes.test_filter_profiles_endpoint] Reimport 'datetime' (imported line 5)
+tests/bulletin_board/test_profile_system.py:453: [W0621(redefined-outer-name), TestDataValidation.test_json_field_validation] Redefining name 'db_session' from outer scope (line 25)
+tests/bulletin_board/test_profile_system.py:453: [W0621(redefined-outer-name), TestDataValidation.test_json_field_validation] Redefining name 'sample_customization' from outer scope (line 52)
+tests/bulletin_board/test_profile_system.py:453: [W0613(unused-argument), TestDataValidation.test_json_field_validation] Unused argument 'db_session'
+tests/bulletin_board/test_profile_system.py:460: [W0621(redefined-outer-name), TestDataValidation.test_color_format_validation] Redefining name 'sample_customization' from outer scope (line 52)
+tests/bulletin_board/test_profile_system.py:467: [W0621(redefined-outer-name), TestDataValidation.test_boolean_fields] Redefining name 'sample_customization' from outer scope (line 52)
+************* Module test_database
+tests/bulletin_board/test_database.py:7: [C0413(wrong-import-position), ] Import "from datetime import datetime, timedelta" should be placed at the top of the module
+tests/bulletin_board/test_database.py:9: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_database.py:10: [C0413(wrong-import-position), ] Import "from sqlalchemy import create_engine, inspect" should be placed at the top of the module
+tests/bulletin_board/test_database.py:11: [C0413(wrong-import-position), ] Import "from sqlalchemy.exc import IntegrityError" should be placed at the top of the module
+tests/bulletin_board/test_database.py:13: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.database.models import AgentProfile, Comment, Post, create_tables, get_db_engine, get_session" should be placed at the top of the module
+tests/bulletin_board/test_database.py:275: [W0212(protected-access), TestDatabaseHelpers.test_get_session] Access to a protected member _SessionFactory of a client class
+tests/bulletin_board/test_database.py:276: [W0212(protected-access), TestDatabaseHelpers.test_get_session] Access to a protected member _ScopedSession of a client class
+************* Module test_web_api
+tests/bulletin_board/test_web_api.py:9: [C0413(wrong-import-position), ] Import "import json" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:10: [C0413(wrong-import-position), ] Import "from unittest.mock import patch" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:12: [C0413(wrong-import-position), ] Import "import pytest" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:14: [C0413(wrong-import-position), ] Import "from packages.bulletin_board.database.models import Comment" should be placed at the top of the module
+tests/bulletin_board/test_web_api.py:21: [W0613(unused-argument), TestBulletinBoardAPI.mock_db_session] Unused argument 'mock_agents'
+tests/bulletin_board/test_web_api.py:31: [W0613(unused-argument), TestBulletinBoardAPI.test_get_recent_posts] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:31: [W0613(unused-argument), TestBulletinBoardAPI.test_get_recent_posts] Unused argument 'mock_posts'
+tests/bulletin_board/test_web_api.py:56: [W0613(unused-argument), TestBulletinBoardAPI.test_get_nonexistent_post] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:61: [W0613(unused-argument), TestBulletinBoardAPI.test_get_agents] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:76: [W0613(unused-argument), TestAgentEndpoints.mock_db_session] Unused argument 'mock_agents'
+tests/bulletin_board/test_web_api.py:90: [W0613(unused-argument), TestAgentEndpoints.test_agent_recent_posts_localhost_allowed] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:90: [W0613(unused-argument), TestAgentEndpoints.test_agent_recent_posts_localhost_allowed] Unused argument 'mock_posts'
+tests/bulletin_board/test_web_api.py:127: [W0613(unused-argument), TestAgentEndpoints.test_create_comment_missing_fields] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:139: [W0613(unused-argument), TestAgentEndpoints.test_create_comment_invalid_agent] Unused argument 'mock_db_session'
+tests/bulletin_board/test_web_api.py:152: [W0613(unused-argument), TestAgentEndpoints.test_create_comment_old_post] Unused argument 'mock_db_session'
+************* Module fixtures
+tests/bulletin_board/fixtures.py:33: [W0212(protected-access), test_db_engine] Access to a protected member _SessionFactory of a client class
+tests/bulletin_board/fixtures.py:34: [W0212(protected-access), test_db_engine] Access to a protected member _ScopedSession of a client class
+tests/bulletin_board/fixtures.py:50: [W0212(protected-access), test_db_engine] Access to a protected member _SessionFactory of a client class
+tests/bulletin_board/fixtures.py:51: [W0212(protected-access), test_db_engine] Access to a protected member _ScopedSession of a client class
+tests/bulletin_board/fixtures.py:55: [W0621(redefined-outer-name), test_db_session] Redefining name 'test_db_engine' from outer scope (line 28)
+tests/bulletin_board/fixtures.py:77: [W0621(redefined-outer-name), mock_db_functions] Redefining name 'test_db_engine' from outer scope (line 28)
+tests/bulletin_board/fixtures.py:82: [W0613(unused-argument), mock_db_functions.mock_get_engine] Unused argument 'url'
+tests/bulletin_board/fixtures.py:115: [W0718(broad-exception-caught), mock_db_functions] Catching too general exception Exception
+tests/bulletin_board/fixtures.py:120: [W0621(redefined-outer-name), app] Redefining name 'mock_settings' from outer scope (line 67)
+tests/bulletin_board/fixtures.py:120: [W0621(redefined-outer-name), app] Redefining name 'mock_db_functions' from outer scope (line 77)
+tests/bulletin_board/fixtures.py:120: [W0613(unused-argument), app] Unused argument 'mock_settings'
+tests/bulletin_board/fixtures.py:120: [W0613(unused-argument), app] Unused argument 'mock_db_functions'
+tests/bulletin_board/fixtures.py:137: [W0621(redefined-outer-name), client] Redefining name 'app' from outer scope (line 120)
+************* Module examples.gemini-consultation
+examples/gemini-consultation.py:22: [W0621(redefined-outer-name), consult_gemini] Redefining name 'response' from outer scope (line 41)
+examples/gemini-consultation.py:22: [W3101(missing-timeout), consult_gemini] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+************* Module examples.full-workflow
+examples/full-workflow.py:27: [W3101(missing-timeout), MCPWorkflow.execute_tool] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+examples/full-workflow.py:143: [W0613(unused-argument), MCPWorkflow._create_architecture_animation] Unused argument 'project_info'
+************* Module examples.manim-animation
+examples/manim-animation.py:22: [W0621(redefined-outer-name), create_animation] Redefining name 'result' from outer scope (line 59)
+examples/manim-animation.py:19: [W3101(missing-timeout), create_animation] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+************* Module examples.latex-compilation
+examples/latex-compilation.py:22: [W0621(redefined-outer-name), compile_latex] Redefining name 'result' from outer scope (line 104)
+examples/latex-compilation.py:19: [W3101(missing-timeout), compile_latex] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+************* Module packages.github_ai_agents.src.github_ai_agents.code_parser
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:11: [R0903(too-few-public-methods), CodeBlock] Too few public methods (1/2)
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:75: [W0613(unused-argument), CodeParser._find_associated_filename] Unused argument 'code_content'
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:149: [W1203(logging-fstring-interpolation), CodeParser.apply_code_blocks] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:155: [W1203(logging-fstring-interpolation), CodeParser.apply_code_blocks] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:166: [W1203(logging-fstring-interpolation), CodeParser.apply_code_blocks] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:186: [W0718(broad-exception-caught), CodeParser.apply_code_blocks] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:184: [W1203(logging-fstring-interpolation), CodeParser.apply_code_blocks] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:187: [W1203(logging-fstring-interpolation), CodeParser.apply_code_blocks] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:210: [W1203(logging-fstring-interpolation), CodeParser._sanitize_filename] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:216: [W1203(logging-fstring-interpolation), CodeParser._sanitize_filename] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:221: [W1203(logging-fstring-interpolation), CodeParser._sanitize_filename] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:247: [W1203(logging-fstring-interpolation), CodeParser.extract_and_apply] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/code_parser.py:249: [W1203(logging-fstring-interpolation), CodeParser.extract_and_apply] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.security.manager
+packages/github_ai_agents/src/github_ai_agents/security/manager.py:54: [W0718(broad-exception-caught), SecurityManager._load_config] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/security/manager.py:51: [W1514(unspecified-encoding), SecurityManager._load_config] Using open without explicitly specifying an encoding
+packages/github_ai_agents/src/github_ai_agents/security/manager.py:55: [W1203(logging-fstring-interpolation), SecurityManager._load_config] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/security/manager.py:59: [W0613(unused-argument), SecurityManager.check_trigger_comment] Unused argument 'entity_type'
+packages/github_ai_agents/src/github_ai_agents/security/manager.py:183: [W0613(unused-argument), SecurityManager.perform_full_security_check] Unused argument 'entity_type'
+packages/github_ai_agents/src/github_ai_agents/security/manager.py:184: [W0613(unused-argument), SecurityManager.perform_full_security_check] Unused argument 'entity_id'
+************* Module packages.github_ai_agents.src.github_ai_agents.agents
+packages/github_ai_agents/src/github_ai_agents/agents/__init__.py:30: [W0718(broad-exception-caught), get_best_available_agent] Catching too general exception Exception
+************* Module packages.github_ai_agents.src.github_ai_agents.agents.crush
+packages/github_ai_agents/src/github_ai_agents/agents/crush.py:48: [W1203(logging-fstring-interpolation), CrushAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/crush.py:49: [W1203(logging-fstring-interpolation), CrushAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/crush.py:63: [W1203(logging-fstring-interpolation), CrushAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/crush.py:65: [W1203(logging-fstring-interpolation), CrushAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/crush.py:67: [W1203(logging-fstring-interpolation), CrushAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/crush.py:59: [W0612(unused-variable), CrushAgent.generate_code] Unused variable 'stderr'
+************* Module packages.github_ai_agents.src.github_ai_agents.agents.base
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:15: [W0107(unnecessary-pass), AgentError] Unnecessary pass statement
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:74: [W0107(unnecessary-pass), BaseAgent.generate_code] Unnecessary pass statement
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:96: [W0107(unnecessary-pass), BaseAgent.is_available] Unnecessary pass statement
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:105: [W0107(unnecessary-pass), BaseAgent.get_trigger_keyword] Unnecessary pass statement
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:165: [W1203(logging-fstring-interpolation), CLIAgent._execute_command] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:193: [W0707(raise-missing-from), CLIAgent._execute_command] Consider explicitly re-raising using 'except Exception as exc' and 'raise AgentTimeoutError(self.name, self.timeout) from exc'
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:196: [W0707(raise-missing-from), CLIAgent._execute_command] Consider explicitly re-raising using 'except FileNotFoundError as exc' and 'raise AgentExecutionError(self.name, -1, '', f"Executable '{self.executable}' not found") from exc'
+packages/github_ai_agents/src/github_ai_agents/agents/base.py:209: [W1510(subprocess-run-check), CLIAgent.is_available] 'subprocess.run' used without explicitly defining the value for 'check'.
+************* Module packages.github_ai_agents.src.github_ai_agents.agents.opencode
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:34: [W1203(logging-fstring-interpolation), OpenCodeAgent.__init__] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:61: [W1203(logging-fstring-interpolation), OpenCodeAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:62: [W1203(logging-fstring-interpolation), OpenCodeAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:63: [W1203(logging-fstring-interpolation), OpenCodeAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:72: [W1203(logging-fstring-interpolation), OpenCodeAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:74: [W1203(logging-fstring-interpolation), OpenCodeAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:76: [W1203(logging-fstring-interpolation), OpenCodeAgent.generate_code] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:78: [W0707(raise-missing-from), OpenCodeAgent.generate_code] Consider explicitly re-raising using 'raise AgentExecutionError(self.name, e.exit_code, e.stdout, e.stderr or 'No error output from opencode command') from e'
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:128: [W1203(logging-fstring-interpolation), OpenCodeAgent._execute_stdin] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:160: [W0707(raise-missing-from), OpenCodeAgent._execute_stdin] Consider explicitly re-raising using 'except Exception as exc' and 'raise AgentTimeoutError(self.name, self.timeout) from exc'
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:163: [W0707(raise-missing-from), OpenCodeAgent._execute_stdin] Consider explicitly re-raising using 'except FileNotFoundError as exc' and 'raise AgentExecutionError(self.name, -1, '', f'Executable not found in command: {cmd}') from exc'
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:170: [W1203(logging-fstring-interpolation), OpenCodeAgent._parse_output] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:171: [W1203(logging-fstring-interpolation), OpenCodeAgent._parse_output] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/opencode.py:173: [W1203(logging-fstring-interpolation), OpenCodeAgent._parse_output] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.agents.claude
+packages/github_ai_agents/src/github_ai_agents/agents/claude.py:39: [W0612(unused-variable), ClaudeAgent.generate_code] Unused variable 'stderr'
+************* Module packages.github_ai_agents.src.github_ai_agents.agents.containerized
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:96: [W0718(broad-exception-caught), ContainerizedCLIAgent.is_available] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:77: [W1510(subprocess-run-check), ContainerizedCLIAgent.is_available] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:94: [W1203(logging-fstring-interpolation), ContainerizedCLIAgent.is_available] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:97: [W1203(logging-fstring-interpolation), ContainerizedCLIAgent.is_available] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:114: [W0718(broad-exception-caught), ContainerizedCLIAgent.is_available] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:103: [W1510(subprocess-run-check), ContainerizedCLIAgent.is_available] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:112: [W1203(logging-fstring-interpolation), ContainerizedCLIAgent.is_available] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/agents/containerized.py:118: [W1203(logging-fstring-interpolation), ContainerizedCLIAgent.is_available] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.agents.gemini
+packages/github_ai_agents/src/github_ai_agents/agents/gemini.py:49: [W0612(unused-variable), GeminiAgent.generate_code] Unused variable 'stderr'
+************* Module packages.github_ai_agents.src.github_ai_agents.subagents.manager
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:38: [W1203(logging-fstring-interpolation), SubagentManager._load_personas] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:47: [W0718(broad-exception-caught), SubagentManager._load_personas] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:44: [W1514(unspecified-encoding), SubagentManager._load_personas] Using open without explicitly specifying an encoding
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:46: [W1203(logging-fstring-interpolation), SubagentManager._load_personas] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:48: [W1203(logging-fstring-interpolation), SubagentManager._load_personas] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:117: [W0718(broad-exception-caught), SubagentManager.execute_with_persona] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/subagents/manager.py:107: [W1203(logging-fstring-interpolation), SubagentManager.execute_with_persona] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.utils.github
+packages/github_ai_agents/src/github_ai_agents/utils/github.py:48: [W1203(logging-fstring-interpolation), run_gh_command] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/utils/github.py:50: [W1203(logging-fstring-interpolation), run_gh_command] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/utils/github.py:92: [W1203(logging-fstring-interpolation), run_git_command] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/utils/github.py:94: [W1203(logging-fstring-interpolation), run_git_command] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.monitors.base
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:79: [W0718(broad-exception-caught), BaseMonitor._initialize_agents] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:78: [W1203(logging-fstring-interpolation), BaseMonitor._initialize_agents] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:80: [W1203(logging-fstring-interpolation), BaseMonitor._initialize_agents] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:125: [W1203(logging-fstring-interpolation), BaseMonitor.get_recent_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:139: [W0107(unnecessary-pass), BaseMonitor._get_json_fields] Unnecessary pass statement
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:243: [C0201(consider-iterating-dictionary), BaseMonitor._get_agent_unavailable_error] Consider iterating the dictionary directly instead of calling .keys()
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:256: [W0107(unnecessary-pass), BaseMonitor.process_items] Unnecessary pass statement
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:265: [W1203(logging-fstring-interpolation), BaseMonitor.run_continuous] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:273: [W0718(broad-exception-caught), BaseMonitor.run_continuous] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:274: [W1203(logging-fstring-interpolation), BaseMonitor.run_continuous] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/base.py:302: [W1203(logging-fstring-interpolation), BaseMonitor._parse_target_numbers] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.monitors.issue
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:19: [W0246(useless-parent-delegation), IssueMonitor.__init__] Useless parent or super() delegation in method '__init__'
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:33: [W1203(logging-fstring-interpolation), IssueMonitor.process_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:39: [W1203(logging-fstring-interpolation), IssueMonitor.process_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:44: [W1203(logging-fstring-interpolation), IssueMonitor.process_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:66: [W1203(logging-fstring-interpolation), IssueMonitor._process_issues_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:64: [W0612(unused-variable), IssueMonitor._process_issues_async] Unused variable 'i'
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:79: [W1203(logging-fstring-interpolation), IssueMonitor._process_single_issue_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:91: [W1203(logging-fstring-interpolation), IssueMonitor._process_single_issue_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:97: [W1203(logging-fstring-interpolation), IssueMonitor._process_single_issue_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:118: [W1203(logging-fstring-interpolation), IssueMonitor._handle_implementation_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:131: [W0718(broad-exception-caught), IssueMonitor._handle_implementation_async] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:132: [W1203(logging-fstring-interpolation), IssueMonitor._handle_implementation_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:145: [W1203(logging-fstring-interpolation), IssueMonitor._process_single_issue] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:157: [W1203(logging-fstring-interpolation), IssueMonitor._process_single_issue] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:163: [W1203(logging-fstring-interpolation), IssueMonitor._process_single_issue] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:184: [W1203(logging-fstring-interpolation), IssueMonitor._handle_implementation] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:197: [W0718(broad-exception-caught), IssueMonitor._handle_implementation] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:198: [W1203(logging-fstring-interpolation), IssueMonitor._handle_implementation] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:256: [W1203(logging-fstring-interpolation), IssueMonitor._implement_issue] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:259: [W1203(logging-fstring-interpolation), IssueMonitor._implement_issue] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:267: [W1203(logging-fstring-interpolation), IssueMonitor._implement_issue] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:372: [W0718(broad-exception-caught), IssueMonitor._create_pr] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:277: [W1203(logging-fstring-interpolation), IssueMonitor._create_pr] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:291: [W1203(logging-fstring-interpolation), IssueMonitor._create_pr] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:293: [W1203(logging-fstring-interpolation), IssueMonitor._create_pr] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:313: [W1203(logging-fstring-interpolation), IssueMonitor._create_pr] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:373: [W1203(logging-fstring-interpolation), IssueMonitor._create_pr] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:288: [W0612(unused-variable), IssueMonitor._create_pr] Unused variable 'blocks'
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:396: [W1203(logging-fstring-interpolation), IssueMonitor._handle_close] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:478: [W1203(logging-fstring-interpolation), IssueMonitor._review_issues_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:499: [W1203(logging-fstring-interpolation), IssueMonitor._review_single_issue_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:533: [W0718(broad-exception-caught), IssueMonitor._review_single_issue_async] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:521: [W1203(logging-fstring-interpolation), IssueMonitor._review_single_issue_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/issue.py:534: [W1203(logging-fstring-interpolation), IssueMonitor._review_single_issue_async] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.monitors.pr
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:20: [W0246(useless-parent-delegation), PRMonitor.__init__] Useless parent or super() delegation in method '__init__'
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:57: [W1203(logging-fstring-interpolation), PRMonitor.get_open_prs] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:63: [W1203(logging-fstring-interpolation), PRMonitor.process_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:69: [W1203(logging-fstring-interpolation), PRMonitor.process_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:74: [W1203(logging-fstring-interpolation), PRMonitor.process_items] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:96: [W1203(logging-fstring-interpolation), PRMonitor._process_prs_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:94: [W0612(unused-variable), PRMonitor._process_prs_async] Unused variable 'i'
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:115: [W1203(logging-fstring-interpolation), PRMonitor._process_single_pr_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:127: [W1203(logging-fstring-interpolation), PRMonitor._process_single_pr_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:134: [W1203(logging-fstring-interpolation), PRMonitor._process_single_pr_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:238: [W1203(logging-fstring-interpolation), PRMonitor._handle_review_feedback_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:249: [W0718(broad-exception-caught), PRMonitor._handle_review_feedback_async] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:250: [W1203(logging-fstring-interpolation), PRMonitor._handle_review_feedback_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:297: [W1203(logging-fstring-interpolation), PRMonitor._implement_review_feedback] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:303: [W1203(logging-fstring-interpolation), PRMonitor._implement_review_feedback] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:369: [W0718(broad-exception-caught), PRMonitor._apply_review_fixes] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:319: [W1203(logging-fstring-interpolation), PRMonitor._apply_review_fixes] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:327: [W1203(logging-fstring-interpolation), PRMonitor._apply_review_fixes] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:329: [W1203(logging-fstring-interpolation), PRMonitor._apply_review_fixes] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:347: [W1203(logging-fstring-interpolation), PRMonitor._apply_review_fixes] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:370: [W1203(logging-fstring-interpolation), PRMonitor._apply_review_fixes] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:324: [W0612(unused-variable), PRMonitor._apply_review_fixes] Unused variable 'blocks'
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:445: [W1203(logging-fstring-interpolation), PRMonitor._review_prs_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:466: [W1203(logging-fstring-interpolation), PRMonitor._review_single_pr_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:471: [W0718(broad-exception-caught), PRMonitor._review_single_pr_async] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:472: [W1203(logging-fstring-interpolation), PRMonitor._review_single_pr_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:519: [W0718(broad-exception-caught), PRMonitor._review_single_pr_async] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:507: [W1203(logging-fstring-interpolation), PRMonitor._review_single_pr_async] Use lazy % formatting in logging functions
+packages/github_ai_agents/src/github_ai_agents/monitors/pr.py:520: [W1203(logging-fstring-interpolation), PRMonitor._review_single_pr_async] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.src.github_ai_agents.config
+packages/github_ai_agents/src/github_ai_agents/config.py:103: [W0718(broad-exception-caught), AgentConfig._load_config] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/config.py:98: [W1514(unspecified-encoding), AgentConfig._load_config] Using open without explicitly specifying an encoding
+************* Module packages.github_ai_agents.src.github_ai_agents.cli
+packages/github_ai_agents/src/github_ai_agents/cli.py:65: [W0718(broad-exception-caught), main] Catching too general exception Exception
+packages/github_ai_agents/src/github_ai_agents/cli.py:66: [W1203(logging-fstring-interpolation), main] Use lazy % formatting in logging functions
+************* Module packages.github_ai_agents.tests.test_agents
+packages/github_ai_agents/tests/test_agents.py:11: [R0903(too-few-public-methods), TestBaseAgent] Too few public methods (1/2)
+packages/github_ai_agents/tests/test_agents.py:29: [W0212(protected-access), TestOpenCodeAgent.test_initialization] Access to a protected member _use_docker of a client class
+packages/github_ai_agents/tests/test_agents.py:30: [W0212(protected-access), TestOpenCodeAgent.test_initialization] Access to a protected member _project_root of a client class
+packages/github_ai_agents/tests/test_agents.py:74: [W0212(protected-access), TestOpenCodeAgent.test_is_available_docker_preferred] Access to a protected member _use_docker of a client class
+packages/github_ai_agents/tests/test_agents.py:75: [W0212(protected-access), TestOpenCodeAgent.test_is_available_docker_preferred] Access to a protected member _available of a client class
+packages/github_ai_agents/tests/test_agents.py:104: [W0212(protected-access), TestOpenCodeAgent.test_is_available_falls_back_to_local] Access to a protected member _use_docker of a client class
+packages/github_ai_agents/tests/test_agents.py:105: [W0212(protected-access), TestOpenCodeAgent.test_is_available_falls_back_to_local] Access to a protected member _available of a client class
+packages/github_ai_agents/tests/test_agents.py:119: [W0212(protected-access), TestOpenCodeAgent.test_is_available_not_found] Access to a protected member _available of a client class
+packages/github_ai_agents/tests/test_agents.py:109: [W0613(unused-argument), TestOpenCodeAgent.test_is_available_not_found] Unused argument 'mock_run'
+packages/github_ai_agents/tests/test_agents.py:124: [W0212(protected-access), TestOpenCodeAgent.test_build_command_docker] Access to a protected member _use_docker of a client class
+packages/github_ai_agents/tests/test_agents.py:131: [W0212(protected-access), TestOpenCodeAgent.test_build_command_docker] Access to a protected member _build_command of a client class
+packages/github_ai_agents/tests/test_agents.py:154: [W0212(protected-access), TestOpenCodeAgent.test_build_command_local] Access to a protected member _use_docker of a client class
+packages/github_ai_agents/tests/test_agents.py:156: [W0212(protected-access), TestOpenCodeAgent.test_build_command_local] Access to a protected member _build_command of a client class
+packages/github_ai_agents/tests/test_agents.py:169: [W0212(protected-access), TestOpenCodeAgent.test_generate_code] Access to a protected member _use_docker of a client class
+packages/github_ai_agents/tests/test_agents.py:211: [W0212(protected-access), TestCrushAgent.test_docker_preferred] Access to a protected member _use_docker of a client class
+************* Module packages.github_ai_agents.tests.test_subagents
+packages/github_ai_agents/tests/test_subagents.py:46: [W0212(protected-access), TestSubagentManager.test_load_personas] Access to a protected member _load_personas of a client class
+packages/github_ai_agents/tests/test_subagents.py:73: [W0212(protected-access), TestSubagentManager.test_build_prompt] Access to a protected member _build_prompt of a client class
+packages/github_ai_agents/tests/test_subagents.py:152: [W0612(unused-variable), TestSubagentManager.test_execute_with_specific_agent] Unused variable 'stderr'
+packages/github_ai_agents/tests/test_subagents.py:163: [W0612(unused-variable), TestSubagentManager.test_execute_with_unknown_agent] Unused variable 'stdout'
+************* Module packages.github_ai_agents.tests.test_monitors
+packages/github_ai_agents/tests/test_monitors.py:80: [W0212(protected-access), TestIssueMonitor.test_has_agent_comment] Access to a protected member _has_agent_comment of a client class
+packages/github_ai_agents/tests/test_monitors.py:92: [W0212(protected-access), TestIssueMonitor.test_has_agent_comment] Access to a protected member _has_agent_comment of a client class
+packages/github_ai_agents/tests/test_monitors.py:126: [W0212(protected-access), TestIssueMonitor.test_process_single_issue_with_trigger] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_monitors.py:97: [W0613(unused-argument), TestIssueMonitor.test_process_single_issue_with_trigger] Unused argument 'mock_gh_command'
+packages/github_ai_agents/tests/test_monitors.py:147: [W0212(protected-access), TestIssueMonitor.test_process_single_issue_security_rejected] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_monitors.py:160: [W0212(protected-access), TestIssueMonitor.test_post_starting_work_comment] Access to a protected member _post_starting_work_comment of a client class
+packages/github_ai_agents/tests/test_monitors.py:234: [W0212(protected-access), TestPRMonitor.test_check_trigger_comment_pr] Access to a protected member _check_trigger_comment of a client class
+packages/github_ai_agents/tests/test_monitors.py:273: [W0212(protected-access), TestPRMonitor.test_process_single_pr_with_changes_requested] Access to a protected member _process_single_pr of a client class
+packages/github_ai_agents/tests/test_monitors.py:240: [W0613(unused-argument), TestPRMonitor.test_process_single_pr_with_changes_requested] Unused argument 'mock_gh_command'
+packages/github_ai_agents/tests/test_monitors.py:296: [W0212(protected-access), TestPRMonitor.test_extract_review_items] Access to a protected member _extract_review_items of a client class
+packages/github_ai_agents/tests/test_monitors.py:312: [W0212(protected-access), TestPRMonitor.test_post_error_comment] Access to a protected member _post_error_comment of a client class
+************* Module packages.github_ai_agents.tests.test_issue_monitor
+packages/github_ai_agents/tests/test_issue_monitor.py:18: [W0621(redefined-outer-name), issue_monitor] Redefining name 'mock_env' from outer scope (line 11)
+packages/github_ai_agents/tests/test_issue_monitor.py:18: [W0613(unused-argument), issue_monitor] Unused argument 'mock_env'
+packages/github_ai_agents/tests/test_issue_monitor.py:27: [W0621(redefined-outer-name), TestIssueMonitor.test_initialization] Redefining name 'mock_env' from outer scope (line 11)
+packages/github_ai_agents/tests/test_issue_monitor.py:27: [W0613(unused-argument), TestIssueMonitor.test_initialization] Unused argument 'mock_env'
+packages/github_ai_agents/tests/test_issue_monitor.py:40: [W0621(redefined-outer-name), TestIssueMonitor.test_get_open_issues] Redefining name 'issue_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_issue_monitor.py:59: [W0621(redefined-outer-name), TestIssueMonitor.test_process_issue_with_trigger] Redefining name 'issue_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_issue_monitor.py:91: [W0212(protected-access), TestIssueMonitor.test_process_issue_with_trigger] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_issue_monitor.py:97: [W0621(redefined-outer-name), TestIssueMonitor.test_handle_close_action] Redefining name 'issue_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_issue_monitor.py:117: [W0212(protected-access), TestIssueMonitor.test_handle_close_action] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_issue_monitor.py:124: [W0621(redefined-outer-name), TestIssueMonitor.test_handle_summarize_action] Redefining name 'issue_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_issue_monitor.py:149: [W0212(protected-access), TestIssueMonitor.test_handle_summarize_action] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_issue_monitor.py:158: [W0621(redefined-outer-name), TestIssueMonitor.test_security_rejection] Redefining name 'issue_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_issue_monitor.py:173: [W0212(protected-access), TestIssueMonitor.test_security_rejection] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_issue_monitor.py:181: [W0621(redefined-outer-name), TestIssueMonitor.test_containerized_agent_error] Redefining name 'issue_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_issue_monitor.py:203: [W0212(protected-access), TestIssueMonitor.test_containerized_agent_error] Access to a protected member _process_single_issue of a client class
+packages/github_ai_agents/tests/test_issue_monitor.py:210: [W0621(redefined-outer-name), TestIssueMonitor.test_continuous_monitoring] Redefining name 'issue_monitor' from outer scope (line 18)
+************* Module packages.github_ai_agents.tests.test_pr_monitor
+packages/github_ai_agents/tests/test_pr_monitor.py:18: [W0621(redefined-outer-name), pr_monitor] Redefining name 'mock_env' from outer scope (line 11)
+packages/github_ai_agents/tests/test_pr_monitor.py:18: [W0613(unused-argument), pr_monitor] Unused argument 'mock_env'
+packages/github_ai_agents/tests/test_pr_monitor.py:27: [W0621(redefined-outer-name), TestPRMonitor.test_initialization] Redefining name 'mock_env' from outer scope (line 11)
+packages/github_ai_agents/tests/test_pr_monitor.py:27: [W0613(unused-argument), TestPRMonitor.test_initialization] Unused argument 'mock_env'
+packages/github_ai_agents/tests/test_pr_monitor.py:40: [W0621(redefined-outer-name), TestPRMonitor.test_get_open_prs] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:57: [W0621(redefined-outer-name), TestPRMonitor.test_check_review_trigger] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:61: [W0212(protected-access), TestPRMonitor.test_check_review_trigger] Access to a protected member _check_review_trigger of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:66: [W0212(protected-access), TestPRMonitor.test_check_review_trigger] Access to a protected member _check_review_trigger of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:71: [W0212(protected-access), TestPRMonitor.test_check_review_trigger] Access to a protected member _check_review_trigger of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:75: [W0621(redefined-outer-name), TestPRMonitor.test_get_review_comments] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:105: [W0212(protected-access), TestPRMonitor.test_get_review_comments] Access to a protected member _get_review_comments of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:111: [W0621(redefined-outer-name), TestPRMonitor.test_process_pr_with_security_rejection] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:142: [W0212(protected-access), TestPRMonitor.test_process_pr_with_security_rejection] Access to a protected member _process_single_pr of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:152: [W0621(redefined-outer-name), TestPRMonitor.test_handle_review_feedback_with_valid_agent] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:165: [W0212(protected-access), TestPRMonitor.test_handle_review_feedback_with_valid_agent] Access to a protected member _handle_review_feedback of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:175: [W0621(redefined-outer-name), TestPRMonitor.test_handle_review_feedback_with_containerized_agent] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:183: [W0212(protected-access), TestPRMonitor.test_handle_review_feedback_with_containerized_agent] Access to a protected member _handle_review_feedback of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:191: [W0621(redefined-outer-name), TestPRMonitor.test_has_responded_to_comment] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:194: [W0212(protected-access), TestPRMonitor.test_has_responded_to_comment] Access to a protected member _has_responded_to_comment of a client class
+packages/github_ai_agents/tests/test_pr_monitor.py:197: [W0621(redefined-outer-name), TestPRMonitor.test_continuous_monitoring] Redefining name 'pr_monitor' from outer scope (line 18)
+packages/github_ai_agents/tests/test_pr_monitor.py:197: [W0613(unused-argument), TestPRMonitor.test_continuous_monitoring] Unused argument 'mock_gh_command'
+************* Module packages.bulletin_board.agents.agent_runner
+packages/bulletin_board/agents/agent_runner.py:125: [W0613(unused-argument), ClaudeAgent._generate_comment] Unused argument 'post'
+packages/bulletin_board/agents/agent_runner.py:183: [W0613(unused-argument), GeminiAgent._generate_comment] Unused argument 'post'
+************* Module packages.bulletin_board.agents.moderation_system
+packages/bulletin_board/agents/moderation_system.py:126: [W0718(broad-exception-caught), ContentModerator._load_config] Catching too general exception Exception
+packages/bulletin_board/agents/moderation_system.py:98: [W1514(unspecified-encoding), ContentModerator._load_config] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/moderation_system.py:168: [W0613(unused-argument), ContentModerator.moderate_content] Unused argument 'content_type'
+packages/bulletin_board/agents/moderation_system.py:359: [W0613(unused-argument), ContentModerator.check_rate_limits] Unused argument 'agent_id'
+packages/bulletin_board/agents/moderation_system.py:424: [W0613(unused-argument), ContentModerator._get_health_recommendation] Unused argument 'quality_level'
+packages/bulletin_board/agents/moderation_system.py:133: [W0201(attribute-defined-outside-init), ContentModerator._use_defaults] Attribute 'blocked_patterns' defined outside __init__
+packages/bulletin_board/agents/moderation_system.py:140: [W0201(attribute-defined-outside-init), ContentModerator._use_defaults] Attribute 'modify_patterns' defined outside __init__
+packages/bulletin_board/agents/moderation_system.py:149: [W0201(attribute-defined-outside-init), ContentModerator._use_defaults] Attribute 'chaos_patterns' defined outside __init__
+packages/bulletin_board/agents/moderation_system.py:158: [W0201(attribute-defined-outside-init), ContentModerator._use_defaults] Attribute 'quality_patterns' defined outside __init__
+************* Module packages.bulletin_board.agents.personality_drift
+packages/bulletin_board/agents/personality_drift.py:20: [R0902(too-many-instance-attributes), PersonalityState] Too many instance attributes (17/15)
+packages/bulletin_board/agents/personality_drift.py:91: [W1514(unspecified-encoding), PersonalityDriftEngine.get_current_state] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/personality_drift.py:445: [W1514(unspecified-encoding), PersonalityDriftEngine._get_baseline_personality] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/personality_drift.py:455: [W1514(unspecified-encoding), PersonalityDriftEngine._save_state] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/personality_drift.py:466: [W1514(unspecified-encoding), PersonalityDriftEngine._save_to_history] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/personality_drift.py:498: [W1514(unspecified-encoding), PersonalityDriftEngine._record_influence] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/personality_drift.py:503: [W1514(unspecified-encoding), PersonalityDriftEngine._record_influence] Using open without explicitly specifying an encoding
+packages/bulletin_board/agents/personality_drift.py:516: [W1514(unspecified-encoding), PersonalityDriftEngine._record_major_shift] Using open without explicitly specifying an encoding
+************* Module packages.bulletin_board.agents.personality_system
+packages/bulletin_board/agents/personality_system.py:166: [W0718(broad-exception-caught), PersonalityManager.load_personalities] Catching too general exception Exception
+packages/bulletin_board/agents/personality_system.py:154: [W1514(unspecified-encoding), PersonalityManager.load_personalities] Using open without explicitly specifying an encoding
+************* Module packages.bulletin_board.agents.enhanced_agent_runner
+packages/bulletin_board/agents/enhanced_agent_runner.py:61: [W0718(broad-exception-caught), EnhancedAgentRunner.run_agent_cycle] Catching too general exception Exception
+packages/bulletin_board/agents/enhanced_agent_runner.py:81: [W0612(unused-variable), EnhancedAgentRunner._process_post] Unused variable 'probability'
+packages/bulletin_board/agents/enhanced_agent_runner.py:255: [W0613(unused-argument), EnhancedAgentRunner._generate_base_response] Unused argument 'post'
+packages/bulletin_board/agents/enhanced_agent_runner.py:255: [W0613(unused-argument), EnhancedAgentRunner._generate_base_response] Unused argument 'context'
+packages/bulletin_board/agents/enhanced_agent_runner.py:287: [W0613(unused-argument), EnhancedAgentRunner._generate_meme_text] Unused argument 'context'
+packages/bulletin_board/agents/enhanced_agent_runner.py:347: [W0107(unnecessary-pass), EnhancedAgentRunner._engage_with_replies] Unnecessary pass statement
+packages/bulletin_board/agents/enhanced_agent_runner.py:398: [W0718(broad-exception-caught), main] Catching too general exception Exception
+************* Module packages.bulletin_board.agents.memory_enhanced_runner
+packages/bulletin_board/agents/memory_enhanced_runner.py:114: [C0201(consider-iterating-dictionary), MemoryEnhancedRunner._build_memory_context] Consider iterating the dictionary directly instead of calling .keys()
+packages/bulletin_board/agents/memory_enhanced_runner.py:131: [W0612(unused-variable), MemoryEnhancedRunner._should_respond_with_memory] Unused variable 'should_respond'
+packages/bulletin_board/agents/memory_enhanced_runner.py:144: [W0612(unused-variable), MemoryEnhancedRunner._should_respond_with_memory] Unused variable 'other_agent'
+packages/bulletin_board/agents/memory_enhanced_runner.py:183: [W0612(unused-variable), MemoryEnhancedRunner._generate_memory_aware_response] Unused variable 'other_agent'
+packages/bulletin_board/agents/memory_enhanced_runner.py:216: [C0201(consider-iterating-dictionary), MemoryEnhancedRunner._store_interaction_memory] Consider iterating the dictionary directly instead of calling .keys()
+packages/bulletin_board/agents/memory_enhanced_runner.py:262: [C0201(consider-iterating-dictionary), MemoryEnhancedRunner._apply_interaction_drift] Consider iterating the dictionary directly instead of calling .keys()
+packages/bulletin_board/agents/memory_enhanced_runner.py:321: [W0718(broad-exception-caught), MemoryEnhancedRunner._run_analytics] Catching too general exception Exception
+packages/bulletin_board/agents/memory_enhanced_runner.py:300: [C0201(consider-iterating-dictionary), MemoryEnhancedRunner._run_analytics] Consider iterating the dictionary directly instead of calling .keys()
+packages/bulletin_board/agents/memory_enhanced_runner.py:328: [C0201(consider-iterating-dictionary), MemoryEnhancedRunner._apply_time_drift_to_all] Consider iterating the dictionary directly instead of calling .keys()
+packages/bulletin_board/agents/memory_enhanced_runner.py:528: [W0718(broad-exception-caught), MemoryEnhancedRunner.run] Catching too general exception Exception
+************* Module packages.bulletin_board.agents.reaction_system
+packages/bulletin_board/agents/reaction_system.py:86: [C0207(use-maxsplit-arg), ReactionManager._load_fallback_reactions] Use filename.split('.', maxsplit=1)[0] instead
+packages/bulletin_board/agents/reaction_system.py:162: [W0718(broad-exception-caught), ReactionManager.load_reactions] Catching too general exception Exception
+packages/bulletin_board/agents/reaction_system.py:114: [W0718(broad-exception-caught), ReactionManager.load_reactions] Catching too general exception Exception
+packages/bulletin_board/agents/reaction_system.py:155: [C0207(use-maxsplit-arg), ReactionManager.load_reactions] Use filename.split('.', maxsplit=1)[0] instead
+packages/bulletin_board/agents/reaction_system.py:273: [W0613(unused-argument), MemeGenerator._generate_drake_text] Unused argument 'style'
+packages/bulletin_board/agents/reaction_system.py:356: [R0903(too-few-public-methods), ExpressionEnhancer] Too few public methods (1/2)
+************* Module packages.bulletin_board.agents.init_profiles
+packages/bulletin_board/agents/init_profiles.py:32: [W0718(broad-exception-caught), load_profile_config] Catching too general exception Exception
+packages/bulletin_board/agents/init_profiles.py:28: [W1514(unspecified-encoding), load_profile_config] Using open without explicitly specifying an encoding
+************* Module packages.bulletin_board.agents.agent_profiles
+packages/bulletin_board/agents/agent_profiles.py:37: [W0718(broad-exception-caught), load_agent_profiles] Catching too general exception Exception
+packages/bulletin_board/agents/agent_profiles.py:23: [W1514(unspecified-encoding), load_agent_profiles] Using open without explicitly specifying an encoding
+************* Module packages.bulletin_board.agents.feed_collector
+packages/bulletin_board/agents/feed_collector.py:19: [R0903(too-few-public-methods), FeedCollector] Too few public methods (1/2)
+packages/bulletin_board/agents/feed_collector.py:123: [W0718(broad-exception-caught), GitHubFavoritesCollector._store_favorites] Catching too general exception Exception
+packages/bulletin_board/agents/feed_collector.py:30: [R0903(too-few-public-methods), GitHubFavoritesCollector] Too few public methods (1/2)
+packages/bulletin_board/agents/feed_collector.py:232: [W0718(broad-exception-caught), NewsCollector._store_articles] Catching too general exception Exception
+packages/bulletin_board/agents/feed_collector.py:136: [R0903(too-few-public-methods), NewsCollector] Too few public methods (1/2)
+packages/bulletin_board/agents/feed_collector.py:245: [W0621(redefined-outer-name), run_collectors] Redefining name 'engine' from outer scope (line 270)
+************* Module packages.bulletin_board.app.profile_routes
+packages/bulletin_board/app/profile_routes.py:1: [C0302(too-many-lines), ] Too many lines in module (1051/1000)
+packages/bulletin_board/app/profile_routes.py:1016: [W0621(redefined-outer-name), filter_profiles] Redefining name 'datetime' from outer scope (line 5)
+packages/bulletin_board/app/profile_routes.py:1016: [W0621(redefined-outer-name), filter_profiles] Redefining name 'timedelta' from outer scope (line 5)
+packages/bulletin_board/app/profile_routes.py:1016: [W0404(reimported), filter_profiles] Reimport 'datetime' (imported line 5)
+packages/bulletin_board/app/profile_routes.py:1016: [W0404(reimported), filter_profiles] Reimport 'timedelta' (imported line 5)
+************* Module packages.bulletin_board.app.app
+packages/bulletin_board/app/app.py:52: [W0603(global-statement), get_engine] Using the global statement
+packages/bulletin_board/app/app.py:141: [W0718(broad-exception-caught), health] Catching too general exception Exception
+packages/bulletin_board/app/app.py:513: [W1514(unspecified-encoding), get_reactions] Using open without explicitly specifying an encoding
+packages/bulletin_board/app/app.py:545: [W1514(unspecified-encoding), get_reactions] Using open without explicitly specifying an encoding
+packages/bulletin_board/app/app.py:548: [W1203(logging-fstring-interpolation), get_reactions] Use lazy % formatting in logging functions
+packages/bulletin_board/app/app.py:552: [W1203(logging-fstring-interpolation), get_reactions] Use lazy % formatting in logging functions
+packages/bulletin_board/app/app.py:554: [W1203(logging-fstring-interpolation), get_reactions] Use lazy % formatting in logging functions
+************* Module packages.bulletin_board.app.seed_routes
+packages/bulletin_board/app/seed_routes.py:102: [W0718(broad-exception-caught), seed_agent] Catching too general exception Exception
+packages/bulletin_board/app/seed_routes.py:104: [W1203(logging-fstring-interpolation), seed_agent] Use lazy % formatting in logging functions
+packages/bulletin_board/app/seed_routes.py:199: [W0718(broad-exception-caught), seed_profile_customization] Catching too general exception Exception
+packages/bulletin_board/app/seed_routes.py:201: [W1203(logging-fstring-interpolation), seed_profile_customization] Use lazy % formatting in logging functions
+packages/bulletin_board/app/seed_routes.py:259: [W0718(broad-exception-caught), seed_post] Catching too general exception Exception
+packages/bulletin_board/app/seed_routes.py:261: [W1203(logging-fstring-interpolation), seed_post] Use lazy % formatting in logging functions
+packages/bulletin_board/app/seed_routes.py:322: [W0718(broad-exception-caught), seed_comment] Catching too general exception Exception
+packages/bulletin_board/app/seed_routes.py:324: [W1203(logging-fstring-interpolation), seed_comment] Use lazy % formatting in logging functions
+packages/bulletin_board/app/seed_routes.py:414: [W0718(broad-exception-caught), clear_test_data] Catching too general exception Exception
+packages/bulletin_board/app/seed_routes.py:416: [W1203(logging-fstring-interpolation), clear_test_data] Use lazy % formatting in logging functions
+************* Module packages.bulletin_board.app.security
+packages/bulletin_board/app/security.py:121: [W1203(logging-fstring-interpolation), sanitize_basic_html] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:147: [W1203(logging-fstring-interpolation), sanitize_myspace_html] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:190: [W1203(logging-fstring-interpolation), sanitize_embed_tags.check_embed] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:231: [W0718(broad-exception-caught), sanitize_embed_tags.check_embed] Catching too general exception Exception
+packages/bulletin_board/app/security.py:201: [W1203(logging-fstring-interpolation), sanitize_embed_tags.check_embed] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:206: [W1203(logging-fstring-interpolation), sanitize_embed_tags.check_embed] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:220: [W1203(logging-fstring-interpolation), sanitize_embed_tags.check_embed] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:228: [W1203(logging-fstring-interpolation), sanitize_embed_tags.check_embed] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:232: [W1203(logging-fstring-interpolation), sanitize_embed_tags.check_embed] Use lazy % formatting in logging functions
+packages/bulletin_board/app/security.py:254: [W0237(arguments-renamed), sanitize_markdown.SafeRenderer.block_code] Parameter 'code' has been renamed to 'text' in overriding 'SafeRenderer.block_code' method
+packages/bulletin_board/app/security.py:271: [W0237(arguments-renamed), sanitize_markdown.SafeRenderer.image] Parameter 'text' has been renamed to 'alt' in overriding 'SafeRenderer.image' method
+packages/bulletin_board/app/security.py:379: [W1203(logging-fstring-interpolation), sanitize_for_storage] Use lazy % formatting in logging functions
+************* Module packages.bulletin_board.database.profile_models
+packages/bulletin_board/database/profile_models.py:36: [R0903(too-few-public-methods), ProfileCustomization] Too few public methods (0/2)
+packages/bulletin_board/database/profile_models.py:97: [R0903(too-few-public-methods), ProfileVisit] Too few public methods (0/2)
+packages/bulletin_board/database/profile_models.py:115: [R0903(too-few-public-methods), ProfileComment] Too few public methods (0/2)
+packages/bulletin_board/database/profile_models.py:132: [R0903(too-few-public-methods), ProfileMedia] Too few public methods (0/2)
+packages/bulletin_board/database/profile_models.py:153: [R0903(too-few-public-methods), ProfileWidget] Too few public methods (0/2)
+packages/bulletin_board/database/profile_models.py:172: [R0903(too-few-public-methods), ProfileBlogPost] Too few public methods (0/2)
+packages/bulletin_board/database/profile_models.py:191: [R0903(too-few-public-methods), ProfilePlaylist] Too few public methods (0/2)
+************* Module packages.bulletin_board.database.models
+packages/bulletin_board/database/models.py:21: [R0903(too-few-public-methods), AgentProfile] Too few public methods (0/2)
+packages/bulletin_board/database/models.py:36: [R0903(too-few-public-methods), Post] Too few public methods (0/2)
+packages/bulletin_board/database/models.py:54: [R0903(too-few-public-methods), Comment] Too few public methods (0/2)
+packages/bulletin_board/database/models.py:106: [W0603(global-statement), init_session_factory] Using the global statement
+************* Module remove_custom_css
+packages/bulletin_board/database/migrations/remove_custom_css.py:16: [C0413(wrong-import-position), ] Import "from database.config import get_database_url" should be placed at the top of the module
+************* Module packages.bulletin_board.config.test_settings
+packages/bulletin_board/config/test_settings.py:8: [R0902(too-many-instance-attributes), TestSettings] Too many instance attributes (22/15)
+************* Module packages.bulletin_board.config.settings
+packages/bulletin_board/config/settings.py:75: [W0718(broad-exception-caught), Settings._load_config] Catching too general exception Exception
+packages/bulletin_board/config/settings.py:17: [R0903(too-few-public-methods), Settings] Too few public methods (1/2)
+************* Module packages.bulletin_board.api.health
+packages/bulletin_board/api/health.py:36: [W0718(broad-exception-caught), health_check] Catching too general exception Exception
+packages/bulletin_board/api/health.py:95: [W0718(broad-exception-caught), detailed_health_check] Catching too general exception Exception
+packages/bulletin_board/api/health.py:76: [W1404(implicit-str-concat), ] Implicit string concatenation found in call
+packages/bulletin_board/api/health.py:79: [W1404(implicit-str-concat), ] Implicit string concatenation found in call
+packages/bulletin_board/api/health.py:139: [W0718(broad-exception-caught), readiness_check] Catching too general exception Exception
+************* Module packages.bulletin_board.api.schemas
+packages/bulletin_board/api/schemas.py:22: [W0107(unnecessary-pass), AgentProfileCreate] Unnecessary pass statement
+packages/bulletin_board/api/schemas.py:32: [R0903(too-few-public-methods), AgentProfile.Config] Too few public methods (0/2)
+packages/bulletin_board/api/schemas.py:50: [W0107(unnecessary-pass), PostCreate] Unnecessary pass statement
+packages/bulletin_board/api/schemas.py:61: [R0903(too-few-public-methods), Post.Config] Too few public methods (0/2)
+packages/bulletin_board/api/schemas.py:95: [R0903(too-few-public-methods), Comment.Config] Too few public methods (0/2)
+packages/bulletin_board/api/schemas.py:105: [R0903(too-few-public-methods), PostWithComments.Config] Too few public methods (0/2)
+packages/bulletin_board/api/schemas.py:151: [W0613(unused-argument), PaginatedResponse.calculate_pages] Unused argument 'v'
+************* Module packages.bulletin_board.api.validators
+packages/bulletin_board/api/validators.py:39: [W0718(broad-exception-caught), validate_json.decorator.wrapper] Catching too general exception Exception
+packages/bulletin_board/api/validators.py:82: [W0718(broad-exception-caught), validate_query_params.decorator.wrapper] Catching too general exception Exception
+************* Module packages.bulletin_board.utils.version
+packages/bulletin_board/utils/version.py:53: [W0718(broad-exception-caught), get_version] Catching too general exception Exception
+packages/bulletin_board/utils/version.py:62: [W0718(broad-exception-caught), get_version] Catching too general exception Exception
+packages/bulletin_board/utils/version.py:60: [W1514(unspecified-encoding), get_version] Using open without explicitly specifying an encoding
+************* Module packages.bulletin_board.utils.exceptions
+packages/bulletin_board/utils/exceptions.py:24: [W0107(unnecessary-pass), DatabaseError] Unnecessary pass statement
+packages/bulletin_board/utils/exceptions.py:30: [W0107(unnecessary-pass), ValidationError] Unnecessary pass statement
+************* Module packages.bulletin_board.utils.error_handlers
+packages/bulletin_board/utils/error_handlers.py:122: [W0613(unused-argument), register_error_handlers.bad_request] Unused argument 'error'
+packages/bulletin_board/utils/error_handlers.py:126: [W0613(unused-argument), register_error_handlers.not_found] Unused argument 'error'
+packages/bulletin_board/utils/error_handlers.py:130: [W0613(unused-argument), register_error_handlers.method_not_allowed] Unused argument 'error'
+************* Module packages.bulletin_board.utils.config_validator
+packages/bulletin_board/utils/config_validator.py:70: [W0621(redefined-outer-name), ConfigValidator.validate_all] Redefining name 'results' from outer scope (line 192)
+packages/bulletin_board/utils/config_validator.py:104: [W0621(redefined-outer-name), ConfigValidator.print_validation_report] Redefining name 'results' from outer scope (line 192)
+packages/bulletin_board/utils/config_validator.py:166: [W0621(redefined-outer-name), validate_startup] Redefining name 'validator' from outer scope (line 189)
+packages/bulletin_board/utils/config_validator.py:167: [W0621(redefined-outer-name), validate_startup] Redefining name 'results' from outer scope (line 192)
+************* Module analytics_system
+packages/bulletin_board/analytics/analytics_system.py:22: [C0413(wrong-import-position), ] Import "import matplotlib.pyplot as plt" should be placed at the top of the module
+packages/bulletin_board/analytics/analytics_system.py:23: [C0413(wrong-import-position), ] Import "import numpy as np" should be placed at the top of the module
+packages/bulletin_board/analytics/analytics_system.py:24: [C0413(wrong-import-position), ] Import "from structlog import get_logger" should be placed at the top of the module
+packages/bulletin_board/analytics/analytics_system.py:151: [W0718(broad-exception-caught), AnalyticsCollector.collect_community_metrics] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:219: [W0718(broad-exception-caught), AnalyticsCollector.collect_agent_metrics] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:160: [W1510(subprocess-run-check), AnalyticsCollector.collect_agent_metrics] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:289: [W0718(broad-exception-caught), AnalyticsCollector.generate_interaction_heatmap] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:244: [W1510(subprocess-run-check), AnalyticsCollector.generate_interaction_heatmap] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:265: [W1514(unspecified-encoding), AnalyticsCollector.generate_interaction_heatmap] Using open without explicitly specifying an encoding
+packages/bulletin_board/analytics/analytics_system.py:368: [W0718(broad-exception-caught), AnalyticsCollector.analyze_sentiment_trends] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:311: [W1510(subprocess-run-check), AnalyticsCollector.analyze_sentiment_trends] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:325: [W0718(broad-exception-caught), AnalyticsCollector.analyze_sentiment_trends] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:405: [W0718(broad-exception-caught), AnalyticsCollector.generate_chaos_metrics] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:412: [W1510(subprocess-run-check), AnalyticsCollector._count_entries] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:432: [W1510(subprocess-run-check), AnalyticsCollector._count_unique_agents] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:448: [W1510(subprocess-run-check), AnalyticsCollector._calculate_average_sentiment] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:485: [W1510(subprocess-run-check), AnalyticsCollector._find_peak_hours] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:506: [W1510(subprocess-run-check), AnalyticsCollector._get_trending_topics] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:643: [W1510(subprocess-run-check), AnalyticsCollector._identify_chaos_agents] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/analytics/analytics_system.py:681: [W1514(unspecified-encoding), AnalyticsCollector._store_metrics] Using open without explicitly specifying an encoding
+packages/bulletin_board/analytics/analytics_system.py:690: [W1514(unspecified-encoding), AnalyticsCollector._store_metrics] Using open without explicitly specifying an encoding
+packages/bulletin_board/analytics/analytics_system.py:706: [W1514(unspecified-encoding), AnalyticsCollector._store_heatmap] Using open without explicitly specifying an encoding
+packages/bulletin_board/analytics/analytics_system.py:714: [W1514(unspecified-encoding), AnalyticsCollector._store_sentiment_trend] Using open without explicitly specifying an encoding
+packages/bulletin_board/analytics/analytics_system.py:722: [W1514(unspecified-encoding), AnalyticsCollector._store_chaos_metrics] Using open without explicitly specifying an encoding
+packages/bulletin_board/analytics/analytics_system.py:762: [W0718(broad-exception-caught), AnalyticsCollector._visualize_heatmap] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:745: [W0612(unused-variable), AnalyticsCollector._visualize_heatmap] Unused variable 'fig'
+packages/bulletin_board/analytics/analytics_system.py:805: [W0718(broad-exception-caught), AnalyticsCollector._visualize_sentiment_trend] Catching too general exception Exception
+packages/bulletin_board/analytics/analytics_system.py:771: [W0612(unused-variable), AnalyticsCollector._visualize_sentiment_trend] Unused variable 'fig'
+************* Module packages.bulletin_board.scripts.generate_test_data
+packages/bulletin_board/scripts/generate_test_data.py:136: [E2515(invalid-character-zero-width-space), ] Invalid unescaped character zero-width-space, use "\u200B" instead.
+packages/bulletin_board/scripts/generate_test_data.py:100: [C0301(line-too-long), ] Line too long (154/127)
+packages/bulletin_board/scripts/generate_test_data.py:101: [C0301(line-too-long), ] Line too long (159/127)
+packages/bulletin_board/scripts/generate_test_data.py:102: [C0301(line-too-long), ] Line too long (155/127)
+packages/bulletin_board/scripts/generate_test_data.py:103: [C0301(line-too-long), ] Line too long (275/127)
+packages/bulletin_board/scripts/generate_test_data.py:341: [R1702(too-many-nested-blocks), generate_creative_comments] Too many nested blocks (6/5)
+packages/bulletin_board/scripts/generate_test_data.py:368: [W0612(unused-variable), generate_creative_comments] Unused variable 'depth'
+packages/bulletin_board/scripts/generate_test_data.py:596: [C0201(consider-iterating-dictionary), populate_test_database] Consider iterating the dictionary directly instead of calling .keys()
+************* Module packages.bulletin_board.scripts.seed_realistic_data
+packages/bulletin_board/scripts/seed_realistic_data.py:227: [C0301(line-too-long), ] Line too long (151/127)
+packages/bulletin_board/scripts/seed_realistic_data.py:383: [C0301(line-too-long), ] Line too long (145/127)
+packages/bulletin_board/scripts/seed_realistic_data.py:122: [W1404(implicit-str-concat), ] Implicit string concatenation found in list
+packages/bulletin_board/scripts/seed_realistic_data.py:547: [W0612(unused-variable), generate_realistic_comments] Unused variable 'depth'
+************* Module packages.bulletin_board.scripts.seed_via_api
+packages/bulletin_board/scripts/seed_via_api.py:25: [W3101(missing-timeout), make_api_request] Missing timeout argument for method 'requests.post' can cause your program to hang indefinitely
+packages/bulletin_board/scripts/seed_via_api.py:27: [W3101(missing-timeout), make_api_request] Missing timeout argument for method 'requests.delete' can cause your program to hang indefinitely
+packages/bulletin_board/scripts/seed_via_api.py:29: [W3101(missing-timeout), make_api_request] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+packages/bulletin_board/scripts/seed_via_api.py:353: [W0603(global-statement), main] Using the global statement
+packages/bulletin_board/scripts/seed_via_api.py:359: [W3101(missing-timeout), main] Missing timeout argument for method 'requests.get' can cause your program to hang indefinitely
+************* Module memory_system
+packages/bulletin_board/memory/memory_system.py:98: [W1514(unspecified-encoding), FileMemorySystem.store_memory] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:200: [W0718(broad-exception-caught), FileMemorySystem.search_memories] Catching too general exception Exception
+packages/bulletin_board/memory/memory_system.py:167: [W1510(subprocess-run-check), FileMemorySystem.search_memories] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/memory/memory_system.py:183: [W1510(subprocess-run-check), FileMemorySystem.search_memories] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/memory/memory_system.py:260: [W1514(unspecified-encoding), FileMemorySystem.store_incident] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:276: [W1514(unspecified-encoding), FileMemorySystem.store_incident] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:285: [W1514(unspecified-encoding), FileMemorySystem.store_incident] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:315: [W0718(broad-exception-caught), FileMemorySystem.find_incident] Catching too general exception Exception
+packages/bulletin_board/memory/memory_system.py:300: [W1510(subprocess-run-check), FileMemorySystem.find_incident] 'subprocess.run' used without explicitly defining the value for 'check'.
+packages/bulletin_board/memory/memory_system.py:322: [W1514(unspecified-encoding), FileMemorySystem._load_incident_from_file] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:376: [W1514(unspecified-encoding), FileMemorySystem.update_relationship] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:421: [W1514(unspecified-encoding), FileMemorySystem.update_relationship] Using open without explicitly specifying an encoding
+packages/bulletin_board/memory/memory_system.py:439: [W1514(unspecified-encoding), FileMemorySystem.get_relationship] Using open without explicitly specifying an encoding
+
+-----------------------------------
+Your code has been rated at 9.33/10
+
+
+=== Linting Summary ===
+Errors: 1
+Warnings: 1047
+❌ Linting failed with 1 errors

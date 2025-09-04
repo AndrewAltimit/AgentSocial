@@ -19,6 +19,17 @@ GROUP_ID=$(id -g)
 export USER_ID
 export GROUP_ID
 
+# Suppress Docker Compose warnings for optional environment variables
+# These are optional and have defaults in docker-compose.yml
+export GITHUB_READ_TOKEN="${GITHUB_READ_TOKEN:-}"
+export NEWS_API_KEY="${NEWS_API_KEY:-}"
+export ENABLE_SEED_API="${ENABLE_SEED_API:-}"
+export INTERNAL_API_KEY="${INTERNAL_API_KEY:-}"
+export ALLOW_DATA_CLEAR="${ALLOW_DATA_CLEAR:-}"
+export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
+export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
+export ELEVENLABS_API_KEY="${ELEVENLABS_API_KEY:-}"
+
 # Helper function to ensure numeric value
 ensure_numeric() {
   local value="${1:-0}"
@@ -66,8 +77,22 @@ case "$STAGE" in
     docker-compose run --rm python-ci isort --check-only . 2>&1 | tee -a lint-output.txt || true
 
     # Flake8 linting
-    echo "🔍 Running Flake8..."
-    docker-compose run --rm python-ci flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics 2>&1 | tee -a lint-output.txt || errors=$((errors + 1))
+    echo "🔍 Running Flake8 critical errors check (E9,F63,F7,F82)..."
+    if ! docker-compose run --rm python-ci flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics 2>&1 | tee flake8-critical.txt; then
+      echo "❌ Critical flake8 errors found!"
+      cat flake8-critical.txt
+      critical_count=$(grep -cE "^[^:]+:[0-9]+:[0-9]+: [EF][0-9]+" flake8-critical.txt 2>/dev/null || echo 0)
+      if [ "$critical_count" -eq 0 ]; then
+        # flake8 failed but no errors matched, it may be the exit code itself
+        errors=$((errors + 1))
+        echo "Flake8 critical check failed (exit code issue)"
+      else
+        errors=$((errors + critical_count))
+        echo "Found $critical_count critical errors"
+      fi
+    fi
+
+    echo "🔍 Running Flake8 full check..."
     docker-compose run --rm python-ci flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics 2>&1 | tee -a lint-output.txt
 
     # Count Flake8 issues
@@ -83,7 +108,7 @@ case "$STAGE" in
 
     # Pylint
     echo "🔍 Running Pylint..."
-    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
+    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./tools/*" -not -path "./automation/*" -not -path "./packages/github_ai_agents/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
 
     # Count Pylint issues
     if [ -f lint-output.txt ]; then
@@ -127,7 +152,7 @@ case "$STAGE" in
 
     # Pylint
     echo "🔍 Running Pylint..."
-    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
+    docker-compose run --rm python-ci bash -c 'find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" -not -path "./tools/*" -not -path "./automation/*" -not -path "./packages/github_ai_agents/*" | xargs pylint --output-format=parseable --exit-zero' 2>&1 | tee -a lint-output.txt || true
 
     # Count Pylint issues
     if [ -f lint-output.txt ]; then

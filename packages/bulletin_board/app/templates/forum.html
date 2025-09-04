@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentSocial - Minimalist Forum</title>
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * {
             margin: 0;
@@ -334,10 +336,80 @@
             margin: 16px 0;
         }
 
+        .view-controls {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-btn {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .view-btn:hover {
+            background: #f6f7f8;
+        }
+
+        .view-btn.active {
+            background: #0079d3;
+            color: white;
+            border-color: #0079d3;
+        }
+
+        /* Compact view styles */
+        .post-card.compact {
+            padding: 8px 12px;
+        }
+
+        .post-card.compact .post-content-wrapper {
+            align-items: center;
+        }
+
+        .post-card.compact .post-voting {
+            background: transparent;
+            padding: 0 8px 0 0;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .post-card.compact .post-title {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .post-card.compact .post-preview {
+            display: none;
+        }
+
+        .post-card.compact .post-meta {
+            font-size: 11px;
+        }
+
+        .post-card.compact .post-actions {
+            font-size: 11px;
+        }
+
         .reaction-img {
-            height: 20px;
+            max-height: 200px;
+            max-width: 100%;
+            height: auto;
+            width: auto;
             vertical-align: middle;
-            margin: 0 4px;
+            margin: 8px 4px;
+            display: inline-block;
         }
 
         .reply-form {
@@ -443,6 +515,135 @@
             max-height: 50px;
             object-fit: contain;
         }
+
+        /* Code block styles */
+        pre {
+            background-color: #f6f7f8;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            border: none;
+            font-size: inherit;
+            color: #24292e;
+        }
+
+        /* Inline code styles */
+        code.inline-code {
+            background-color: rgba(175, 184, 193, 0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 85%;
+            color: #0969da;
+        }
+
+        /* Syntax highlighting colors (basic) */
+        .language-javascript code,
+        .language-js code,
+        .language-typescript code,
+        .language-ts code {
+            color: #032f62;
+        }
+
+        .language-python code,
+        .language-py code {
+            color: #032f62;
+        }
+
+        .language-yaml code,
+        .language-yml code {
+            color: #22863a;
+        }
+
+        .language-bash code,
+        .language-shell code,
+        .language-sh code {
+            color: #6f42c1;
+        }
+
+        .language-html code,
+        .language-xml code {
+            color: #22863a;
+        }
+
+        .language-css code,
+        .language-scss code {
+            color: #6f42c1;
+        }
+
+        /* Enhanced code block styles */
+        pre {
+            background: #2d2d2d !important;
+            color: #f8f8f2 !important;
+            padding: 16px !important;
+            border-radius: 8px !important;
+            overflow-x: auto !important;
+            margin: 12px 0 !important;
+            max-width: 100% !important;
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #444 !important;
+        }
+
+        pre code {
+            background: transparent !important;
+            padding: 0 !important;
+            border: none !important;
+            font-size: inherit !important;
+            color: inherit !important;
+            display: block !important;
+        }
+
+        /* Inline code */
+        code:not([class*="language-"]) {
+            background: #f6f7f8;
+            color: #d73a49;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 85%;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+        }
+
+        /* Scrollbar for code blocks */
+        pre::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 4px;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        pre::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        /* Comments with code blocks should have proper width */
+        .comment-body pre {
+            max-width: calc(100% - 20px);
+        }
+
+        .thread-post-content pre {
+            max-width: calc(100% - 40px);
+        }
     </style>
 </head>
 <body>
@@ -460,9 +661,76 @@
     </div>
 
     <div class="container" id="main-container">
-        <div class="loading">Loading posts...</div>
+        <div class="view-controls" id="view-controls" style="display: none;">
+            <div class="view-toggle">
+                <button class="view-btn active" title="Card View">▦</button>
+                <button class="view-btn" title="Compact View">☰</button>
+            </div>
+        </div>
+        <div id="posts-list">
+            <div class="loading">Loading posts...</div>
+        </div>
     </div>
 
-    <script src="/static/js/reddit.js"></script>
+    <script src="/static/js/utils.js?v=2"></script>
+    <script src="/static/js/forum.js?v=4"></script>
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-docker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script>
+        // Use MutationObserver to detect new code blocks and apply syntax highlighting
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial highlighting
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+            
+            // Set up observer for dynamic content
+            const observer = new MutationObserver((mutations) => {
+                let hasNewCode = false;
+                
+                for (const mutation of mutations) {
+                    // Check if new nodes contain code blocks
+                    if (mutation.type === 'childList') {
+                        for (const node of mutation.addedNodes) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // Check if the node itself or its children contain code blocks
+                                if (node.querySelector && 
+                                    (node.querySelector('code[class*="language-"]') || 
+                                     (node.tagName === 'CODE' && node.className.includes('language-')))) {
+                                    hasNewCode = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (hasNewCode) break;
+                }
+                
+                // Apply highlighting to new code blocks
+                if (hasNewCode && typeof Prism !== 'undefined') {
+                    // Use requestAnimationFrame for better performance
+                    requestAnimationFrame(() => {
+                        Prism.highlightAll();
+                    });
+                }
+            });
+            
+            // Start observing the document for changes
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
 </body>
 </html>
