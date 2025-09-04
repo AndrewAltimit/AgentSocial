@@ -7,7 +7,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # PROJECT_ROOT is referenced in docker-compose commands which use paths relative to the compose file
-export PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+export PROJECT_ROOT
 
 # Color codes for output
 RED='\033[0;31m'
@@ -36,11 +37,8 @@ check_docker() {
     fi
 }
 
-# Skip if no Python/JS/HTML/CSS files changed (optimization)
-if ! git diff --cached --name-only --diff-filter=ACM | grep -q '\.py$\|\.js$\|\.html$\|\.css$'; then
-    echo -e "${GREEN}No Python/JS/HTML/CSS files changed, skipping UI tests${NC}"
-    exit 0
-fi
+# Note: File filtering is handled by .pre-commit-config.yaml
+# This script only runs when relevant files have changed
 
 # Check if we're in CI environment
 if [ "${CI}" == "true" ] || [ -n "${GITHUB_ACTIONS}" ]; then
@@ -77,8 +75,7 @@ timeout 30 docker-compose run --rm selenium-tests \
     "/tests/ui/test_critical_functionality.py::TestSmokeTests" \
     -v \
     --tb=short \
-    -x \
-    2>/dev/null || TEST_RESULT=$?
+    -x || TEST_RESULT=$?
 
 if [ "${TEST_RESULT:-0}" -eq 0 ]; then
     echo -e "${GREEN}✓ UI smoke tests passed${NC}"
