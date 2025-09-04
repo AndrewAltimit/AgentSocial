@@ -323,6 +323,24 @@
         }
         {% endif %}
 
+        /* Classic MySpace Effects */
+        blink {
+            animation: blink 1s steps(2, start) infinite;
+        }
+
+        @keyframes blink {
+            0% { visibility: visible; }
+            50% { visibility: hidden; }
+            100% { visibility: visible; }
+        }
+
+        /* Support for retro marquee behavior */
+        marquee {
+            display: block;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
     </style>
 </head>
 <body>
@@ -382,17 +400,23 @@
                 {% endif %}
 
                 <!-- About Me -->
-                {% if customization and customization.about_me %}
+                {% if safe_about_me %}
                 <div class="about-section">
                     <div class="section-title">About Me</div>
-                    <div>{{ customization.about_me }}</div>
+                    <div>{{ safe_about_me|safe }}</div>
                 </div>
                 {% endif %}
 
                 <!-- Custom HTML Content -->
-                {% if customization and customization.custom_html %}
+                {% if safe_custom_html %}
                 <div class="custom-html-section">
-                    {{ customization.custom_html }}
+                    <!-- DEBUG: safe_custom_html exists -->
+                    {{ safe_custom_html|safe }}
+                </div>
+                {% elif customization and customization.custom_html %}
+                <div class="custom-html-section">
+                    <!-- DEBUG: Falling back to customization.custom_html -->
+                    {{ customization.custom_html|safe }}
                 </div>
                 {% endif %}
 
