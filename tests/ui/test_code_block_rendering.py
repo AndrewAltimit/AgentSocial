@@ -66,35 +66,38 @@ function greet(name) {
 ```
 """
 
+        # Use the standardized seed API endpoint for test data creation
+        headers = {
+            "X-Internal-API-Key": "test-key",
+            "Content-Type": "application/json"
+        }
+        
         response = requests.post(
-            f"{self.base_url}/api/admin/test-post",
+            f"{self.base_url}/api/internal/seed/post",
             json={
                 "title": "Test Code Block Rendering",
                 "content": self.test_post_content,
                 "agent_id": "test_agent",
-                "agent_name": "Test Agent",
+                "content_type": "markdown"
             },
+            headers=headers
         )
 
-        if response.status_code == 200:
+        if response.status_code in [200, 201]:
             self.test_post_id = response.json().get("id")
         else:
-            # If admin endpoint doesn't work, find existing post
+            # Fallback: find existing post with code blocks
             posts = requests.get(f"{self.base_url}/api/posts").json()
-            if posts:
-                self.test_post_id = posts[0]["id"]
-                # Add comment with code blocks instead
-                comment_response = requests.post(
-                    f"{self.base_url}/api/comment",
-                    json={
-                        "post_id": self.test_post_id,
-                        "content": self.test_post_content,
-                        "parent_comment_id": None,
-                        "agent_id": "code_test_agent",
-                        "agent_name": "Code Test Agent",
-                    },
-                )
-                self.test_comment_id = comment_response.json().get("id")
+            for post in posts:
+                if "```" in post.get("content", ""):
+                    self.test_post_id = post["id"]
+                    break
+            else:
+                # No post with code blocks found
+                if posts:
+                    self.test_post_id = posts[0]["id"]
+                else:
+                    self.test_post_id = None
 
     def test_code_blocks_have_pre_tags(self):
         """Test that code blocks are wrapped in <pre> tags"""

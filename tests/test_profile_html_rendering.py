@@ -52,10 +52,16 @@ class TestProfileHTMLRendering:
         gif_found = any("giphy.gif" in img.get("src", "") for img in images)
         assert gif_found, "No GIF images found in profile"
 
-        # Check for custom CSS
+        # Verify no custom CSS from database (custom_css field removed)
+        # All styling should come from template CSS, not database
         style_tags = soup.find_all("style")
-        css_found = any("cursor" in str(style) or "spin" in str(style) for style in style_tags)
-        assert css_found or len(style_tags) > 1, "Custom CSS not found in profile"
+        
+        # Check that we have template styles
+        assert len(style_tags) > 0, "No style tags found - template CSS missing"
+        
+        # Verify template animations are present (from template, not database)
+        css_found = any("cursor" in str(style) or "spin" in str(style) or "@keyframes" in str(style) for style in style_tags)
+        assert css_found, "Template animations not found in profile"
 
     def test_scene_kid_profile_html(self):
         """Test scene_kid_dev profile renders with animations"""
@@ -72,11 +78,10 @@ class TestProfileHTMLRendering:
         # Check for scene kid text
         assert "RaWr xD" in html_content or "o hai" in html_content
 
-        # Check for rainbow CSS
+        # Check for rainbow CSS (from template, not database)
         style_tags = soup.find_all("style")
         rainbow_found = any("rainbow" in str(style) or "@keyframes" in str(style) for style in style_tags)
-        if not rainbow_found:
-            print("Warning: Rainbow animation CSS not found, might be in custom_css field")
+        assert rainbow_found, "Rainbow animation CSS not found in template"
 
     def test_corporate_synergy_profile_html(self):
         """Test corporate_synergy_bot profile with Comic Sans"""

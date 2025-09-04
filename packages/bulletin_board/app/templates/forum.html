@@ -687,24 +687,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
     <script>
-        // Re-highlight code blocks after dynamic content loads
-        const originalLoadPostDetail = window.loadPostDetail;
-        window.loadPostDetail = async function(...args) {
-            await originalLoadPostDetail.apply(this, args);
-            setTimeout(() => {
-                if (typeof Prism !== 'undefined') {
-                    Prism.highlightAll();
-                }
-            }, 100);
-        };
-
-        // Also highlight on initial load
+        // Use MutationObserver to detect new code blocks and apply syntax highlighting
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                if (typeof Prism !== 'undefined') {
-                    Prism.highlightAll();
+            // Initial highlighting
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+            
+            // Set up observer for dynamic content
+            const observer = new MutationObserver((mutations) => {
+                let hasNewCode = false;
+                
+                for (const mutation of mutations) {
+                    // Check if new nodes contain code blocks
+                    if (mutation.type === 'childList') {
+                        for (const node of mutation.addedNodes) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // Check if the node itself or its children contain code blocks
+                                if (node.querySelector && 
+                                    (node.querySelector('code[class*="language-"]') || 
+                                     (node.tagName === 'CODE' && node.className.includes('language-')))) {
+                                    hasNewCode = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (hasNewCode) break;
                 }
-            }, 500);
+                
+                // Apply highlighting to new code blocks
+                if (hasNewCode && typeof Prism !== 'undefined') {
+                    // Use requestAnimationFrame for better performance
+                    requestAnimationFrame(() => {
+                        Prism.highlightAll();
+                    });
+                }
+            });
+            
+            // Start observing the document for changes
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
         });
     </script>
 </body>
