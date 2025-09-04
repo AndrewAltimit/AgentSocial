@@ -133,7 +133,7 @@ Final line with ~~strikethrough~~ text.""",
         " ",  # Single space
         "\n\n\n",  # Multiple newlines
         "\t\t\t",  # Tabs
-        "​",  # Zero-width space
+        "\u200b",  # Zero-width space
     ],
 }
 
@@ -274,7 +274,11 @@ def generate_creative_posts() -> List[Dict[str, Any]]:
                     "source": random.choice(["news", "favorites"]),
                     "title": f"{title_prefix} #{idx + 1}",
                     "content": content,
-                    "url": (f"https://test.example.com/{category}/{idx}" if random.random() > 0.3 else None),
+                    "url": (
+                        f"https://test.example.com/{category}/{idx}"
+                        if random.random() > 0.3
+                        else None
+                    ),
                     "post_metadata": {
                         "author": random.choice(CREATIVE_AGENTS)["agent_id"],
                         "tags": [category, "test", "edge-case"],
@@ -283,7 +287,8 @@ def generate_creative_posts() -> List[Dict[str, Any]]:
                         "contains_emoji": any(ord(c) > 127 for c in content),
                         "length": len(content),
                     },
-                    "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 168)),
+                    "created_at": datetime.utcnow()
+                    - timedelta(hours=random.randint(1, 168)),
                 }
             )
             post_id += 1
@@ -295,7 +300,8 @@ def generate_creative_posts() -> List[Dict[str, Any]]:
             "content": "Testing Unicode: \u200b (zero-width space) and \u2060 (word joiner)",
         },
         {
-            "title": "Post with EXTREMELY long title that goes on and on and on and on and on and on " * 5
+            "title": "Post with EXTREMELY long title that goes on and on and on and on and on and on "
+            * 5
             + "...",  # Keep under 500 chars
             "content": "Short content",
         },
@@ -326,7 +332,8 @@ def generate_creative_posts() -> List[Dict[str, Any]]:
                     "test_type": "edge_case",
                     "author": "chaos_monkey_agent",
                 },
-                "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 24)),
+                "created_at": datetime.utcnow()
+                - timedelta(hours=random.randint(1, 24)),
             }
         )
         post_id += 1
@@ -356,7 +363,8 @@ def generate_creative_comments(post_ids: List[int]) -> List[Dict[str, Any]]:
                 "parent_comment_id": None,
                 "agent_id": agent["agent_id"],
                 "content": content,
-                "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 48)),
+                "created_at": datetime.utcnow()
+                - timedelta(hours=random.randint(1, 48)),
                 "children": [],  # Track children for nesting
             }
 
@@ -388,11 +396,17 @@ def generate_creative_comments(post_ids: List[int]) -> List[Dict[str, Any]]:
                             "parent_comment_id": None,  # Will be set when inserting
                             "agent_id": reply_agent["agent_id"],
                             "content": reply_content,
-                            "created_at": datetime.utcnow() - timedelta(hours=random.randint(1, 24)),
+                            "created_at": datetime.utcnow()
+                            - timedelta(hours=random.randint(1, 24)),
                             "children": [],
                         }
-                        if isinstance(current_parent, dict) and "children" in current_parent:
-                            cast(List[Any], current_parent["children"]).append(reply_comment)
+                        if (
+                            isinstance(current_parent, dict)
+                            and "children" in current_parent
+                        ):
+                            cast(List[Any], current_parent["children"]).append(
+                                reply_comment
+                            )
                         current_parent = reply_comment
 
             comments.append(parent_comment)
@@ -471,7 +485,11 @@ def populate_test_database():
         # Create creative agent profiles
         logger.info("Creating creative agent profiles...")
         for agent_data in CREATIVE_AGENTS:
-            existing = session.query(AgentProfile).filter_by(agent_id=agent_data["agent_id"]).first()
+            existing = (
+                session.query(AgentProfile)
+                .filter_by(agent_id=agent_data["agent_id"])
+                .first()
+            )
 
             if not existing:
                 agent = AgentProfile(
@@ -489,7 +507,11 @@ def populate_test_database():
 
             # Add profile customization
             if agent_data.get("customization"):
-                existing_custom = session.query(ProfileCustomization).filter_by(agent_id=agent_data["agent_id"]).first()
+                existing_custom = (
+                    session.query(ProfileCustomization)
+                    .filter_by(agent_id=agent_data["agent_id"])
+                    .first()
+                )
 
                 if not existing_custom:
                     custom = ProfileCustomization(
@@ -548,13 +570,16 @@ def populate_test_database():
         for agent_id in agent_ids:
             # Each agent friends with 2-3 random other agents
             num_friends = random.randint(2, 3)
-            friends = random.sample([a for a in agent_ids if a != agent_id], num_friends)
+            friends = random.sample(
+                [a for a in agent_ids if a != agent_id], num_friends
+            )
 
             for friend_id in friends:
                 # Check if connection exists
                 existing = session.execute(
                     friend_connections.select().where(
-                        (friend_connections.c.agent_id == agent_id) & (friend_connections.c.friend_id == friend_id)
+                        (friend_connections.c.agent_id == agent_id)
+                        & (friend_connections.c.friend_id == friend_id)
                     )
                 ).first()
 
@@ -563,7 +588,8 @@ def populate_test_database():
                         friend_connections.insert().values(
                             agent_id=agent_id,
                             friend_id=friend_id,
-                            is_top_friend=random.random() > 0.7,  # 30% chance of top friend
+                            is_top_friend=random.random()
+                            > 0.7,  # 30% chance of top friend
                             created_at=datetime.utcnow(),
                         )
                     )
