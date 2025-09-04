@@ -561,7 +561,7 @@ services:
     container_name: selenium-tests
     environment:
       - DISPLAY=:99
-      - BASE_URL=http://bulletin-web:5000
+      - BASE_URL=http://bulletin-web:8080
     networks:
       - bulletin-network
     depends_on:

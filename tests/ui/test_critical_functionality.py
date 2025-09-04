@@ -3,6 +3,7 @@ Critical functionality tests for AgentSocial
 These tests ensure core features work before committing code
 """
 
+import os
 import time
 
 import pytest
@@ -12,6 +13,9 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+
+# Get base URL from environment or use default
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080")
 
 
 class TestCriticalFunctionality:
@@ -37,7 +41,7 @@ class TestCriticalFunctionality:
 
     def test_homepage_loads_without_errors(self):
         """Test that homepage loads without JavaScript errors"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Check for JavaScript errors
         logs = self.driver.get_log("browser")
@@ -55,7 +59,7 @@ class TestCriticalFunctionality:
 
     def test_posts_load_and_display(self):
         """Test that posts load from API and display correctly"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Wait for posts to load
         posts = self.wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "post-card")))
@@ -74,7 +78,7 @@ class TestCriticalFunctionality:
 
     def test_post_detail_navigation_flow(self):
         """Test complete flow: list -> detail -> back to list"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Step 1: Get initial posts
         posts = self.wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, "post-card")))
@@ -119,7 +123,7 @@ class TestCriticalFunctionality:
 
     def test_comments_display_in_detail_view(self):
         """Test that comments are visible in post detail"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Navigate to a post
         first_post = self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "post-card")))
@@ -144,7 +148,7 @@ class TestCriticalFunctionality:
 
     def test_navigation_links_clickable(self):
         """Test that all navigation links are clickable"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Get all navigation links
         nav_links = self.driver.find_elements(By.CSS_SELECTOR, "a")
@@ -174,7 +178,7 @@ class TestCriticalFunctionality:
 
     def test_images_load_properly(self):
         """Test that images (including reactions) load without 404s"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Navigate to a post with potential images
         first_post = self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "post-card")))
@@ -196,7 +200,7 @@ class TestCriticalFunctionality:
 
     def test_voting_functionality(self):
         """Test that voting buttons respond to clicks"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Find first vote button
         try:
@@ -221,7 +225,7 @@ class TestCriticalFunctionality:
         """Test that layout responds to viewport changes"""
         # Test desktop view
         self.driver.set_window_size(1920, 1080)
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
         time.sleep(1)
 
         desktop_source = self.driver.page_source
@@ -261,7 +265,7 @@ class TestSmokeTests:
     def test_app_is_running(self):
         """Test that application is accessible"""
         try:
-            self.driver.get("http://localhost:8080")
+            self.driver.get(BASE_URL)
             assert True
         except Exception as e:
             pytest.fail(f"Application not accessible: {e}")
@@ -269,10 +273,10 @@ class TestSmokeTests:
     def test_no_500_errors(self):
         """Test that no 500 errors on main pages"""
         urls = [
-            "http://localhost:8080",
-            "http://localhost:8080/desktop",
-            "http://localhost:8080/mobile",
-            "http://localhost:8080/api/posts",
+            BASE_URL,
+            f"{BASE_URL}/desktop",
+            f"{BASE_URL}/mobile",
+            f"{BASE_URL}/api/posts",
         ]
 
         for url in urls:
@@ -286,7 +290,7 @@ class TestSmokeTests:
 
     def test_critical_elements_present(self):
         """Test that critical UI elements are present"""
-        self.driver.get("http://localhost:8080")
+        self.driver.get(BASE_URL)
 
         # Should have some container
         containers = self.driver.find_elements(By.CSS_SELECTOR, "[id*='container']")

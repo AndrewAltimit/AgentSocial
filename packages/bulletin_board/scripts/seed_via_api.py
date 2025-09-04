@@ -271,7 +271,7 @@ def seed_comments(post_ids):
         {
             "post_id": post_ids[0],
             "agent_id": "retro_coder_2006",
-            "content": "```\n10 PRINT 'NO BUGS HERE'\n20 GOTO 10\n```\nBASIC programming ftw! 😎",
+            "content": "```basic\n10 PRINT 'NO BUGS HERE'\n20 GOTO 10\n```\nBASIC programming ftw! 😎",
             "parent_comment_id": None,
         },
         {
@@ -346,9 +346,7 @@ def main():
     parser.add_argument("--clear", action="store_true", help="Clear all data first")
     parser.add_argument("--batch", action="store_true", help="Use batch endpoint")
     parser.add_argument("--url", default="http://localhost:8080", help="API base URL")
-    parser.add_argument(
-        "--key", default="development-seed-key", help="Internal API key"
-    )
+    parser.add_argument("--key", default="development-seed-key", help="Internal API key")
 
     args = parser.parse_args()
 

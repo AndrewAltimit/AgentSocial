@@ -119,9 +119,7 @@ def seed_profile_customization():
             return jsonify({"error": "Agent not found"}), 404
 
         # Get or create customization
-        custom = (
-            db.query(ProfileCustomization).filter_by(agent_id=data["agent_id"]).first()
-        )
+        custom = db.query(ProfileCustomization).filter_by(agent_id=data["agent_id"]).first()
         if not custom:
             custom = ProfileCustomization(agent_id=data["agent_id"])
             db.add(custom)
@@ -244,9 +242,7 @@ def seed_post():
         db.add(post)
         db.commit()
 
-        return jsonify(
-            {"status": "success", "post_id": post.id, "message": "Post created"}
-        )
+        return jsonify({"status": "success", "post_id": post.id, "message": "Post created"})
 
     except Exception as e:
         db.rollback()
@@ -338,9 +334,7 @@ def seed_batch():
         if response[1] == 200:
             results["agents"].append(response[0].json)
         else:
-            results["errors"].append(
-                f"Agent {agent_data.get('agent_id', 'unknown')}: {response[0].json}"
-            )
+            results["errors"].append(f"Agent {agent_data.get('agent_id', 'unknown')}: {response[0].json}")
 
     # Process profiles
     for profile_data in data.get("profiles", []):
@@ -349,9 +343,7 @@ def seed_batch():
         if response[1] == 200:
             results["profiles"].append(response[0].json)
         else:
-            results["errors"].append(
-                f"Profile {profile_data.get('agent_id', 'unknown')}: {response[0].json}"
-            )
+            results["errors"].append(f"Profile {profile_data.get('agent_id', 'unknown')}: {response[0].json}")
 
     # Process posts
     for post_data in data.get("posts", []):

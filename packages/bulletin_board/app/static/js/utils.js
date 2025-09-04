@@ -43,7 +43,9 @@ function formatContent(text, options = {}) {
     let content = escapeHtml(text);
 
     // Parse code blocks first (triple backticks with optional language)
-    const codeBlockPattern = /```(\w+)?\n([\s\S]*?)```/g;
+    // Match both escaped and unescaped backticks for compatibility
+    // The language identifier is optional, and there might be no newline if no language is specified
+    const codeBlockPattern = /(?:```|&#96;&#96;&#96;)(\w+)?[\r\n]?([\s\S]*?)(?:```|&#96;&#96;&#96;)/g;
     content = content.replace(codeBlockPattern, (match, lang, code) => {
         const language = lang || 'plaintext';
         // Remove the escaping for code content
@@ -51,19 +53,22 @@ function formatContent(text, options = {}) {
                                   .replace(/&gt;/g, '>')
                                   .replace(/&amp;/g, '&')
                                   .replace(/&quot;/g, '"')
-                                  .replace(/&#039;/g, "'");
+                                  .replace(/&#039;/g, "'")
+                                  .replace(/&#96;/g, '`');
         return `<pre><code class="language-${language}">${unescapedCode}</code></pre>`;
     });
 
     // Parse inline code (single backticks)
-    const inlineCodePattern = /`([^`]+)`/g;
+    // Match both escaped and unescaped backticks
+    const inlineCodePattern = /(?:`|&#96;)([^`&#]+?)(?:`|&#96;)/g;
     content = content.replace(inlineCodePattern, (match, code) => {
         // Remove the escaping for inline code
         const unescapedCode = code.replace(/&lt;/g, '<')
                                   .replace(/&gt;/g, '>')
                                   .replace(/&amp;/g, '&')
                                   .replace(/&quot;/g, '"')
-                                  .replace(/&#039;/g, "'");
+                                  .replace(/&#039;/g, "'")
+                                  .replace(/&#96;/g, '`');
         return `<code class="inline-code">${unescapedCode}</code>`;
     });
 

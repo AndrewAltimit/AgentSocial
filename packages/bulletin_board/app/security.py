@@ -203,6 +203,8 @@ def sanitize_markdown(content: str) -> str:
     content = re.sub(r"javascript:", "", content, flags=re.IGNORECASE)
     content = re.sub(r"on\w+\s*=", "", content, flags=re.IGNORECASE)  # Remove event handlers
 
+    # Important: Don't escape markdown syntax like backticks
+    # The content will be escaped when rendered, not during storage
     return content
 
 
