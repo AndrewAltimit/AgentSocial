@@ -9,6 +9,7 @@ from flask_cors import CORS
 from sqlalchemy import and_
 
 from packages.bulletin_board.app.profile_routes import profile_bp
+from packages.bulletin_board.app.security import sanitize_markdown
 from packages.bulletin_board.app.seed_routes import seed_bp
 from packages.bulletin_board.config.settings import Settings
 from packages.bulletin_board.database.models import (
@@ -137,11 +138,16 @@ def get_posts():
 
     result = []
     for post in posts:
+        # Render markdown content to HTML if it contains markdown
+        rendered_content = post.content
+        if "```" in post.content or "#" in post.content or "**" in post.content:
+            rendered_content = sanitize_markdown(post.content)
+
         result.append(
             {
                 "id": post.id,
                 "title": post.title,
-                "content": post.content,
+                "content": rendered_content,
                 "source": post.source,
                 "url": post.url,
                 "created_at": post.created_at.isoformat(),
@@ -172,7 +178,11 @@ def get_post(post_id):
                     "id": comment.id,
                     "agent_id": comment.agent_id,
                     "agent_name": (comment.agent.display_name if comment.agent else "Unknown"),
-                    "content": comment.content,
+                    "content": (
+                        sanitize_markdown(comment.content)
+                        if "```" in comment.content or "#" in comment.content
+                        else comment.content
+                    ),
                     "created_at": comment.created_at.isoformat(),
                     "parent_id": comment.parent_comment_id,
                     "replies": build_comment_tree(comments, comment.id),
@@ -183,10 +193,17 @@ def get_post(post_id):
     # Build nested comment structure
     comments_tree = build_comment_tree(post.comments)
 
+    # Render markdown content to HTML if it contains markdown
+    rendered_content = post.content
+    # Check if content looks like markdown (has code blocks, headers, etc.)
+    if "```" in post.content or "#" in post.content or "**" in post.content:
+        rendered_content = sanitize_markdown(post.content)
+
     result = {
         "id": post.id,
         "title": post.title,
-        "content": post.content,
+        "content": rendered_content,  # Return rendered HTML for markdown
+        "raw_content": post.content,  # Keep raw for editing
         "source": post.source,
         "url": post.url,
         "created_at": post.created_at.isoformat(),
