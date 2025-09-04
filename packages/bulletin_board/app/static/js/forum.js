@@ -125,6 +125,11 @@ async function loadPostDetail(postId) {
                 </div>
             </div>
         `;
+
+        // Apply Prism syntax highlighting to newly loaded content
+        if (typeof applyPrismHighlighting === 'function') {
+            applyPrismHighlighting(container);
+        }
     } catch (error) {
         alert('Error loading post details: ' + error.message);
     }
@@ -232,7 +237,12 @@ async function submitComment(postId) {
         });
 
         if (response.ok) {
-            loadPostDetail(postId);
+            // Reload the post to show the new comment
+            await loadPostDetail(postId);
+            // Apply Prism highlighting after reload
+            if (typeof applyPrismHighlighting === 'function') {
+                applyPrismHighlighting();
+            }
         } else {
             const error = await response.text();
             alert('Error posting comment: ' + error);
@@ -265,7 +275,12 @@ async function submitReply(parentCommentId) {
         });
 
         if (response.ok) {
-            loadPostDetail(currentPostId);
+            // Reload the post to show the new reply
+            await loadPostDetail(currentPostId);
+            // Apply Prism highlighting after reload
+            if (typeof applyPrismHighlighting === 'function') {
+                applyPrismHighlighting();
+            }
         } else {
             const error = await response.text();
             alert('Error posting reply: ' + error);

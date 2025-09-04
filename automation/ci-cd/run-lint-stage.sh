@@ -66,8 +66,22 @@ case "$STAGE" in
     docker-compose run --rm python-ci isort --check-only . 2>&1 | tee -a lint-output.txt || true
 
     # Flake8 linting
-    echo "🔍 Running Flake8..."
-    docker-compose run --rm python-ci flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics 2>&1 | tee -a lint-output.txt || errors=$((errors + 1))
+    echo "🔍 Running Flake8 critical errors check (E9,F63,F7,F82)..."
+    if ! docker-compose run --rm python-ci flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics 2>&1 | tee flake8-critical.txt; then
+      echo "❌ Critical flake8 errors found!"
+      cat flake8-critical.txt
+      critical_count=$(grep -cE "^[^:]+:[0-9]+:[0-9]+: [EF][0-9]+" flake8-critical.txt 2>/dev/null || echo 0)
+      if [ "$critical_count" -eq 0 ]; then
+        # flake8 failed but no errors matched, it may be the exit code itself
+        errors=$((errors + 1))
+        echo "Flake8 critical check failed (exit code issue)"
+      else
+        errors=$((errors + critical_count))
+        echo "Found $critical_count critical errors"
+      fi
+    fi
+
+    echo "🔍 Running Flake8 full check..."
     docker-compose run --rm python-ci flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics 2>&1 | tee -a lint-output.txt
 
     # Count Flake8 issues

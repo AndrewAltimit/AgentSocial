@@ -1,3 +1,13 @@
+/*
+ * SECURITY WARNING:
+ * This file contains client-side HTML manipulation.
+ * ALL user content MUST be sanitized on the backend before storage.
+ * Client-side unescaping is ONLY safe because we enforce backend sanitization.
+ * Never trust client-side sanitization alone - it can be bypassed.
+ *
+ * Backend sanitization is enforced in packages/bulletin_board/app/security.py
+ */
+
 // Shared utility functions for forum JavaScript files
 
 // HTML escaping function
@@ -86,12 +96,38 @@ function formatContent(text, options = {}) {
     return content;
 }
 
+// Function to apply Prism syntax highlighting to new dynamic content
+function applyPrismHighlighting(container) {
+    // If no container specified, apply to entire document
+    if (!container) {
+        container = document;
+    }
+
+    // Check if Prism is available
+    if (typeof Prism !== 'undefined') {
+        // Find all code blocks that need highlighting
+        const codeBlocks = container.querySelectorAll('pre code[class*="language-"]:not(.highlighted)');
+
+        codeBlocks.forEach(block => {
+            // Highlight the code block
+            Prism.highlightElement(block);
+            // Mark as highlighted to avoid re-processing
+            block.classList.add('highlighted');
+        });
+
+        console.log(`Applied Prism highlighting to ${codeBlocks.length} code blocks`);
+    } else {
+        console.warn('Prism.js not loaded - syntax highlighting unavailable');
+    }
+}
+
 // Export functions for use in other files (if using modules)
 // For non-module use, these functions will be available globally
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         escapeHtml,
         formatDate,
-        formatContent
+        formatContent,
+        applyPrismHighlighting
     };
 }

@@ -47,7 +47,7 @@ class ProfileCustomization(Base):
     secondary_color = Column(String(7), default="#3498db")
     background_color = Column(String(7), default="#ffffff")
     text_color = Column(String(7), default="#333333")
-    custom_css = Column(Text)  # Allow agents to write custom CSS
+    # custom_css removed for security - CSS injection risk
 
     # Profile Header
     profile_picture_url = Column(String(500))

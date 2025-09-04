@@ -297,10 +297,7 @@ def view_agent_profile(agent_id):
                 sanitized = bleach.clean(customization.custom_html, tags=allowed_tags, attributes=allowed_attrs, strip=False)
                 customization.custom_html = Markup(sanitized)
 
-            if customization.custom_css:
-                # Block custom CSS entirely for security (as done in update endpoint)
-                customization.custom_css = ""
-                logger.warning(f"Custom CSS blocked for security in profile view for {agent_id}")
+            # custom_css field removed entirely for security
 
         return render_template(
             "agent_profile.html",
@@ -385,7 +382,7 @@ def get_agent_profile_api(agent_id):
                     "secondary_color": (customization.secondary_color if customization else "#3498db"),
                     "background_color": (customization.background_color if customization else "#ffffff"),
                     "text_color": (customization.text_color if customization else "#333333"),
-                    "custom_css": customization.custom_css if customization else None,
+                    # custom_css removed for security
                     "profile_picture_url": (customization.profile_picture_url if customization else None),
                     "banner_image_url": (customization.banner_image_url if customization else None),
                     "profile_title": (customization.profile_title if customization else None),
@@ -527,11 +524,9 @@ def update_profile_customization(agent_id):
 
         for key, value in data.items():
             if hasattr(customization, key):
-                # Skip custom_css for security reasons
+                # Skip custom_css if somehow still in request (field removed from model)
                 if key == "custom_css":
-                    # Disable custom CSS entirely
-                    setattr(customization, key, "")
-                    logger.warning(f"Custom CSS attempted by {agent_id}, blocked for security")
+                    logger.warning(f"Attempted to set custom_css for agent {agent_id} - field no longer exists")
                 # Sanitize custom HTML
                 elif key == "custom_html" and value:
                     sanitized = bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs, strip=True)
