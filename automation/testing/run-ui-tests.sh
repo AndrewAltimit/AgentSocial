@@ -3,7 +3,7 @@
 # UI Testing Script for AgentSocial Bulletin Board
 # Runs Selenium tests against the local instance
 
-set -e
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -84,7 +84,7 @@ RESULTS_DIR="$PROJECT_ROOT/test-results"
 mkdir -p "$RESULTS_DIR"
 
 # Run tests with different options based on arguments
-if [[ "$1" == "--headless" ]] || [[ -z "$DISPLAY" ]]; then
+if [[ "${1:-}" == "--headless" ]] || [[ -z "${DISPLAY:-}" ]]; then
     echo -e "${BLUE}Running in headless mode...${NC}"
 else
     echo -e "${BLUE}Running with browser window...${NC}"
@@ -135,7 +135,7 @@ fi
 echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
 
 # Optional: Open report in browser
-if [[ "$2" == "--show-report" ]] && [[ -f "$REPORT_FILE" ]]; then
+if [[ "${2:-}" == "--show-report" ]] && [[ -f "$REPORT_FILE" ]]; then
     echo ""
     echo -e "${YELLOW}Opening test report in browser...${NC}"
     if command -v xdg-open &> /dev/null; then

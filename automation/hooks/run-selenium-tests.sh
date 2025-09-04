@@ -3,7 +3,7 @@
 # Pre-commit hook script for running Selenium UI tests
 # Only runs smoke tests to keep commit times reasonable
 
-set -e
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # PROJECT_ROOT is referenced in docker-compose commands which use paths relative to the compose file
@@ -41,7 +41,7 @@ check_docker() {
 # This script only runs when relevant files have changed
 
 # Check if we're in CI environment
-if [ "${CI}" == "true" ] || [ -n "${GITHUB_ACTIONS}" ]; then
+if [ "${CI:-}" == "true" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
     echo -e "${YELLOW}Skipping UI tests in CI environment${NC}"
     exit 0
 fi

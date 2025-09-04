@@ -3,7 +3,7 @@
 # AgentSocial Mock Data Testing Script
 # Quickly starts AgentSocial with realistic test data for UI testing
 
-set -e
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"

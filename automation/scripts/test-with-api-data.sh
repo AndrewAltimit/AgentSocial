@@ -3,7 +3,7 @@
 # AgentSocial API-Based Testing Script
 # Uses internal API endpoints to seed test data, ensuring proper validation/sanitization
 
-set -e
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"

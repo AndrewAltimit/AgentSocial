@@ -1,11 +1,12 @@
 /*
- * SECURITY WARNING:
- * This file contains client-side HTML manipulation.
- * ALL user content MUST be sanitized on the backend before storage.
- * Client-side unescaping is ONLY safe because we enforce backend sanitization.
- * Never trust client-side sanitization alone - it can be bypassed.
+ * SECURITY NOTE:
+ * This file handles content display for the bulletin board.
+ * ALL markdown content is converted to safe HTML on the server side.
+ * The server uses mistune with bleach for defense-in-depth sanitization.
+ * This eliminates the need for client-side unescaping, preventing XSS vectors.
  *
- * Backend sanitization is enforced in packages/bulletin_board/app/security.py
+ * Backend markdown-to-HTML conversion: packages/bulletin_board/app/security.py
+ * Board Access: This board is for AI agents only - not available for public posting
  */
 
 // Shared utility functions for forum JavaScript files
@@ -33,44 +34,27 @@ function formatDate(isoDate) {
     return 'just now';
 }
 
-// Content formatting function with markdown and reaction image support
+// Content formatting function
 function formatContent(text, options = {}) {
+    // For markdown content, the server has already converted it to safe HTML
+    // with proper syntax highlighting support via mistune + bleach
+    // We can directly use the HTML as it's already sanitized server-side
+
+    // Check if the content appears to be pre-rendered HTML (contains HTML tags)
+    const isPreRenderedHtml = /<(p|div|pre|code|img|a|h[1-6]|ul|ol|li|blockquote|table)/.test(text);
+
+    if (isPreRenderedHtml) {
+        // Content is already safe HTML from server-side markdown rendering
+        // Just return it as-is - no client-side processing needed
+        return text;
+    }
+
+    // For plain text content (non-markdown), escape and format
+    let content = escapeHtml(text);
+
     // Options can include: reactionBaseUrl, enableReactionPattern
     const reactionBaseUrl = options.reactionBaseUrl || 'https://raw.githubusercontent.com/AndrewAltimit/Media/refs/heads/main/reaction/';
     const enableReactionPattern = options.enableReactionPattern !== false; // Default true
-
-    // Escape HTML first
-    let content = escapeHtml(text);
-
-    // Parse code blocks first (triple backticks with optional language)
-    // Match both escaped and unescaped backticks for compatibility
-    // The language identifier is optional, and there might be no newline if no language is specified
-    const codeBlockPattern = /(?:```|&#96;&#96;&#96;)(\w+)?[\r\n]?([\s\S]*?)(?:```|&#96;&#96;&#96;)/g;
-    content = content.replace(codeBlockPattern, (match, lang, code) => {
-        const language = lang || 'plaintext';
-        // Remove the escaping for code content
-        const unescapedCode = code.replace(/&lt;/g, '<')
-                                  .replace(/&gt;/g, '>')
-                                  .replace(/&amp;/g, '&')
-                                  .replace(/&quot;/g, '"')
-                                  .replace(/&#039;/g, "'")
-                                  .replace(/&#96;/g, '`');
-        return `<pre><code class="language-${language}">${unescapedCode}</code></pre>`;
-    });
-
-    // Parse inline code (single backticks)
-    // Match both escaped and unescaped backticks
-    const inlineCodePattern = /(?:`|&#96;)([^`&#]+?)(?:`|&#96;)/g;
-    content = content.replace(inlineCodePattern, (match, code) => {
-        // Remove the escaping for inline code
-        const unescapedCode = code.replace(/&lt;/g, '<')
-                                  .replace(/&gt;/g, '>')
-                                  .replace(/&amp;/g, '&')
-                                  .replace(/&quot;/g, '"')
-                                  .replace(/&#039;/g, "'")
-                                  .replace(/&#96;/g, '`');
-        return `<code class="inline-code">${unescapedCode}</code>`;
-    });
 
     // Check for reaction image patterns - old format [reaction:filename] (if enabled)
     if (enableReactionPattern) {
@@ -80,23 +64,8 @@ function formatContent(text, options = {}) {
         });
     }
 
-    // Check for markdown image syntax ![alt](url)
-    const markdownImagePattern = /!\[([^\]]*)\]\(([^)]+)\)/gi;
-    content = content.replace(markdownImagePattern, (match, altText, url) => {
-        // Check if this is a reaction image from the AndrewAltimit/Media repo
-        if (url.includes('AndrewAltimit/Media') && url.includes('/reaction/')) {
-            return `<img src="${url}" class="reaction-img" alt="${altText || 'Reaction'}" style="max-height: 200px; vertical-align: middle; margin: 10px 0;" />`;
-        }
-        // Handle regular images
-        return `<img src="${url}" alt="${altText}" style="max-width: 100%; height: auto; margin: 10px 0;" />`;
-    });
-
-    // Convert line breaks to <br> for better formatting (but not inside pre tags)
+    // Convert line breaks to <br> for plain text
     content = content.replace(/\n/g, '<br>');
-    // Fix line breaks inside pre tags (they shouldn't be converted to <br>)
-    content = content.replace(/<pre>([\s\S]*?)<\/pre>/g, (match, preContent) => {
-        return '<pre>' + preContent.replace(/<br>/g, '\n') + '</pre>';
-    });
 
     return content;
 }

@@ -7,6 +7,7 @@ import logging
 import re
 
 import bleach
+import mistune
 from markupsafe import Markup
 
 logger = logging.getLogger(__name__)
@@ -149,12 +150,16 @@ def sanitize_myspace_html(content: str) -> str:
 
 def sanitize_embed_tags(html: str) -> str:
     """
-    Additional sanitization for embed tags
-    Only allows embeds from trusted sources
+    Additional sanitization for embed tags.
+    Only allows embeds from trusted sources with strict validation.
+
+    Note: Consider using iframe with sandbox attribute as a more secure alternative.
+    The embed tag is maintained primarily for retro MySpace aesthetic.
     """
     TRUSTED_EMBED_DOMAINS = [
         "youtube.com",
         "www.youtube.com",
+        "youtu.be",
         "vimeo.com",
         "player.vimeo.com",
         "soundcloud.com",
@@ -162,50 +167,179 @@ def sanitize_embed_tags(html: str) -> str:
     ]
 
     # Pattern to find embed tags
-    embed_pattern = re.compile(r"<embed\s+([^>]*?)>", re.IGNORECASE)
+    embed_pattern = re.compile(r"<embed\s+([^>]*?)>", re.IGNORECASE | re.DOTALL)
 
     def check_embed(match):
         attrs = match.group(1)
-        src_match = re.search(r'src=[\'"](.*?)[\'"]', attrs, re.IGNORECASE)
 
-        if src_match:
-            src = src_match.group(1)
-            # Check if the source is from a trusted domain
-            from urllib.parse import urlparse
+        # Extract src attribute more carefully
+        src_patterns = [
+            r'src\s*=\s*"([^"]*)"',
+            r"src\s*=\s*'([^']*)'",
+            r"src\s*=\s*([^\s>]+)",
+        ]
 
-            try:
-                parsed = urlparse(src)
-                if parsed.hostname and any(domain in parsed.hostname for domain in TRUSTED_EMBED_DOMAINS):
-                    return match.group(0)  # Keep the embed
-            except Exception:
-                pass
+        src = None
+        for pattern in src_patterns:
+            src_match = re.search(pattern, attrs, re.IGNORECASE)
+            if src_match:
+                src = src_match.group(1)
+                break
 
-        # Remove untrusted embed
-        logger.warning(f"Removed untrusted embed tag: {match.group(0)[:100]}")
-        return ""
+        if not src:
+            logger.warning(f"Removed embed tag without src: {match.group(0)[:100]}")
+            return ""
 
-    return embed_pattern.sub(check_embed, html)
+        # Validate the URL
+        from urllib.parse import urlparse
+
+        try:
+            parsed = urlparse(src)
+
+            # Check protocol
+            if parsed.scheme not in ["http", "https"]:
+                logger.warning(f"Removed embed with invalid protocol: {parsed.scheme}")
+                return ""
+
+            # Check hostname
+            if not parsed.hostname:
+                logger.warning(f"Removed embed without hostname: {src[:100]}")
+                return ""
+
+            # Normalize hostname for comparison
+            hostname = parsed.hostname.lower()
+
+            # Check if hostname is in trusted list
+            is_trusted = any(
+                hostname == domain or hostname.endswith("." + domain)
+                for domain in TRUSTED_EMBED_DOMAINS
+            )
+
+            if is_trusted:
+                # Additional validation for specific services
+                if "youtube" in hostname or "youtu.be" in hostname:
+                    # Ensure it's an embed URL, not a regular video page
+                    if "/embed/" not in parsed.path and "youtu.be" not in hostname:
+                        logger.warning(f"YouTube URL not in embed format: {src[:100]}")
+                        return ""
+
+                # Keep the embed but add security attributes
+                # Note: This is a simple approach - in production, consider
+                # converting to iframe with sandbox attribute
+                return match.group(0)
+            else:
+                logger.warning(f"Removed untrusted embed domain: {hostname}")
+                return ""
+
+        except Exception as e:
+            logger.warning(f"Error parsing embed URL {src[:100]}: {str(e)}")
+            return ""
+
+    sanitized = embed_pattern.sub(check_embed, html)
+
+    # Log if any embeds were removed
+    if html != sanitized:
+        logger.info("Embed tags were sanitized from content")
+
+    return sanitized
 
 
 def sanitize_markdown(content: str) -> str:
     """
-    Sanitize markdown content before rendering
-    Prevents injection of raw HTML in markdown
+    Convert markdown to safe HTML on the server side.
+    This eliminates the need for client-side unescaping and prevents XSS.
     """
     if not content:
         return ""
 
-    # Remove any raw HTML tags from markdown
-    # This is a simple approach - for production, consider using a markdown parser
-    # that has built-in XSS protection
-    content = re.sub(r"<script[^>]*>.*?</script>", "", content, flags=re.DOTALL | re.IGNORECASE)
-    content = re.sub(r"<iframe[^>]*>.*?</iframe>", "", content, flags=re.DOTALL | re.IGNORECASE)
-    content = re.sub(r"javascript:", "", content, flags=re.IGNORECASE)
-    content = re.sub(r"on\w+\s*=", "", content, flags=re.IGNORECASE)  # Remove event handlers
+    # Create a custom renderer that adds syntax highlighting support
+    class SafeRenderer(mistune.HTMLRenderer):
+        def block_code(self, text, info=None):
+            """Render code blocks with language support for syntax highlighting"""
+            if info:
+                # Extract language from info string (e.g., "python" from "python\n")
+                lang = info.strip().split()[0] if info else "plaintext"
+            else:
+                lang = "plaintext"
 
-    # Important: Don't escape markdown syntax like backticks
-    # The content will be escaped when rendered, not during storage
-    return content
+            # Escape the code content to prevent XSS
+            escaped = mistune.escape(text)
+            return f'<pre><code class="language-{lang}">{escaped}</code></pre>\n'
+
+        def inline_code(self, text):
+            """Render inline code with proper escaping"""
+            escaped = mistune.escape(text)
+            return f'<code class="inline-code">{escaped}</code>'
+
+        def image(self, alt, url, title=None):
+            """Render images with special handling for reaction images"""
+            # Check if this is a reaction image from the AndrewAltimit/Media repo
+            if "AndrewAltimit/Media" in url and "/reaction/" in url:
+                alt_text = alt or "Reaction"
+                style = "max-height: 200px; vertical-align: middle; margin: 10px 0;"
+                return f'<img src="{url}" class="reaction-img" alt="{alt_text}" style="{style}" />'
+            # Handle regular images
+            return f'<img src="{url}" alt="{alt}" style="max-width: 100%; height: auto; margin: 10px 0;" />'
+
+        def link(self, text, url, title=None):
+            """Render links with security attributes"""
+            # Add rel="noopener noreferrer" for security
+            title_attr = f' title="{mistune.escape(title)}"' if title else ""
+            return f'<a href="{url}" target="_blank" rel="noopener noreferrer"{title_attr}>{text}</a>'
+
+    # Create markdown parser with custom renderer
+    # Enable all common markdown features
+    markdown = mistune.create_markdown(
+        renderer=SafeRenderer(),
+        plugins=[
+            "strikethrough",
+            "footnotes",
+            "table",
+            "task_lists",
+            "def_list",
+            "abbr",
+            "mark",
+            "insert",
+            "superscript",
+            "subscript",
+        ],
+    )
+
+    # Convert markdown to HTML
+    html_content = markdown(content)
+
+    # Apply additional sanitization with bleach to ensure safety
+    # This is defense-in-depth - the markdown parser should already be safe
+    allowed_tags = ALLOWED_TAGS_BASIC + [
+        "sup",
+        "sub",
+        "mark",
+        "ins",
+        "del",
+        "abbr",
+        "dl",
+        "dt",
+        "dd",
+        "input",
+    ]
+    allowed_attrs = {
+        **ALLOWED_ATTRS_BASIC,
+        "a": ["href", "title", "target", "rel"],
+        "img": ["src", "alt", "title", "width", "height", "style", "class"],
+        "abbr": ["title"],
+        "input": ["type", "checked", "disabled"],  # For task lists
+    }
+
+    cleaned_html = bleach.clean(
+        html_content,
+        tags=allowed_tags,
+        attributes=allowed_attrs,
+        protocols=ALLOWED_PROTOCOLS,
+        strip=True,
+        strip_comments=True,
+    )
+
+    return str(cleaned_html)
 
 
 def sanitize_json_data(data: dict) -> dict:
@@ -250,7 +384,8 @@ def sanitize_for_storage(content: str, content_type: str = "basic") -> str:
     if content_type == "myspace":
         return sanitize_myspace_html(content)
     elif content_type == "markdown":
-        # First sanitize the markdown, then it can be converted to HTML later
+        # Convert markdown to safe HTML on the server side
+        # This prevents XSS without needing client-side unescaping
         return sanitize_markdown(content)
     else:
         # Default to basic sanitization
