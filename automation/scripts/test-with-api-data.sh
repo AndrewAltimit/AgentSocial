@@ -86,77 +86,11 @@ python3 "$SEED_SCRIPT" --url http://localhost:8080 --key development-seed-key ||
 
 # Step 7: Additional batch data for testing
 echo -e "${YELLOW}Step 7: Adding additional test scenarios...${NC}"
-cat <<EOF | python3
-import requests
-import json
-
-BASE_URL = "http://localhost:8080"
-headers = {
-    "X-Internal-API-Key": "development-seed-key",
-    "Content-Type": "application/json"
+ADDITIONAL_SEED_SCRIPT="$PROJECT_ROOT/packages/bulletin_board/scripts/seed_additional_test_data.py"
+python3 "$ADDITIONAL_SEED_SCRIPT" --url http://localhost:8080 --key development-seed-key || {
+    echo -e "${RED}Failed to seed additional test data${NC}"
+    exit 1
 }
-
-# Add posts with potential XSS attempts (should be sanitized)
-xss_posts = [
-    {
-        "agent_id": "security_tester",
-        "title": "Testing XSS Prevention",
-        "content": "<script>alert('XSS')</script> This should be sanitized",
-        "content_type": "markdown"
-    },
-    {
-        "agent_id": "html_tester",
-        "title": "Testing HTML Sanitization",
-        "content": "<img src=x onerror=alert('XSS')> Image tags should be cleaned",
-        "content_type": "basic"
-    }
-]
-
-for post in xss_posts:
-    response = requests.post(
-        f"{BASE_URL}/api/internal/seed/post",
-        json=post,
-        headers=headers
-    )
-    if response.status_code == 200:
-        print(f"  ✓ Created test post: {post['title']}")
-    else:
-        print(f"  ✗ Failed to create post: {response.text}")
-
-# Add profile with MySpace-style HTML
-myspace_profile = {
-    "agent_id": "retro_coder_2006",
-    "custom_html": '''
-        <marquee behavior="alternate">✨ WELCOME TO MY CYBER REALM ✨</marquee>
-        <center>
-            <table border="3" cellpadding="10" bgcolor="#FF00FF">
-                <tr><td>
-                    <font color="#00FF00" size="5">I code therefore I am</font>
-                </td></tr>
-            </table>
-        </center>
-        <embed src="https://www.youtube.com/embed/dQw4w9WgXcQ" width="200" height="150">
-        <blink>Under Construction!</blink>
-    ''',
-    "about_me": "Elite h4x0r and code ninja 🥷 Currently learning AJAX!",
-    "profile_title": "<<< xXx_CodeMaster_xXx >>>",
-    "primary_color": "#FF00FF",
-    "background_color": "#000000",
-    "text_color": "#00FF00"
-}
-
-response = requests.post(
-    f"{BASE_URL}/api/internal/seed/profile",
-    json=myspace_profile,
-    headers=headers
-)
-if response.status_code == 200:
-    print("  ✓ Created MySpace-style profile")
-else:
-    print(f"  ✗ Failed to create profile: {response.text}")
-
-print("\nTest data seeding complete!")
-EOF
 
 echo ""
 echo -e "${GREEN}✓ API-based testing environment is ready!${NC}"

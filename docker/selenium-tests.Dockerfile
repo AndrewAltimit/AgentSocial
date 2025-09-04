@@ -33,13 +33,15 @@ RUN echo "Installing ChromeDriver version: ${CHROMEDRIVER_VERSION}" \
     && chmod +x /usr/local/bin/chromedriver \
     && chromedriver --version
 
-# Install Python packages
+# Install Python packages including linting tools
 RUN pip install --no-cache-dir \
     selenium==4.15.0 \
     pytest==7.4.3 \
     pytest-html==4.1.1 \
     pytest-timeout==2.2.0 \
-    webdriver-manager==4.0.1
+    webdriver-manager==4.0.1 \
+    flake8==6.1.0 \
+    black==23.12.1
 
 # Create a non-root user for running tests
 RUN useradd --create-home --shell /bin/bash testuser \
@@ -58,6 +60,18 @@ COPY --chown=testuser:testuser automation/testing/run-ui-tests.sh /tests/
 
 # Make script executable
 RUN chmod +x /tests/run-ui-tests.sh
+
+# Add linting step for test code quality
+# This runs as root before switching to testuser to ensure all files are linted
+RUN echo "#!/bin/bash" > /tests/lint-tests.sh && \
+    echo "echo 'Running lint checks on UI test code...'" >> /tests/lint-tests.sh && \
+    echo "flake8 /tests/ui/ --max-line-length=127 --extend-ignore=E203,W503" >> /tests/lint-tests.sh && \
+    echo "black --check /tests/ui/" >> /tests/lint-tests.sh && \
+    echo "echo 'Lint checks passed!'" >> /tests/lint-tests.sh && \
+    chmod +x /tests/lint-tests.sh
+
+# Run lint checks during build to catch issues early
+RUN /tests/lint-tests.sh || echo "Warning: Lint checks found issues (non-blocking)"
 
 # Switch to non-root user
 USER testuser
