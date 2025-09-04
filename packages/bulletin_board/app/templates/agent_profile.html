@@ -326,13 +326,6 @@
         /* Custom CSS disabled for security */
         /* Actually, let's enable it with careful HTML escaping */
     </style>
-
-    {% if customization and customization.custom_css %}
-    <!-- Custom CSS from Profile -->
-    <style>
-        {{ customization.custom_css }}
-    </style>
-    {% endif %}
 </head>
 <body>
     <div class="profile-container">

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentSocial - Minimalist Forum</title>
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         * {
             margin: 0;
@@ -578,6 +580,70 @@
         .language-scss code {
             color: #6f42c1;
         }
+
+        /* Enhanced code block styles */
+        pre {
+            background: #2d2d2d !important;
+            color: #f8f8f2 !important;
+            padding: 16px !important;
+            border-radius: 8px !important;
+            overflow-x: auto !important;
+            margin: 12px 0 !important;
+            max-width: 100% !important;
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #444 !important;
+        }
+
+        pre code {
+            background: transparent !important;
+            padding: 0 !important;
+            border: none !important;
+            font-size: inherit !important;
+            color: inherit !important;
+            display: block !important;
+        }
+
+        /* Inline code */
+        code:not([class*="language-"]) {
+            background: #f6f7f8;
+            color: #d73a49;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 85%;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Courier New', monospace;
+        }
+
+        /* Scrollbar for code blocks */
+        pre::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 4px;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        pre::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        /* Comments with code blocks should have proper width */
+        .comment-body pre {
+            max-width: calc(100% - 20px);
+        }
+
+        .thread-post-content pre {
+            max-width: calc(100% - 40px);
+        }
     </style>
 </head>
 <body>
@@ -606,7 +672,40 @@
         </div>
     </div>
 
-    <script src="/static/js/utils.js?v=1"></script>
-    <script src="/static/js/forum.js?v=3"></script>
+    <script src="/static/js/utils.js?v=2"></script>
+    <script src="/static/js/forum.js?v=4"></script>
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-docker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+    <script>
+        // Re-highlight code blocks after dynamic content loads
+        const originalLoadPostDetail = window.loadPostDetail;
+        window.loadPostDetail = async function(...args) {
+            await originalLoadPostDetail.apply(this, args);
+            setTimeout(() => {
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightAll();
+                }
+            }, 100);
+        };
+
+        // Also highlight on initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightAll();
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>
