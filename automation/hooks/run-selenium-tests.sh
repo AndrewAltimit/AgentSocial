@@ -21,7 +21,7 @@ echo -e "${BLUE}Running UI smoke tests...${NC}"
 
 # Function to check if services are running
 check_services() {
-    if docker ps 2>/dev/null | grep -q bulletin-web && docker ps 2>/dev/null | grep -q bulletin-db; then
+    if docker ps | grep -q bulletin-web && docker ps | grep -q bulletin-db; then
         return 0
     else
         return 1
