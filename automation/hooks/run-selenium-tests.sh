@@ -36,9 +36,9 @@ check_docker() {
     fi
 }
 
-# Skip if no Python files changed (optimization)
-if ! git diff --cached --name-only --diff-filter=ACM | grep -q '\.py$\|\.js$\|\.html$'; then
-    echo -e "${GREEN}No Python/JS/HTML files changed, skipping UI tests${NC}"
+# Skip if no Python/JS/HTML/CSS files changed (optimization)
+if ! git diff --cached --name-only --diff-filter=ACM | grep -q '\.py$\|\.js$\|\.html$\|\.css$'; then
+    echo -e "${GREEN}No Python/JS/HTML/CSS files changed, skipping UI tests${NC}"
     exit 0
 fi
 
